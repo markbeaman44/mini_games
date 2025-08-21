@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Echo Superhero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(135deg, #2d1b69, #11998e);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #4facfe;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .start-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 10px #4facfe; }
+            to { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px #4facfe, 0 0 30px #4facfe; }
+        }
+
+        .start-screen p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .instructions-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #4facfe;
+        }
+
+        .instructions-content p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+        }
+
+        .level-grid {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 100px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .grid-cell {
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .grid-cell:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .hero {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(255,107,107,0.5);
+            z-index: 5;
+        }
+
+        .echo {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            background: linear-gradient(135deg, rgba(255,107,107,0.6), rgba(255,142,83,0.6));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(255,107,107,0.3);
+            z-index: 4;
+            border: 2px dashed rgba(255,255,255,0.5);
+        }
+
+        .civilian {
+            position: absolute;
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+            z-index: 3;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            top: 5%;
+            left: 5%;
+            background: linear-gradient(135deg, #ff4757, #c44569);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .switch {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            left: 20%;
+            background: linear-gradient(135deg, #ffa726, #fb8c00);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .switch.active {
+            background: linear-gradient(135deg, #66bb6a, #43a047);
+            box-shadow: 0 0 15px rgba(76,175,80,0.6);
+        }
+
+        .switch:hover {
+            transform: scale(1.1);
+        }
+
+        .game-ui {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+        }
+
+        .ui-info {
+            display: flex;
+            gap: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .game-over h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #4facfe;
+        }
+
+        .game-over p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mobile-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .time-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .echo-trail {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border: 2px solid rgba(255,107,107,0.3);
+            border-radius: 50%;
+            z-index: 1;
+            animation: fadeOut 2s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: scale(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: grid;
+            }
+            
+            .level-grid {
+                bottom: 180px;
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(5, 1fr);
+            }
+            
+            .game-ui {
+                height: 60px;
+                padding: 0 15px;
+            }
+            
+            .ui-info {
+                font-size: 0.9rem;
+                gap: 15px;
+            }
+            
+            .controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <div class="start-screen" id="startScreen">
+            <h1>🦸 Time Echo Superhero</h1>
+            <p>Work with your past selves to save the city!</p>
+            <button class="start-btn" id="startBtn">Start Mission</button>
+        </div>
+
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🕐 How to Play</h2>
+                <p><strong>🦸‍♂️ Your Mission:</strong> Save all civilians by working with your time echoes!</p>
+                <p><strong>⏰ Time Echoes:</strong> Your past movements create "echoes" that help activate switches and clear paths.</p>
+                <p><strong>🎯 Strategy:</strong> Plan your route carefully - your echoes will repeat your exact movements!</p>
+                <p><strong>🔄 Controls:</strong> Use WASD or arrow keys to move, or touch controls on mobile.</p>
+                <p><strong>⚡ Goal:</strong> Rescue all civilians and reach the exit. Some switches need multiple heroes!</p>
+                <button class="close-instructions" id="closeInstructions">Got it! Let's Save the City!</button>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="time-indicator" id="timeIndicator">Timeline: Present</div>
+            <div class="level-grid" id="levelGrid"></div>
+            
+            <div class="game-ui">
+                <div class="ui-info">
+                    <div>Level: <span id="currentLevel">1</span></div>
+                    <div>Civilians: <span id="civilianCount">0</span></div>
+                    <div>Echoes: <span id="echoCount">0</span></div>
+                </div>
+                <div class="controls">
+                    <button class="control-btn" id="resetMoveBtn">Reset Moves</button>
+                    <button class="control-btn" id="nextTimeBtn">Next Timeline</button>
+                </div>
+            </div>
+            
+            <div class="mobile-controls" id="mobileControls">
+                <button class="mobile-btn" id="resetMoveMobile">Reset</button>
+                <button class="mobile-btn" id="nextTimeMobile">Next Timeline</button>
+                <button class="mobile-btn" id="helpBtn">Help</button>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>Mission Complete!</h2>
+            <p id="gameOverText">You've saved the city through time!</p>
+            <button class="restart-btn" id="restartBtn">New Mission</button>
+        </div>
+    </div>
+
+    <script>
+        class TimeEchoGame {
+            constructor() {
+                this.currentLevel = 1;
+                this.maxLevel = 5;
+                this.playerPos = { x: 0, y: 0 };
+                this.moves = [];
+                this.echoes = [];
+                this.timeline = 0;
+                this.civilians = [];
+                this.obstacles = [];
+                this.switches = [];
+                this.civiliansSaved = 0;
+                this.totalCivilians = 0;
+                this.isMoving = false;
+                this.exitPos = { x: 7, y: 5 };
+                
+                this.levels = [
+                    {
+                        player: { x: 0, y: 0 },
+                        civilians: [{ x: 7, y: 0 }],
+                        obstacles: [{ x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 }, { x: 3, y: 5 }],
+                        switches: [{ x: 1, y: 2, targets: [{ x: 3, y: 1 }] }],
+                        exit: { x: 7, y: 2 }
+                    },
+                    {
+                        player: { x: 0, y: 0 },
+                        civilians: [{ x: 7, y: 0 }, { x: 7, y: 4 }],
+                        obstacles: [
+                            { x: 3, y: 0 }, { x: 3, y: 1 }, { x: 3, y: 2 }, { x: 3, y: 3 }, { x: 3, y: 4 }, { x: 3, y: 5 },
+                            { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 2 }, { x: 5, y: 3 }, { x: 5, y: 4 }, { x: 5, y: 5 }
+                        ],
+                        switches: [
+                            { x: 1, y: 1, targets: [{ x: 3, y: 1 }] },
+                            { x: 4, y: 3, targets: [{ x: 5, y: 3 }] }
+                        ],
+                        exit: { x: 7, y: 2 }
+                    },
+                    {
+                        player: { x: 0, y: 2 },
+                        civilians: [{ x: 7, y: 1 }, { x: 7, y: 3 }, { x: 1, y: 0 }],
+                        obstacles: [
+                            { x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 },
+                            { x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+                            { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 }
+                        ],
+                        switches: [
+                            { x: 0, y: 4, targets: [{ x: 2, y: 1 }, { x: 2, y: 3 }] },
+                            { x: 3, y: 2, targets: [{ x: 4, y: 1 }, { x: 4, y: 3 }] },
+                            { x: 5, y: 0, targets: [{ x: 6, y: 1 }, { x: 6, y: 3 }] }
+                        ],
+                        exit: { x: 7, y: 2 }
+                    },
+                    {
+                        player: { x: 0, y: 0 },
+                        civilians: [{ x: 7, y: 0 }, { x: 7, y: 2 }, { x: 7, y: 4 }, { x: 0, y: 4 }],
+                        obstacles: [
+                            { x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 },
+                            { x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 },
+                            { x: 6, y: 0 }, { x: 6, y: 1 }, { x: 6, y: 2 }, { x: 6, y: 3 }, { x: 6, y: 4 }, { x: 6, y: 5 }
+                        ],
+                        switches: [
+                            { x: 0, y: 2, targets: [{ x: 2, y: 1 }, { x: 2, y: 3 }] },
+                            { x: 3, y: 1, targets: [{ x: 4, y: 1 }, { x: 4, y: 3 }] },
+                            { x: 5, y: 2, targets: [{ x: 6, y: 1 }, { x: 6, y: 3 }] }
+                        ],
+                        exit: { x: 7, y: 5 }
+                    },
+                    {
+                        player: { x: 0, y: 2 },
+                        civilians: [{ x: 7, y: 0 }, { x: 7, y: 4 }, { x: 3, y: 2 }, { x: 1, y: 5 }, { x: 6, y: 5 }],
+                        obstacles: [
+                            { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 3 }, { x: 1, y: 4 },
+                            { x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 },
+                            { x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 },
+                            { x: 5, y: 0 }, { x: 5, y: 1 }, { x: 5, y: 2 }, { x: 5, y: 3 }, { x: 5, y: 4 }
+                        ],
+                        switches: [
+                            { x: 0, y: 0, targets: [{ x: 1, y: 1 }, { x: 2, y: 1 }] },
+                            { x: 0, y: 4, targets: [{ x: 1, y: 3 }, { x: 2, y: 3 }] },
+                            { x: 3, y: 1, targets: [{ x: 4, y: 1 }, { x: 5, y: 1 }] },
+                            { x: 3, y: 3, targets: [{ x: 4, y: 3 }, { x: 5, y: 3 }] }
+                        ],
+                        exit: { x: 7, y: 2 }
+                    }
+                ];
+
+                this.initializeElements();
+                this.bindEvents();
+                this.showInstructions();
+            }
+
+            initializeElements() {
+                this.startScreen = document.getElementById('startScreen');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.levelGrid = document.getElementById('levelGrid');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.timeIndicator = document.getElementById('timeIndicator');
+                
+                // UI elements
+                this.currentLevelSpan = document.getElementById('currentLevel');
+                this.civilianCountSpan = document.getElementById('civilianCount');
+                this.echoCountSpan = document.getElementById('echoCount');
+                this.gameOverText = document.getElementById('gameOverText');
+            }
+
+            bindEvents() {
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                document.getElementById('resetMoveBtn').addEventListener('click', () => {
+                    this.resetMoves();
+                });
+
+                document.getElementById('nextTimeBtn').addEventListener('click', () => {
+                    this.nextTimeline();
+                });
+
+                // Mobile controls
+                document.getElementById('resetMoveMobile').addEventListener('click', () => {
+                    this.resetMoves();
+                });
+
+                document.getElementById('nextTimeMobile').addEventListener('click', () => {
+                    this.nextTimeline();
+                });
+
+                document.getElementById('helpBtn').addEventListener('click', () => {
+                    this.showInstructions();
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for start screen
+                    if (e.key === ' ' && this.startScreen.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    if (this.gameArea.style.display === 'block' && !this.isMoving) {
+                        switch(e.key.toLowerCase()) {
+                            case 'w':
+                            case 'arrowup':
+                                e.preventDefault();
+                                this.movePlayer(0, -1);
+                                break;
+                            case 's':
+                            case 'arrowdown':
+                                e.preventDefault();
+                                this.movePlayer(0, 1);
+                                break;
+                            case 'a':
+                            case 'arrowleft':
+                                e.preventDefault();
+                                this.movePlayer(-1, 0);
+                                break;
+                            case 'd':
+                            case 'arrowright':
+                                e.preventDefault();
+                                this.movePlayer(1, 0);
+                                break;
+                            case ' ':
+                                e.preventDefault();
+                                this.nextTimeline();
+                                break;
+                            case 'r':
+                                e.preventDefault();
+                                this.resetMoves();
+                                break;
+                        }
+                    }
+
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                // Touch controls for mobile
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'grid';
+                }
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.startGame();
+            }
+
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.loadLevel(this.currentLevel);
+                this.playSound(440, 100);
+            }
+
+            loadLevel(levelNum) {
+                const level = this.levels[levelNum - 1];
+                
+                // Reset game state
+                this.playerPos = { ...level.player };
+                this.moves = [];
+                this.echoes = [];
+                this.timeline = 0;
+                this.civiliansSaved = 0;
+                this.totalCivilians = level.civilians.length;
+                this.civilians = level.civilians.map(c => ({ ...c, saved: false }));
+                this.obstacles = level.obstacles.map(o => ({ ...o, active: true }));
+                this.switches = level.switches.map(s => ({ ...s, active: false }));
+                this.exitPos = { ...level.exit };
+                
+                this.updateUI();
+                this.renderLevel();
+            }
+
+            renderLevel() {
+                this.levelGrid.innerHTML = '';
+                
+                // Create grid cells
+                for (let y = 0; y < 6; y++) {
+                    for (let x = 0; x < 8; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.dataset.x = x;
+                        cell.dataset.y = y;
+                        this.levelGrid.appendChild(cell);
+                    }
+                }
+
+                this.updateVisuals();
+            }
+
+            updateVisuals() {
+                // Clear all cells
+                document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.innerHTML = '';
+                });
+
+                // Add obstacles
+                this.obstacles.forEach(obstacle => {
+                    if (obstacle.active) {
+                        const cell = this.getCell(obstacle.x, obstacle.y);
+                        if (cell) {
+                            const obstacleDiv = document.createElement('div');
+                            obstacleDiv.className = 'obstacle';
+                            obstacleDiv.textContent = '⚡';
+                            cell.appendChild(obstacleDiv);
+                        }
+                    }
+                });
+
+                // Add switches
+                this.switches.forEach(switchObj => {
+                    const cell = this.getCell(switchObj.x, switchObj.y);
+                    if (cell) {
+                        const switchDiv = document.createElement('div');
+                        switchDiv.className = `switch ${switchObj.active ? 'active' : ''}`;
+                        switchDiv.textContent = switchObj.active ? '✓' : '○';
+                        cell.appendChild(switchDiv);
+                    }
+                });
+
+                // Add civilians
+                this.civilians.forEach(civilian => {
+                    if (!civilian.saved) {
+                        const cell = this.getCell(civilian.x, civilian.y);
+                        if (cell) {
+                            const civilianDiv = document.createElement('div');
+                            civilianDiv.className = 'civilian';
+                            civilianDiv.textContent = '👤';
+                            cell.appendChild(civilianDiv);
+                        }
+                    }
+                });
+
+                // Add exit
+                const exitCell = this.getCell(this.exitPos.x, this.exitPos.y);
+                if (exitCell) {
+                    const exitDiv = document.createElement('div');
+                    exitDiv.className = 'civilian';
+                    exitDiv.textContent = '🚪';
+                    exitDiv.style.background = 'linear-gradient(135deg, #ffd700, #ffb347)';
+                    exitCell.appendChild(exitDiv);
+                }
+
+                // Add echoes
+                this.echoes.forEach((echo, index) => {
+                    const cell = this.getCell(echo.x, echo.y);
+                    if (cell) {
+                        const echoDiv = document.createElement('div');
+                        echoDiv.className = 'echo';
+                        echoDiv.textContent = `E${index + 1}`;
+                        cell.appendChild(echoDiv);
+                    }
+                });
+
+                // Add player
+                const playerCell = this.getCell(this.playerPos.x, this.playerPos.y);
+                if (playerCell) {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'hero';
+                    playerDiv.textContent = '🦸';
+                    playerCell.appendChild(playerDiv);
+                }
+            }
+
+            getCell(x, y) {
+                return document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+            }
+
+            movePlayer(dx, dy) {
+                const newX = this.playerPos.x + dx;
+                const newY = this.playerPos.y + dy;
+
+                if (this.isValidMove(newX, newY)) {
+                    this.moves.push({ x: this.playerPos.x, y: this.playerPos.y });
+                    this.playerPos.x = newX;
+                    this.playerPos.y = newY;
+                    
+                    // Advance all echoes one step in their recorded paths
+                    this.replayEchoes();
+                    
+                    this.checkInteractions();
+                    this.updateVisuals();
+                    this.playSound(220, 50);
+                }
+            }
+
+            isValidMove(x, y) {
+                // Check bounds
+                if (x < 0 || x >= 8 || y < 0 || y >= 6) return false;
+
+                // Check obstacles
+                return !this.obstacles.some(obstacle => 
+                    obstacle.active && obstacle.x === x && obstacle.y === y
+                );
+            }
+
+            checkInteractions() {
+                // Check civilian rescue
+                this.civilians.forEach(civilian => {
+                    if (!civilian.saved && civilian.x === this.playerPos.x && civilian.y === this.playerPos.y) {
+                        civilian.saved = true;
+                        this.civiliansSaved++;
+                        this.playSound(330, 200);
+                    }
+                });
+
+                // Check echoes on civilians
+                this.echoes.forEach(echo => {
+                    this.civilians.forEach(civilian => {
+                        if (!civilian.saved && civilian.x === echo.x && civilian.y === echo.y) {
+                            civilian.saved = true;
+                            this.civiliansSaved++;
+                            this.playSound(330, 200);
+                        }
+                    });
+                });
+
+                // Check switch activation (player + echoes) - TOGGLE LOGIC
+                this.switches.forEach(switchObj => {
+                    const heroesOnSwitch = [this.playerPos, ...this.echoes].filter(pos => 
+                        pos.x === switchObj.x && pos.y === switchObj.y
+                    ).length;
+
+                    const shouldBeActive = heroesOnSwitch > 0;
+                    
+                    // If switch state changes
+                    if (switchObj.active !== shouldBeActive) {
+                        switchObj.active = shouldBeActive;
+                        
+                        // Update targeted obstacles based on switch state
+                        switchObj.targets.forEach(target => {
+                            const obstacle = this.obstacles.find(o => o.x === target.x && o.y === target.y);
+                            if (obstacle) {
+                                obstacle.active = !switchObj.active; // Obstacle inactive when switch active
+                            }
+                        });
+                        
+                        if (switchObj.active) {
+                            this.playSound(440, 150); // Switch on sound
+                        } else {
+                            this.playSound(220, 150); // Switch off sound
+                        }
+                    }
+                });
+
+                // Check win condition
+                if (this.civiliansSaved >= this.totalCivilians && 
+                    this.playerPos.x === this.exitPos.x && this.playerPos.y === this.exitPos.y) {
+                    this.levelComplete();
+                }
+
+                this.updateUI();
+            }
+
+            nextTimeline() {
+                if (this.moves.length > 0) {
+                    // Create echo with full movement history
+                    const level = this.levels[this.currentLevel - 1];
+                    this.echoes.push({
+                        x: level.player.x,
+                        y: level.player.y,
+                        moves: [...this.moves, { x: this.playerPos.x, y: this.playerPos.y }], // Include final position
+                        currentMoveIndex: 0
+                    });
+                    
+                    // Reset player to start position
+                    this.playerPos = { ...level.player };
+                    this.moves = [];
+                    this.timeline++;
+                    
+                    this.updateTimeIndicator();
+                    this.checkInteractions();
+                    this.updateVisuals();
+                    this.playSound(550, 100);
+                }
+            }
+
+            replayEchoes() {
+                // This function is called when player moves to advance echoes
+                this.echoes.forEach(echo => {
+                    if (echo.currentMoveIndex < echo.moves.length) {
+                        const nextPos = echo.moves[echo.currentMoveIndex];
+                        echo.x = nextPos.x;
+                        echo.y = nextPos.y;
+                        echo.currentMoveIndex++;
+                    }
+                });
+            }
+
+            resetMoves() {
+                const level = this.levels[this.currentLevel - 1];
+                this.playerPos = { ...level.player };
+                this.moves = [];
+                this.echoes = [];
+                this.timeline = 0;
+                this.civiliansSaved = 0;
+                this.civilians.forEach(c => c.saved = false);
+                this.obstacles.forEach(o => o.active = true); // All obstacles start active
+                this.switches.forEach(s => s.active = false); // All switches start inactive
+                
+                this.updateTimeIndicator();
+                this.updateVisuals();
+                this.updateUI();
+                this.playSound(110, 100);
+            }
+
+            updateTimeIndicator() {
+                const timeNames = ['Present', 'Past Echo 1', 'Past Echo 2', 'Past Echo 3', 'Ancient Timeline'];
+                this.timeIndicator.textContent = `Timeline: ${timeNames[this.timeline] || 'Deep Past'}`;
+            }
+
+            levelComplete() {
+                if (this.currentLevel >= this.maxLevel) {
+                    this.gameComplete();
+                } else {
+                    this.currentLevel++;
+                    setTimeout(() => {
+                        this.loadLevel(this.currentLevel);
+                        this.playSound(660, 300);
+                    }, 1000);
+                }
+            }
+
+            gameComplete() {
+                this.gameOverText.textContent = `Mission Complete! You saved the city across ${this.maxLevel} timelines!`;
+                this.gameOver.style.display = 'flex';
+                this.playSound(880, 500);
+            }
+
+            updateUI() {
+                this.currentLevelSpan.textContent = this.currentLevel;
+                this.civilianCountSpan.textContent = `${this.civiliansSaved}/${this.totalCivilians}`;
+                this.echoCountSpan.textContent = this.echoes.length;
+            }
+
+            restartGame() {
+                this.currentLevel = 1;
+                this.gameOver.style.display = 'none';
+                this.loadLevel(this.currentLevel);
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new TimeEchoGame();
+        });
+    </script>
+</body>
+</html>

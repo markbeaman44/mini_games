@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Magic Spells - Mini Games Hub</title>
+    <style>
+        :root{
+            --bg1:#0b0f1a; /* deep night */
+            --bg2:#2b0f2f; /* purple dusk */
+            --accent:#ff6b6b;
+            --panel:#111214;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:system-ui,Segoe UI,Arial;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}
+        .container{width:920px;height:640px;background:linear-gradient(180deg,rgba(0,0,0,0.25),rgba(0,0,0,0.15));border-radius:14px;padding:18px;position:relative;overflow:hidden;border:3px solid rgba(255,255,255,0.04)}
+        .topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px}
+        .title{font-size:1.6rem;font-weight:800;display:flex;gap:10px;align-items:center}
+        .subtitle{font-size:0.9rem;color:#ffd700}
+        .back{color:#fff;text-decoration:none;border:2px solid rgba(255,255,255,0.06);padding:6px 10px;border-radius:10px}
+
+        /* Match other games: game container and back button */
+        .game-container{width:900px;height:600px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));border-radius:15px;position:relative;overflow:hidden;border:3px solid #FFD700;box-shadow:0 10px 30px rgba(0,0,0,0.4);margin:0 auto}
+        /* Back button fixed to viewport top-left */
+        .back-btn{position:fixed;top:15px;left:15px;background:rgba(255,255,255,0.95);color:#FF1493;border:2px solid #FF1493;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.95rem;font-weight:bold;text-decoration:none;z-index:2200}
+        .back-btn:hover{background:#FF1493;color:white;transform:scale(1.03)}
+
+        /* Start screen to explain rules */
+        .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1100;background:linear-gradient(135deg, rgba(255,182,193,0.95), rgba(255,240,245,0.95));backdrop-filter:blur(8px);padding:26px;border-radius:16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3);border:3px solid #FFD700}
+        .start-screen h2{margin:0 0 10px 0;color:#FF1493;font-size:22px;text-shadow:0 0 12px #FFD700}
+        .start-screen p{margin:6px 0;color:#8B0000;font-weight:700}
+        .start-btn{margin-top:12px;padding:10px 18px;border-radius:12px;font-weight:800;border:2px solid #FFD700;background:linear-gradient(45deg,#FF69B4 0%,#FF1493 100%);color:white;cursor:pointer}
+
+        /* Game area */
+        .topbar{display:flex;justify-content:center;align-items:center;flex-direction:column;padding:10px 12px}
+        .centerDesc{font-size:0.95rem;color:#ffd; margin-top:6px; font-weight:700}
+
+        .stage{position:relative;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.15));height:100%;display:flex;align-items:center;justify-content:center}
+
+        /* Witch */
+        .witch{position:relative;width:220px;height:175px;border-radius:18px;background:linear-gradient(180deg,#2b0b3a,#1a0420);display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,0.6);transition:transform 0.25s ease;cursor:pointer}
+        .witch:hover{transform:translateY(-6px)}
+        .witch .hat{width:160px;height:80px;background:linear-gradient(180deg,#231024,#0d0410);border-radius:8px 8px 40px 40px;transform:translateY(-20px);position:relative}
+        .witch .hat::after{content:'';position:absolute;left:18px;top:10px;width:120px;height:20px;background:linear-gradient(90deg,#ff6b6b66,#ffd16633);border-radius:10px}
+        .witch .face{margin-top:6px;font-size:64px}
+        .witch .label{margin-top:8px;font-weight:700;color:#ffe5a1}
+
+        /* Bottom potion bar */
+        .potionsBar{position:absolute;left:0;right:0;bottom:12px;height:120px;display:flex;align-items:center;justify-content:center;gap:18px}
+        .potion{width:80px;height:100px;background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(0,0,0,0.18));border-radius:12px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;cursor:pointer;transition:transform 0.18s ease,box-shadow 0.18s ease;border:2px solid rgba(255,255,255,0.04)}
+        .potion.selected{transform:translateY(-8px);box-shadow:0 12px 30px rgba(0,0,0,0.6);outline:4px solid rgba(255,255,255,0.04)}
+        .potion .bottle{width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px}
+        .potion .label{font-size:13px;margin-top:6px;color:#ffd;}
+        .potion[data-color="red"] .bottle{background:linear-gradient(180deg,#ff7676,#ff3b3b)}
+        .potion[data-color="blue"] .bottle{background:linear-gradient(180deg,#8ec5ff,#1b8cff)}
+        .potion[data-color="green"] .bottle{background:linear-gradient(180deg,#9ae6b4,#2ecc71)}
+        .potion[data-color="purple"] .bottle{background:linear-gradient(180deg,#d3b6ff,#9b59ff)}
+        .potion[data-color="orange"] .bottle{background:linear-gradient(180deg,#ffd59e,#ff9f1c)}
+
+        /* Vortex animation */
+        .vortex{position:absolute;width:160px;height:160px;border-radius:50%;pointer-events:none;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);opacity:0}
+        .vortex.show{animation:vortexPop 700ms cubic-bezier(.2,.9,.3,1) forwards}
+        @keyframes vortexPop{0%{transform:translate(-50%,-50%) scale(0);opacity:0}50%{transform:translate(-50%,-50%) scale(1.05);opacity:1}100%{transform:translate(-50%,-50%) scale(0.9);opacity:0.9}}
+
+        .effectLayer{position:absolute;inset:0;pointer-events:none}
+
+        /* simple spell visuals */
+        .spellPopup{position:absolute;left:50%;top:12%;transform:translateX(-50%);background:rgba(0,0,0,0.6);padding:12px 18px;border-radius:10px;border:2px solid rgba(255,255,255,0.06);color:#fff;font-weight:700}
+
+        /* bats for effect */
+        .bat{position:absolute;font-size:32px;opacity:0;transform:translateY(-20px);animation:batFly 1200ms linear forwards}
+        @keyframes batFly{0%{opacity:0;transform:translate(-10px,-10px) rotate(-10deg)}50%{opacity:1}100%{transform:translate(800px,-180px) rotate(10deg);opacity:1}}
+
+        /* pumpkin pop */
+        .pumpkin{position:absolute;font-size:120px;left:50%;top:38%;transform:translate(-50%,-50%) scale(0);opacity:0;animation:pumpPop 800ms cubic-bezier(.2,.9,.3,1) forwards}
+        @keyframes pumpPop{0%{transform:translate(-50%,-50%) scale(0);opacity:0}60%{transform:translate(-50%,-50%) scale(1.08);opacity:1}100%{transform:translate(-50%,-50%) scale(1)}}
+
+        .confetti{position:absolute;width:10px;height:16px;border-radius:2px;opacity:0;animation:confettiDrop 900ms ease-out forwards}
+        @keyframes confettiDrop{0%{transform:translateY(-10px);opacity:1}100%{transform:translateY(220px);opacity:1}}
+
+        /* New spell visuals */
+        .fireball{position:absolute;font-size:96px;left:50%;top:50%;transform:translate(-50%,-50%) scale(0);filter:drop-shadow(0 10px 24px rgba(255,120,0,0.6));}
+        .snowman{position:absolute;font-size:110px;left:50%;top:30%;transform:translate(-50%,-50%) scale(0);}
+        .leaf{position:absolute;font-size:28px;opacity:0.95}
+        .shadow-monster{position:absolute;width:260px;height:200px;border-radius:40%/50%;left:50%;top:30%;transform:translate(-50%,-50%) scale(0);background:radial-gradient(ellipse at 30% 35%,rgba(0,0,0,0.95),rgba(0,0,0,0.85));filter:blur(0.6px);}
+        .shadow-eye{position:absolute;width:18px;height:18px;border-radius:50%;background:linear-gradient(180deg,#fff,#ffd700);left:40%;top:35%;box-shadow:0 0 12px rgba(255,215,0,0.9)}
+        .shadow-eye.right{left:auto;right:40%;}
+        .candy-item{position:absolute;font-size:28px}
+
+        @media (max-width:980px){.container{width:95vw;height:85vh}.witch{width:160px;height:200px}.potion{width:64px;height:88px}.potion .bottle{width:46px;height:46px}}
+    </style>
+</head>
+<body>
+    <!-- Back button fixed at top-left of the screen -->
+    <a href="home.html" class="back-btn">← Back to Hub</a>
+
+    <div class="container">
+        <div class="topbar">
+            <div class="title">🪄 Magic Spells <span class="subtitle">— Halloween Lab</span></div>
+            <div class="centerDesc">Click any number of potions (mix them) then click the witch to cast the spell.</div>
+         </div>
+
+        <!-- Start screen -->
+        <div class="start-screen" id="startScreen">
+            <h2>🪄 Welcome to the Halloween Lab</h2>
+            <p>Click any combination of the five potions at the bottom.</p>
+            <p>When ready, click the Witch (or press SPACE) to mix them and cast a spell.</p>
+            <p>Different combinations trigger different spooky effects — have fun!</p>
+            <button class="start-btn" id="startBtn">Start</button>
+        </div>
+
+        <div class="stage" id="stage">
+            <div class="witch" id="witch" title="Click me to mix the potions and cast the spell">
+                <div class="hat"></div>
+                <div class="face">🧙‍♀️</div>
+                <div class="label">Witch Hazel</div>
+            </div>
+
+            <div class="vortex" id="vortex"></div>
+            <div class="effectLayer" id="effects"></div>
+            <div class="spellPopup" id="spellPopup" style="display:none">Casting spell...</div>
+        </div>
+
+        <div class="potionsBar" id="potionsBar">
+            <div class="potion" data-color="red" data-name="Fire" title="Fire Potion">
+                <div class="bottle">🔥</div>
+                <div class="label">Fire</div>
+            </div>
+            <div class="potion" data-color="blue" data-name="Frost" title="Frost Potion">
+                <div class="bottle">❄️</div>
+                <div class="label">Frost</div>
+            </div>
+            <div class="potion" data-color="green" data-name="Nature" title="Nature Potion">
+                <div class="bottle">🌿</div>
+                <div class="label">Nature</div>
+            </div>
+            <div class="potion" data-color="purple" data-name="Shadow" title="Shadow Potion">
+                <div class="bottle">🦇</div>
+                <div class="label">Shadow</div>
+            </div>
+            <div class="potion" data-color="orange" data-name="Candy" title="Candy Potion">
+                <div class="bottle">🍬</div>
+                <div class="label">Candy</div>
+            </div>
+        </div>
+
+      </div>
+
+     <script>
+         (function(){
+            let isGameRunning = false;
+            const startScreen = document.getElementById('startScreen');
+            const startBtn = document.getElementById('startBtn');
+
+            function showStartScreen(){ startScreen.style.display = 'block'; isGameRunning = false; }
+            function startGame(){ startScreen.style.display = 'none'; isGameRunning = true; }
+
+            startBtn.addEventListener('click', ()=> startGame());
+            // allow spacebar to start
+            document.addEventListener('keydown', (e)=>{ if(e.code==='Space' && !isGameRunning){ e.preventDefault(); startGame(); } });
+
+             const potions = Array.from(document.querySelectorAll('.potion'));
+             const witch = document.getElementById('witch');
+             const vortex = document.getElementById('vortex');
+             const effects = document.getElementById('effects');
+             const popup = document.getElementById('spellPopup');
+
+             function togglePotion(el){
+                 el.classList.toggle('selected');
+             }
+
+             potions.forEach(p => p.addEventListener('click', (e)=>{
+                 togglePotion(p);
+             }));
+
+             function getSelected(){
+                 return potions.filter(p=>p.classList.contains('selected')).map(p=>({color:p.dataset.color,name:p.dataset.name,emoji:p.querySelector('.bottle').textContent}))
+             }
+
+             function playBeep(freq, dur){
+                 try{
+                     const ac = new (window.AudioContext||window.webkitAudioContext)();
+                     const o = ac.createOscillator();
+                     const g = ac.createGain();
+                     o.connect(g);g.connect(ac.destination);
+                     o.frequency.value=freq; o.type='sine'; g.gain.value=0.08;
+                     o.start(); o.stop(ac.currentTime+dur);
+                 }catch(e){}
+             }
+
+             function showVortex(colors){
+                 vortex.innerHTML='';
+                 vortex.style.background='';
+                 const cx = 80;
+                 colors.forEach((c,i)=>{
+                     const b = document.createElement('div');
+                     b.style.position='absolute'; b.style.width='40px'; b.style.height='40px'; b.style.borderRadius='50%';
+                     b.style.left=(20+i*30)+'px'; b.style.top=(20+i*12)+'px';
+                     b.style.opacity=0.95; b.style.filter='blur(4px)';
+                     b.style.background=c;
+                     vortex.appendChild(b);
+                 });
+                 vortex.classList.remove('show');
+                 void vortex.offsetWidth;
+                 vortex.classList.add('show');
+             }
+
+             function clearEffects(){
+                 effects.innerHTML='';
+                 popup.style.display='none';
+             }
+
+             function castSpell(){
+                if(!isGameRunning){ popup.textContent='Press Start or SPACE to begin'; popup.style.display='block'; setTimeout(()=>popup.style.display='none',1200); playBeep(220,0.12); return; }
+                 const sel = getSelected();
+                 const colors = sel.map(s=>{
+                     switch(s.color){case 'red':return '#ff6b6b';case 'blue':return '#5cc1ff';case 'green':return '#6ef3a0';case 'purple':return '#b48dff';case 'orange':return '#ffd27a';default:return '#fff'}
+                 });
+
+                 if(sel.length===0){
+                     // small harmless puff
+                     popup.textContent='You must choose at least one potion!'; popup.style.display='block';
+                     setTimeout(()=>popup.style.display='none',1200);
+                     playBeep(220,0.12);
+                     return;
+                 }
+
+                 // Check potion limit (max 2, except all 5 for rainbow)
+                 if(sel.length > 2 && sel.length < 5){
+                     popup.textContent='Maximum 2 potions allowed (or all 5 for rainbow)!'; popup.style.display='block';
+                     setTimeout(()=>popup.style.display='none',1200);
+                     playBeep(220,0.12);
+                     return;
+                 }
+
+                 // show vortex with selected colors
+                 showVortex(colors);
+                 popup.textContent='Mixing potions...'; popup.style.display='block';
+                 playBeep(440,0.18);
+
+                 // short delay then animate mixing into witch
+                 setTimeout(()=>{
+                     popup.textContent='Casting spell!';
+                     // animate little blobs flying to witch
+                     sel.forEach((s,idx)=>{
+                         const orb=document.createElement('div'); orb.className='orb';
+                         orb.style.position='absolute'; orb.style.width='28px'; orb.style.height='28px'; orb.style.borderRadius='50%'; orb.style.left=(120+idx*30)+'px'; orb.style.top='250px'; orb.style.display='flex'; orb.style.alignItems='center'; orb.style.justifyContent='center'; orb.style.fontSize='18px'; orb.style.background=colors[idx]; orb.style.boxShadow='0 6px 16px rgba(0,0,0,0.4)';
+                         orb.textContent=s.emoji;
+                         effects.appendChild(orb);
+                         // fly to witch center
+                         const target = witch.getBoundingClientRect();
+                         const stageRect = document.getElementById('stage').getBoundingClientRect();
+                         const toX = target.left + target.width/2 - stageRect.left - 14; // center adjustments
+                         const toY = target.top + target.height/2 - stageRect.top - 14;
+                         orb.animate([{transform:`translate(0px,0px) scale(1)`},{transform:`translate(${toX-(120+idx*30)}px,${toY-250}px) scale(0.3)`}],{duration:700, easing:'cubic-bezier(.2,.9,.3,1)'});
+                         setTimeout(()=>orb.remove(),720);
+                     });
+                 },600);
+
+                 // after mixing, pick spell outcome
+                 setTimeout(()=>{
+                     const effectKey = sel.map(s=>s.color).sort().join('+');
+                     runSpell(effectKey, sel);
+                     // reset selections after cast
+                     potions.forEach(p=>p.classList.remove('selected'));
+                     setTimeout(()=>clearEffects(),1800);
+                 },1500);
+             }
+
+             function runSpell(key, sel){
+                 // New combination mapping system
+                 const effectsList = {
+                     // Fire combinations
+                     'blue+red': 'fireSnowman',
+                     'green+red': 'fireLeaves', 
+                     'purple+red': 'fireShadow',
+                     'orange+red': 'fireCandy',
+                     
+                     // Frost combinations
+                     'blue+green': 'frostLeaves',
+                     'blue+purple': 'frostShadow', 
+                     'blue+orange': 'frostCandy',
+                     
+                     // Nature combinations
+                     'green+purple': 'natureShadow',
+                     'green+orange': 'natureCandy',
+                     
+                     // Shadow combinations
+                     'orange+purple': 'shadowCandy',
+                     
+                     // Special rainbow (all 5)
+                     'blue+green+orange+purple+red': 'rainbow'
+                 };
+                 
+                 let effect = effectsList[key] || null;
+                 if(!effect){
+                     // If single color, map to the themed spells
+                     if(sel.length===1){
+                         switch(sel[0].color){
+                             case 'red': effect = 'fireball'; break;
+                             case 'blue': effect = 'snowman'; break;
+                             case 'green': effect = 'leaves'; break;
+                             case 'purple': effect = 'shadowMonster'; break;
+                             case 'orange': effect = 'candyRoom'; break;
+                             default: effect = 'sparkle';
+                         }
+                     } else {
+                         effect = 'sparkle'; // fallback for unexpected combinations
+                     }
+                 }
+
+                 // Execute effects
+                 if(effect==='fireball') doFireball();
+                 else if(effect==='snowman') doSnowman();
+                 else if(effect==='leaves') doLeaves();
+                 else if(effect==='shadowMonster') doShadowMonster();
+                 else if(effect==='candyRoom') doCandyRoom();
+                 else if(effect==='fireSnowman') doFireSnowman();
+                 else if(effect==='fireLeaves') doFireLeaves();
+                 else if(effect==='fireShadow') doFireShadow();
+                 else if(effect==='fireCandy') doFireCandy();
+                 else if(effect==='frostLeaves') doFrostLeaves();
+                 else if(effect==='frostShadow') doFrostShadow();
+                 else if(effect==='frostCandy') doFrostCandy();
+                 else if(effect==='natureShadow') doNatureShadow();
+                 else if(effect==='natureCandy') doNatureCandy();
+                 else if(effect==='shadowCandy') doShadowCandy();
+                 else if(effect==='rainbow') doRainbow();
+                 else doSparkle(sel[0]);
+             }
+
+             function doFireworks(){
+                 playBeep(880,0.18);
+                 const c = effects;
+                 for(let i=0;i<6;i++){
+                     const x = 80 + Math.random()*760; const y = 60+Math.random()*240;
+                     for(let j=0;j<18;j++){
+                         const conf=document.createElement('div'); conf.className='confetti'; conf.style.left=(x+Math.random()*30)+'px'; conf.style.top=(y+Math.random()*10)+'px'; conf.style.background=['#ffd166','#ff6b6b','#6ef3a0','#b48dff'][Math.floor(Math.random()*4)];
+                         effects.appendChild(conf);
+                         setTimeout(()=>conf.remove(),1400+Math.random()*600);
+                     }
+                 }
+             }
+
+             function doPumpkin(){
+                 playBeep(520,0.22);
+                 const p = document.createElement('div'); p.className='pumpkin'; p.textContent='🎃'; effects.appendChild(p);
+                 setTimeout(()=>p.remove(),1800);
+             }
+
+             function doMegaPumpkin(){
+                 playBeep(360,0.28);
+                 const p = document.createElement('div'); p.className='pumpkin'; p.style.fontSize='160px'; p.textContent='🎃'; effects.appendChild(p);
+                 // confetti around
+                 doConfetti(); setTimeout(()=>p.remove(),2200);
+             }
+
+             function doBats(){
+                 playBeep(660,0.12);
+                 for(let i=0;i<6;i++){
+                     const b=document.createElement('div'); b.className='bat'; b.textContent='🦇'; b.style.left=(40+i*60)+'px'; b.style.top=(360 - i*8)+'px'; effects.appendChild(b);
+                     setTimeout(()=>b.remove(),1200);
+                 }
+             }
+
+             function doFrostRain(){
+                 playBeep(740,0.12);
+                 for(let i=0;i<24;i++){
+                     const s=document.createElement('div'); s.className='confetti'; s.style.width='6px'; s.style.height='12px'; s.style.left=(20+Math.random()*860)+'px'; s.style.top='-20px'; s.style.background='#cff0ff'; effects.appendChild(s);
+                     setTimeout(()=>s.remove(),1400+Math.random()*800);
+                 }
+             }
+
+             function doSparkle(info){
+                 playBeep(980,0.12);
+                 const s=document.createElement('div'); s.className='pumpkin'; s.style.fontSize='88px'; s.textContent=info?info.emoji:'✨'; effects.appendChild(s);
+                 setTimeout(()=>s.remove(),1200);
+             }
+
+             function doConfetti(){
+                 for(let i=0;i<40;i++){const c=document.createElement('div'); c.className='confetti'; c.style.left=(60+Math.random()*800)+'px'; c.style.top=(20+Math.random()*40)+'px'; c.style.background=['#ffd166','#ff6b6b','#6ef3a0','#b48dff'][Math.floor(Math.random()*4)]; effects.appendChild(c); setTimeout(()=>c.remove(),1400+Math.random()*800)}
+             }
+
+             function doCandyRain(){
+                 playBeep(960,0.12);
+                 for(let i=0;i<30;i++){const c=document.createElement('div'); c.className='confetti'; c.style.width='16px'; c.style.height='16px'; c.style.left=(40+Math.random()*840)+'px'; c.style.top='-20px'; c.style.background=['#ff6b6b','#ffd166','#b48dff'][Math.floor(Math.random()*3)]; c.style.borderRadius='6px'; effects.appendChild(c); setTimeout(()=>c.remove(),1600+Math.random()*900)}
+             }
+
+             // New spell implementations
+             function doFireball(){
+                 playBeep(520,0.28);
+                 const target = witch.getBoundingClientRect();
+                 const stageRect = document.getElementById('stage').getBoundingClientRect();
+                 const f = document.createElement('div'); f.className='fireball'; f.textContent='🔥';
+                 const startX = target.left + target.width/2 - stageRect.left - 48;
+                 const startY = target.top + target.height/2 - stageRect.top - 48;
+                 f.style.left = startX + 'px'; f.style.top = startY + 'px'; f.style.opacity = '1';
+                 effects.appendChild(f);
+                 f.animate([{transform:'translate(0,0) scale(0.6)', opacity:1},{transform:'translate(-40px,-240px) scale(1.6)', opacity:1},{transform:'translate(-80px,-420px) scale(0.3)', opacity:0}],{duration:1000, easing:'cubic-bezier(.2,.9,.3,1)'});
+                 setTimeout(()=>f.remove(),1100);
+             }
+
+             function doSnowman(){
+                 playBeep(420,0.28);
+                 // falling snow
+                 for(let i=0;i<24;i++){const s=document.createElement('div'); s.className='confetti'; s.style.left=(20+Math.random()*860)+'px'; s.style.top='-20px'; s.style.width='8px'; s.style.height='8px'; s.style.background='#fff'; effects.appendChild(s); setTimeout(()=>s.remove(),1400+Math.random()*800)}
+                 // show snowman in center
+                 const sm = document.createElement('div'); sm.className='snowman'; sm.textContent='☃️'; effects.appendChild(sm);
+                 sm.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1.05)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+                 setTimeout(()=>sm.remove(),2000);
+             }
+
+             function doLeaves(){
+                 playBeep(600,0.18);
+                 for(let i=0;i<18;i++){
+                     const l = document.createElement('div'); l.className='leaf'; l.textContent=Math.random()<0.5? '🍃':'🍂';
+                     l.style.left = (Math.random()*920)+'px'; l.style.top = (60+Math.random()*360)+'px'; effects.appendChild(l);
+                     const dx = (Math.random()*800 - 400);
+                     const dy = -60 - Math.random()*120;
+                     const dur = 1600 + Math.random()*1000;
+                     l.animate([{transform:`translate(0,0) rotate(0deg)`, opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*720-360}deg)`, opacity:1}],{duration:dur,easing:'linear'});
+                     setTimeout(()=>l.remove(),dur+80);
+                 }
+             }
+
+             function doShadowMonster(){
+                 playBeep(300,0.36);
+                 const sm = document.createElement('div'); sm.className='shadow-monster';
+                 const e1=document.createElement('div'); e1.className='shadow-eye'; const e2=document.createElement('div'); e2.className='shadow-eye right';
+                 sm.appendChild(e1); sm.appendChild(e2); effects.appendChild(sm);
+                 sm.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1.05)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+                 setTimeout(()=>sm.remove(),2200);
+             }
+
+             function doCandyRoom(){
+                 playBeep(720,0.22);
+                 // fill with candies
+                 const candies = [];
+                 for(let i=0;i<40;i++){
+                     const c = document.createElement('div');
+                     c.className='candy-item';
+                     c.textContent=(Math.random()<0.5?'🍬':'🍭');
+                     c.style.left=(40+Math.random()*820)+'px';
+                     c.style.top=(30+Math.random()*480)+'px';
+                     c.style.opacity='0';
+                     effects.appendChild(c);
+                     candies.push(c);
+                     // small pop-in animation
+                     const delay = Math.random()*400;
+                     c.animate([
+                         { transform: 'translateY(-10px) scale(0.8)', opacity: 0 },
+                         { transform: 'translateY(0) scale(1)', opacity: 1 }
+                     ], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)', delay });
+                 }
+
+                 // after a short while, sweep them out and remove
+                 setTimeout(()=>{
+                     candies.forEach((c, i)=>{
+                         const dx = (Math.random()*600 - 300);
+                         const dy = 220 + Math.random()*200;
+                         c.animate([
+                             { transform: 'translateY(0) scale(1)', opacity: 1 },
+                             { transform: `translate(${dx}px, ${dy}px) rotate(${Math.random()*720-360}deg) scale(0.6)`, opacity: 0 }
+                         ], { duration: 900, easing: 'ease-in', delay: i*12 });
+                         setTimeout(()=>{ try{ c.remove(); }catch(_){ } }, 950 + i*12);
+                     });
+                 }, 2200);
+             }
+
+             // New combination spell implementations
+             function doFireSnowman(){
+                 playBeep(450,0.32);
+                 // falling snow with red tint
+                 for(let i=0;i<24;i++){const s=document.createElement('div'); s.className='confetti'; s.style.left=(20+Math.random()*860)+'px'; s.style.top='-20px'; s.style.width='8px'; s.style.height='8px'; s.style.background='#ffdddd'; effects.appendChild(s); setTimeout(()=>s.remove(),1400+Math.random()*800)}
+                 // snowman with fire hat
+                 const sm = document.createElement('div'); sm.className='snowman'; sm.textContent='☃️'; effects.appendChild(sm);
+                 const hat = document.createElement('div'); hat.style.position='absolute'; hat.style.left='50%'; hat.style.top='25%'; hat.style.transform='translate(-50%,-50%)'; hat.style.fontSize='32px'; hat.textContent='🔥'; effects.appendChild(hat);
+                 sm.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1.05)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+                 setTimeout(()=>{sm.remove(); hat.remove();},2000);
+             }
+
+             function doFireLeaves(){
+                 playBeep(650,0.22);
+                 for(let i=0;i<18;i++){
+                     const l = document.createElement('div'); l.className='leaf'; l.textContent='🍂'; l.style.filter='hue-rotate(30deg) brightness(1.3)';
+                     l.style.left = (Math.random()*920)+'px'; l.style.top = (60+Math.random()*360)+'px'; effects.appendChild(l);
+                     const dx = (Math.random()*800 - 400); const dy = -60 - Math.random()*120; const dur = 1600 + Math.random()*1000;
+                     l.animate([{transform:`translate(0,0) rotate(0deg)`, opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*720-360}deg)`, opacity:1}],{duration:dur,easing:'linear'});
+                     setTimeout(()=>l.remove(),dur+80);
+                 }
+             }
+
+             function doFireShadow(){
+                 playBeep(280,0.4);
+                 const sm = document.createElement('div'); sm.className='shadow-monster';
+                 const e1=document.createElement('div'); e1.className='shadow-eye'; e1.style.background='linear-gradient(180deg,#ff4444,#ff8800)'; e1.style.boxShadow='0 0 12px rgba(255,68,68,0.9)';
+                 const e2=document.createElement('div'); e2.className='shadow-eye right'; e2.style.background='linear-gradient(180deg,#ff4444,#ff8800)'; e2.style.boxShadow='0 0 12px rgba(255,68,68,0.9)';
+                 sm.appendChild(e1); sm.appendChild(e2); effects.appendChild(sm);
+                 sm.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1.05)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+                 setTimeout(()=>sm.remove(),2200);
+             }
+
+             function doFireCandy(){
+                 playBeep(760,0.26);
+                 const candies = [];
+                 for(let i=0;i<40;i++){
+                     const c = document.createElement('div'); c.className='candy-item'; c.textContent=(Math.random()<0.5?'🍬':'🍭'); c.style.filter='hue-rotate(0deg) saturate(1.5)';
+                     c.style.left=(40+Math.random()*820)+'px'; c.style.top=(30+Math.random()*480)+'px'; c.style.opacity='0'; effects.appendChild(c); candies.push(c);
+                     const delay = Math.random()*400; c.animate([{ transform: 'translateY(-10px) scale(0.8)', opacity: 0 },{ transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)', delay });
+                 }
+                 setTimeout(()=>{candies.forEach((c, i)=>{const dx = (Math.random()*600 - 300); const dy = 220 + Math.random()*200; c.animate([{ transform: 'translateY(0) scale(1)', opacity: 1 },{ transform: `translate(${dx}px, ${dy}px) rotate(${Math.random()*720-360}deg) scale(0.6)`, opacity: 0 }], { duration: 900, easing: 'ease-in', delay: i*12 }); setTimeout(()=>{ try{ c.remove(); }catch(_){ } }, 950 + i*12);});}, 2200);
+             }
+
+             function doFrostLeaves(){
+                 playBeep(580,0.20);
+                 for(let i=0;i<18;i++){
+                     const l = document.createElement('div'); l.className='leaf'; l.textContent=Math.random()<0.5? '🍃':'🍂'; l.style.filter='hue-rotate(180deg) brightness(0.8)';
+                     l.style.left = (Math.random()*920)+'px'; l.style.top = (60+Math.random()*360)+'px'; effects.appendChild(l);
+                     const dx = (Math.random()*400 - 200); const dy = -30 - Math.random()*60; const dur = 2200 + Math.random()*800;
+                     l.animate([{transform:`translate(0,0) rotate(0deg)`, opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*360-180}deg)`, opacity:1}],{duration:dur,easing:'ease-out'});
+                     setTimeout(()=>l.remove(),dur+80);
+                 }
+             }
+
+             function doFrostShadow(){
+                 playBeep(260,0.42);
+                 const sm = document.createElement('div'); sm.className='shadow-monster';
+                 const sword = document.createElement('div'); sword.style.position='absolute'; sword.style.left='70%'; sword.style.top='40%'; sword.style.width='40px'; sword.style.height='8px'; sword.style.background='linear-gradient(90deg,#88ddff,#ffffff)'; sword.style.borderRadius='4px'; sword.style.boxShadow='0 0 8px rgba(136,221,255,0.8)';
+                 const e1=document.createElement('div'); e1.className='shadow-eye'; const e2=document.createElement('div'); e2.className='shadow-eye right';
+                 sm.appendChild(e1); sm.appendChild(e2); sm.appendChild(sword); effects.appendChild(sm);
+                 sm.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1.05)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+                 setTimeout(()=>sm.remove(),2200);
+             }
+
+             function doFrostCandy(){
+                 playBeep(720,0.24);
+                 const candies = [];
+                 for(let i=0;i<40;i++){
+                     const c = document.createElement('div'); c.className='candy-item'; c.textContent=(Math.random()<0.5?'🍬':'🍭'); c.style.filter='hue-rotate(200deg) brightness(0.9)';
+                     c.style.left=(40+Math.random()*820)+'px'; c.style.top=(30+Math.random()*480)+'px'; c.style.opacity='0'; effects.appendChild(c); candies.push(c);
+                     const delay = Math.random()*400; c.animate([{ transform: 'translateY(-10px) scale(0.8)', opacity: 0 },{ transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)', delay });
+                 }
+                 setTimeout(()=>{candies.forEach((c, i)=>{const dx = (Math.random()*600 - 300); const dy = 220 + Math.random()*200; c.animate([{ transform: 'translateY(0) scale(1)', opacity: 1 },{ transform: `translate(${dx}px, ${dy}px) rotate(${Math.random()*720-360}deg) scale(0.6)`, opacity: 0 }], { duration: 900, easing: 'ease-in', delay: i*12 }); setTimeout(()=>{ try{ c.remove(); }catch(_){ } }, 950 + i*12);});}, 2200);
+             }
+
+             function doNatureShadow(){
+                 playBeep(520,0.28);
+                 // tornado effect with leaves
+                 for(let i=0;i<25;i++){
+                     const l = document.createElement('div'); l.className='leaf'; l.textContent=Math.random()<0.5? '🍃':'🍂';
+                     const angle = (i/25) * Math.PI * 4; const radius = 60 + (i*3); const centerX = 460; const centerY = 200;
+                     l.style.left = (centerX + Math.cos(angle)*radius)+'px'; l.style.top = (centerY + Math.sin(angle)*radius)+'px'; effects.appendChild(l);
+                     const dur = 2000 + Math.random()*500;
+                     l.animate([{transform:`translate(0,0) rotate(${angle*180/Math.PI}deg)`, opacity:1},{transform:`translate(${Math.cos(angle+Math.PI*8)*radius*2}px,${Math.sin(angle+Math.PI*8)*radius*2}px) rotate(${(angle+Math.PI*8)*180/Math.PI}deg)`, opacity:0.7}],{duration:dur,easing:'ease-out'});
+                     setTimeout(()=>l.remove(),dur+80);
+                 }
+             }
+
+             function doNatureCandy(){
+                 playBeep(740,0.22);
+                 const candies = [];
+                 for(let i=0;i<40;i++){
+                     const c = document.createElement('div'); c.className='candy-item'; c.textContent=(Math.random()<0.5?'🍬':'🍭'); c.style.filter='hue-rotate(90deg) saturate(1.2)';
+                     c.style.left=(40+Math.random()*820)+'px'; c.style.top=(30+Math.random()*480)+'px'; c.style.opacity='0'; effects.appendChild(c); candies.push(c);
+                     const delay = Math.random()*400; c.animate([{ transform: 'translateY(-10px) scale(0.8)', opacity: 0 },{ transform: 'translateY(0) scale(1)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)', delay });
+                 }
+                 setTimeout(()=>{candies.forEach((c, i)=>{const dx = (Math.random()*600 - 300); const dy = 220 + Math.random()*200; c.animate([{ transform: 'translateY(0) scale(1)', opacity: 1 },{ transform: `translate(${dx}px, ${dy}px) rotate(${Math.random()*720-360}deg) scale(0.6)`, opacity: 0 }], { duration: 900, easing: 'ease-in', delay: i*12 }); setTimeout(()=>{ try{ c.remove(); }catch(_){ } }, 950 + i*12);});}, 2200);
+             }
+
+             function doShadowCandy(){
+                 playBeep(680,0.35);
+                 // shadow monster appears first
+                 const sm = document.createElement('div'); sm.className='shadow-monster';
+                 const e1=document.createElement('div'); e1.className='shadow-eye'; const e2=document.createElement('div'); e2.className='shadow-eye right';
+                 sm.appendChild(e1); sm.appendChild(e2); effects.appendChild(sm);
+                 sm.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1.05)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:900,easing:'cubic-bezier(.2,.9,.3,1)'});
+                 
+                 // candy appears and gets eaten
+                 setTimeout(()=>{
+                     for(let i=0;i<20;i++){
+                         const c = document.createElement('div'); c.className='candy-item'; c.textContent=(Math.random()<0.5?'🍬':'🍭');
+                         c.style.left=(300+Math.random()*320)+'px'; c.style.top=(150+Math.random()*200)+'px'; effects.appendChild(c);
+                         const delay = i*50;
+                         setTimeout(()=>{
+                             c.animate([{transform:'translate(0,0) scale(1)', opacity:1},{transform:'translate(160px,50px) scale(0.2)', opacity:0}],{duration:400, easing:'ease-in'});
+                             setTimeout(()=>c.remove(),450);
+                         }, delay);
+                     }
+                 }, 800);
+                 
+                 setTimeout(()=>sm.remove(),3000);
+             }
+
+             function doRainbow(){
+                 playBeep(800,0.4);
+                 // magical rainbow effect
+                 const colors = ['#ff6b6b','#5cc1ff','#6ef3a0','#b48dff','#ffd27a'];
+                 for(let i=0;i<5;i++){
+                     for(let j=0;j<20;j++){
+                         const r = document.createElement('div'); r.className='confetti';
+                         r.style.left = (150 + i*150 + Math.random()*80)+'px'; r.style.top = (80 + Math.random()*40)+'px';
+                         r.style.width='12px'; r.style.height='20px'; r.style.background=colors[i]; r.style.borderRadius='6px';
+                         effects.appendChild(r); setTimeout(()=>r.remove(),2500+Math.random()*1000);
+                     }
+                 }
+                 // add sparkles
+                 for(let i=0;i<30;i++){
+                     const s = document.createElement('div'); s.className='confetti'; s.style.left=(100+Math.random()*720)+'px'; s.style.top=(60+Math.random()*200)+'px';
+                     s.style.width='8px'; s.style.height='8px'; s.style.background='#ffffff'; s.style.borderRadius='50%'; effects.appendChild(s);
+                     setTimeout(()=>s.remove(),3000+Math.random()*500);
+                 }
+             }
+
+             witch.addEventListener('click',()=>{
+                 castSpell();
+             });
+
+            // show start screen on load
+            showStartScreen();
+
+             // small attraction animation
+             setInterval(()=>{
+                 witch.animate([{transform:'translateY(0) rotate(0deg)'},{transform:'translateY(-6px) rotate(-1deg)'},{transform:'translateY(0) rotate(0deg)'}],{duration:2200});
+             },2400);
+
+         })();
+     </script>
+ </body>
+ </html>

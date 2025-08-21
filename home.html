@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 8px;
+            max-width: 1800px;
+            width: 100%;
+            position: relative;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .game-icon {
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .game-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 0;
+            color: #333;
+        }
+
+        .game-description {
+            display: none;
+        }
+
+        .available {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .available .game-title {
+            color: white;
+        }
+
+        .coming-soon {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .coming-soon:hover {
+            transform: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            font-size: 0;
+        }
+
+        .badge-available {
+            background: #4CAF50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        }
+
+        .badge-coming-soon {
+            background: #FF9800;
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.6);
+        }
+
+        @media (max-width: 1600px) {
+            .games-grid {
+                grid-template-columns: repeat(10, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .games-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .games-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .games-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .games-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 8px;
+            }
+        }
+
+        /* Ensure proper layout on short screens */
+        @media (max-height: 600px) {
+            body {
+                justify-content: flex-start;
+                padding-top: 10px;
+            }
+        }
+
+        /* Mobile Landscape View */
+        @media (max-width: 768px) and (orientation: landscape) {
+            body {
+                padding: 8px;
+                justify-content: flex-start;
+            }
+            
+            .games-grid {
+                grid-template-columns: repeat(8, 1fr);
+                gap: 4px;
+                max-height: calc(100vh - 30px);
+                overflow-y: auto;
+            }
+            
+            .game-card {
+                padding: 6px;
+                aspect-ratio: 1 / 1;
+            }
+            
+            .game-icon {
+                font-size: 1.2rem;
+                margin-bottom: 2px;
+            }
+            
+            .game-title {
+                font-size: 0.6rem;
+                line-height: 1.1;
+            }
+            
+            .status-badge {
+                width: 8px;
+                height: 8px;
+                top: 2px;
+                right: 2px;
+            }
+            
+            .coming-soon::after {
+                font-size: 0.5rem;
+                padding: 2px 6px;
+            }
+        }
+
+        /* Mobile Portrait View */
+        @media (max-width: 768px) and (orientation: portrait) {
+            body {
+                justify-content: flex-start;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .games-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            
+            .game-card {
+                padding: 6px;
+                aspect-ratio: 1 / 1;
+            }
+            
+            .game-icon {
+                font-size: 1.4rem;
+                margin-bottom: 2px;
+            }
+            
+            .game-title {
+                font-size: 0.65rem;
+                margin-bottom: 0;
+                line-height: 1.2;
+            }
+            
+            .game-description {
+                display: none;
+            }
+            
+            .status-badge {
+                width: 10px;
+                height: 10px;
+                top: 3px;
+                right: 3px;
+            }
+            
+            .coming-soon::after {
+                font-size: 0.6rem;
+                padding: 3px 8px;
+            }
+        }
+
+        /* Very Small Mobile Screens */
+        @media (max-width: 480px) {
+            body {
+                justify-content: flex-start;
+            }
+            
+            .games-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+            
+            .game-card {
+                padding: 4px;
+            }
+            
+            .game-icon {
+                font-size: 1.2rem;
+                margin-bottom: 1px;
+            }
+            
+            .game-title {
+                font-size: 0.6rem;
+            }
+            
+            .status-badge {
+                width: 8px;
+                height: 8px;
+                top: 2px;
+                right: 2px;
+            }
+            
+            .coming-soon::after {
+                font-size: 0.5rem;
+                padding: 2px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- <div class="header">
+        <h1>🎮 Mini Games Hub</h1>
+        <p>Choose your adventure and start playing!</p>
+    </div> -->
+
+    <div class="games-grid">
+        <!-- Available Game -->
+        <a href="donut.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🍩</div>
+            <div class="game-title">Silly Bounce</div>
+            <div class="game-description">A fun bouncing donut game! Guide your donut through challenges and collect points.</div>
+        </a>
+        <a href="panda.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🐼</div>
+            <div class="game-title">Panda's Adventure</div>
+            <div class="game-description">Join Panda on a journey through the jungle! Solve puzzles and overcome obstacles.</div>
+        </a>
+        <!-- Available Games -->
+        <a href="avoider.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">━━━</div>
+            <div class="game-title">Avoider</div>
+            <div class="game-description">Navigate between platforms and avoid obstacles in this challenging arcade game!</div>
+        </a>
+        <a href="hideseek.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎈</div>
+            <div class="game-title">Hide and Seek Friends</div>
+            <div class="game-description">Help find all the cartoon friends hiding in the playground! A fun game for kids.</div>
+        </a>
+        <a href="stickrunner.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🏃‍♂️</div>
+            <div class="game-title">Stick Runner Adventure</div>
+            <div class="game-description">Help the stick figure run, jump and duck through obstacles in this endless runner!</div>
+        </a>
+        <!-- Available Games -->
+        <a href="puzzle.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🧩</div>
+            <div class="game-title">Color Match Puzzle</div>
+            <div class="game-description">Match colorful patterns in this brain-teasing puzzle game perfect for kids!</div>
+        </a>
+        <!-- Available Games -->
+        <a href="pathfinder.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🐕</div>
+            <div class="game-title">Pinky's Path Adventure</div>
+            <div class="game-description">Help Pinky find her way home! Click tiles to create a path in this fun puzzle game.</div>
+        </a>
+        <!-- Available Games -->
+        <a href="spaceexplorer.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🚀</div>
+            <div class="game-title">Space Explorer</div>
+            <div class="game-description">Navigate your rocket through the dangerous galaxy and avoid attacking planets in this neon space adventure!</div>
+        </a>
+        <!-- Available Games -->
+        <a href="catcher.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">⚾</div>
+            <div class="game-title">Catcher</div>
+            <div class="game-description">Use your baseball glove to catch falling balls while avoiding poop! Strike out at 3 misses!</div>
+        </a>
+        
+        <!-- Placeholder Games -->
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏆</div>
+            <div class="game-title">Trophy Rush</div>
+            <div class="game-description">Collect trophies and become the ultimate champion!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎮</div>
+            <div class="game-title">Retro Arcade</div>
+            <div class="game-description">Experience classic arcade gaming with a modern twist!</div>
+        </a>
+        <a href="starcollector.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🌟</div>
+            <div class="game-title">Star Collector</div>
+            <div class="game-description">Journey through space collecting magical stars!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎪</div>
+            <div class="game-title">Circus Fun</div>
+            <div class="game-description">Join the circus and perform amazing stunts!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🍕</div>
+            <div class="game-title">Pizza Chef</div>
+            <div class="game-description">Cook delicious pizzas and serve happy customers!</div>
+        </a>
+        <a href="castledefense.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🏰</div>
+            <div class="game-title">Castle Defense</div>
+            <div class="game-description">Defend your castle from waves of enemies!</div>
+        </a>
+        <a href="musicmaker.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎵</div>
+            <div class="game-title">Music Maker</div>
+            <div class="game-description">Compose amazing songs and rhythms!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚗</div>
+            <div class="game-title">Speed Racer</div>
+            <div class="game-description">Race through challenging tracks at top speed!</div>
+        </a>
+        <a href="luckydice.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎲</div>
+            <div class="game-title">Lucky Dice</div>
+            <div class="game-description">Roll dice and catch Pokemon in this magical adventure for kids!</div>
+        </a>
+        <a href="rainbowquest.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🌈</div>
+            <div class="game-title">Rainbow Quest</div>
+            <div class="game-description">Jump on clouds as a rainbow! Don't fall off screen!</div>
+        </a>
+        <a href="superhero.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🦸</div>
+            <div class="game-title">Super Hero</div>
+            <div class="game-description">Work with time echoes to save the city!</div>
+        </a>
+        <a href="strikemaster.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎳</div>
+            <div class="game-title">Strike Master</div>
+            <div class="game-description">Bowl energy balls to destroy advancing enemy towers in this unique tower defense bowling hybrid!</div>
+        </a>
+        <a href="magicspells.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🧙</div>
+            <div class="game-title">Magic Spells</div>
+            <div class="game-description">Cast magical Halloween spells in the lab!</div>
+        </a>
+        <a href="beachadventure.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🏖️</div>
+            <div class="game-title">Beach Adventure</div>
+            <div class="game-description">Complete castle puzzles with the right block shapes before the tide comes!</div>
+        </a>
+        <a href="cakefactory.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎂</div>
+            <div class="game-title">Cake Factory</div>
+            <div class="game-description">Control a magical cake on an adventure! Collect ingredients, avoid hazards, and grow bigger!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🔍</div>
+            <div class="game-title">Mystery Detective</div>
+            <div class="game-description">Solve mysterious cases and find hidden clues!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎪</div>
+            <div class="game-title">Carnival Games</div>
+            <div class="game-description">Win prizes at the fun carnival!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏹</div>
+            <div class="game-title">Archer Champion</div>
+            <div class="game-description">Master the bow and arrow in this precision game!</div>
+        </a>
+        <a href="oceanexplorer.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🌊</div>
+            <div class="game-title">Ocean Explorer</div>
+            <div class="game-description">Control ocean waves to launch floating people as far as possible!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎸</div>
+            <div class="game-title">Rock Star</div>
+            <div class="game-description">Play guitar and become a music legend!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏕️</div>
+            <div class="game-title">Camping Trip</div>
+            <div class="game-description">Go on exciting outdoor adventures!</div>
+        </a>
+        <a href="partyplanner.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎊</div>
+            <div class="game-title">Party Planner</div>
+            <div class="game-description">Balance guest emotions for the perfect party!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🧩</div>
+            <div class="game-title">Puzzle Master</div>
+            <div class="game-description">Solve challenging puzzles and brain teasers!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🍎</div>
+            <div class="game-title">Fruit Ninja</div>
+            <div class="game-description">Slice fruits and avoid the bombs!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚁</div>
+            <div class="game-title">Helicopter Pilot</div>
+            <div class="game-description">Fly helicopters on rescue missions!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏰</div>
+            <div class="game-title">Kingdom Builder</div>
+            <div class="game-description">Build and manage your own kingdom!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌟</div>
+            <div class="game-title">Star Wars</div>
+            <div class="game-description">Battle in space with lasers and spaceships!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚢</div>
+            <div class="game-title">Pirate Ship</div>
+            <div class="game-description">Sail the seas and find buried treasure!</div>
+        </a>
+        <a href="busrushhour.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🚌</div>
+            <div class="game-title">Bus Rush Hour</div>
+            <div class="game-description">Jump over road cracks during busy rush hour traffic!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🧙‍♀️</div>
+            <div class="game-title">Fairy Tale</div>
+            <div class="game-description">Live your own magical fairy tale adventure!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎯</div>
+            <div class="game-title">Sniper Elite</div>
+            <div class="game-description">Master precision shooting in this tactical game!</div>
+        </a>
+        <a href="speedrunner.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🏃‍♀️</div>
+            <div class="game-title">Speed Runner</div>
+            <div class="game-description">Spam spacebar to build speed and launch into the sky!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌺</div>
+            <div class="game-title">Garden Paradise</div>
+            <div class="game-description">Grow beautiful flowers and plants!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎮</div>
+            <div class="game-title">Game Developer</div>
+            <div class="game-description">Create your own video games!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏀</div>
+            <div class="game-title">Basketball Pro</div>
+            <div class="game-description">Shoot hoops and become a basketball star!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚂</div>
+            <div class="game-title">Train Conductor</div>
+            <div class="game-description">Drive trains across scenic landscapes!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌙</div>
+            <div class="game-title">Moon Landing</div>
+            <div class="game-description">Explore the moon and collect moon rocks!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎭</div>
+            <div class="game-title">Costume Party</div>
+            <div class="game-description">Dress up in amazing costumes!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎯</div>
+            <div class="game-title">Bubble Shooter</div>
+            <div class="game-description">Pop colorful bubbles in this fun puzzle game!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚁</div>
+            <div class="game-title">Sky Rescue</div>
+            <div class="game-description">Save people with your rescue helicopter!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌟</div>
+            <div class="game-title">Wish Maker</div>
+            <div class="game-description">Make wishes come true with magic!</div>
+        </a>
+        <a href="dragonslayer.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🏰</div>
+            <div class="game-title">Dragon Slayer</div>
+            <div class="game-description">Defeat dragons and save the kingdom!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌊</div>
+            <div class="game-title">Surfing Champion</div>
+            <div class="game-description">Ride the biggest waves!</div>
+        </a>
+        <a href="mimereflection.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎭</div>
+            <div class="game-title">Mimic Artist</div>
+            <div class="game-description">Control mirror reflections to save civilians!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏆</div>
+            <div class="game-title">Quiz Master</div>
+            <div class="game-description">Test your knowledge with fun quizzes!</div>
+        </a>
+        <a href="firebreather.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🔥</div>
+            <div class="game-title">Fire Breather</div>
+            <div class="game-description">Type characters correctly to breathe fire and burn objects!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌟</div>
+            <div class="game-title">Constellation Guide</div>
+            <div class="game-description">Connect stars to form constellations!</div>
+        </a>
+        <a href="flowershop.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🌺</div>
+            <div class="game-title">Flower Shop</div>
+            <div class="game-description">Click flowers to change their colors in your magical garden!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚢</div>
+            <div class="game-title">Ship Captain</div>
+            <div class="game-description">Navigate your ship through stormy seas!</div>
+        </a>
+        <a href="puppetmaster.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎭</div>
+            <div class="game-title">Puppet Master</div>
+            <div class="game-description">Control puppets in amazing shows!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">�</div>
+            <div class="game-title">Shooting Star</div>
+            <div class="game-description">Catch shooting stars and make wishes!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚁</div>
+            <div class="game-title">News Reporter</div>
+            <div class="game-description">Report breaking news from the sky!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌊</div>
+            <div class="game-title">Deep Sea Diver</div>
+            <div class="game-description">Explore the depths of the ocean!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🚀</div>
+            <div class="game-title">Alien Hunter</div>
+            <div class="game-description">Search for aliens in outer space!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎭</div>
+            <div class="game-title">Comedy Club</div>
+            <div class="game-description">Tell jokes and make people laugh!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🏆</div>
+            <div class="game-title">Grand Prix</div>
+            <div class="game-description">Race in the ultimate Formula 1 championship!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🎪</div>
+            <div class="game-title">Animal Trainer</div>
+            <div class="game-description">Train amazing circus animals!</div>
+        </a>
+        <a href="#" class="game-card coming-soon">
+            <span class="status-badge badge-coming-soon"></span>
+            <div class="game-icon">🌟</div>
+            <div class="game-title">Dream Catcher</div>
+            <div class="game-description">Catch dreams and make them come true!</div>
+        </a>
+        <a href="sandartist.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🎨</div>
+            <div class="game-title">Sand Artist</div>
+            <div class="game-description">Create beautiful art with colored sand!</div>
+        </a>
+        <a href="mountainrescue.html" class="game-card available">
+            <span class="status-badge badge-available"></span>
+            <div class="game-icon">🚁</div>
+            <div class="game-title">Mountain Rescue</div>
+            <div class="game-description">Rescue climbers from dangerous mountains!</div>
+        </a>
+    </div>
+
+    <script>
+        // Add click handlers for coming soon games
+        // document.querySelectorAll('.coming-soon').forEach(card => {
+        //     card.addEventListener('click', (e) => {
+        //         e.preventDefault();
+        //         alert('This game is coming soon! Stay tuned for updates.');
+        //     });
+        // });
+
+        // Function to center the last incomplete row
+        function centerLastRow() {
+            const grid = document.querySelector('.games-grid');
+            const cards = Array.from(grid.children);
+            
+            // Get current grid columns from computed style
+            const computedStyle = window.getComputedStyle(grid);
+            const gridColumnsValue = computedStyle.gridTemplateColumns;
+            const gridColumns = gridColumnsValue.split(' ').length;
+            
+            // Calculate if last row is incomplete
+            const totalCards = cards.length;
+            const lastRowCards = totalCards % gridColumns;
+            
+            // Reset all cards to default positioning
+            cards.forEach(card => {
+                card.style.gridColumn = '';
+            });
+            
+            // If last row is incomplete and has cards, center them
+            if (lastRowCards > 0 && lastRowCards < gridColumns) {
+                const startCol = Math.floor((gridColumns - lastRowCards) / 2) + 1;
+                const lastRowStartIndex = totalCards - lastRowCards;
+                
+                // Apply centering to last row cards
+                for (let i = 0; i < lastRowCards; i++) {
+                    const card = cards[lastRowStartIndex + i];
+                    if (card) {
+                        card.style.gridColumn = `${startCol + i}`;
+                    }
+                }
+                
+                console.log(`Centered ${lastRowCards} cards in last row, starting at column ${startCol}`);
+            }
+        }
+
+        // Add subtle animation on page load
+        window.addEventListener('load', () => {
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+            
+            // Center last row after animations and ensure DOM is fully rendered
+            setTimeout(() => {
+                centerLastRow();
+                // Force a second check after a brief delay to ensure it works
+                setTimeout(centerLastRow, 100);
+            }, cards.length * 100 + 1000);
+        });
+
+        // Also run on DOMContentLoaded to catch cases where load event might not be sufficient
+        document.addEventListener('DOMContentLoaded', () => {
+            // Run immediately
+            centerLastRow();
+            // And again after a short delay
+            setTimeout(() => {
+                centerLastRow();
+            }, 100);
+            // And once more to be sure
+            setTimeout(() => {
+                centerLastRow();
+            }, 300);
+        });
+
+        // Re-center on window resize
+        window.addEventListener('resize', () => {
+            setTimeout(centerLastRow, 100);
+        });
+    </script>
+</body>
+</html>

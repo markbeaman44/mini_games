@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Flower Shop - Mini Games Hub</title>
+    <style>
+        :root{
+            --bg1:#e8f5e8; /* light green */
+            --bg2:#c8e6c9; /* medium green */
+            --accent:#4caf50;
+            --panel:#ffffff;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:system-ui,Segoe UI,Arial;color:#2e7d32;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+        
+        /* Back button fixed at top-left of the screen */
+        .back-btn{position:fixed;top:15px;left:15px;background:rgba(255,255,255,0.95);color:#4caf50;border:2px solid #4caf50;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.95rem;font-weight:bold;text-decoration:none;z-index:2200}
+        .back-btn:hover{background:#4caf50;color:white;transform:scale(1.03)}
+
+        /* Start screen */
+        .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1100;background:linear-gradient(135deg, rgba(200,230,201,0.95), rgba(255,255,255,0.95));backdrop-filter:blur(8px);padding:26px;border-radius:16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3);border:3px solid #4caf50}
+        .start-screen h2{margin:0 0 10px 0;color:#2e7d32;font-size:22px;text-shadow:0 0 12px #81c784}
+        .start-screen p{margin:6px 0;color:#1b5e20;font-weight:700}
+        .start-btn{margin-top:12px;padding:10px 18px;border-radius:12px;font-weight:800;border:2px solid #4caf50;background:linear-gradient(45deg,#66bb6a 0%,#4caf50 100%);color:white;cursor:pointer}
+
+        /* Game container */
+        .game-container{width:800px;height:600px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));border-radius:15px;position:relative;overflow:hidden;border:3px solid #4caf50;box-shadow:0 10px 30px rgba(0,0,0,0.4);margin:0 auto}
+        
+        /* Top bar */
+        .topbar{display:flex;justify-content:center;align-items:center;flex-direction:column;padding:10px 12px;background:rgba(255,255,255,0.8);border-bottom:2px solid #4caf50}
+        .title{font-size:1.6rem;font-weight:800;color:#2e7d32}
+        .subtitle{font-size:0.9rem;color:#4caf50;margin-top:4px}
+
+        /* Garden area */
+        .garden{position:relative;width:100%;height:calc(100% - 80px);background:linear-gradient(180deg,#e8f5e8,#c8e6c9);overflow:hidden;cursor:pointer}
+        
+        /* Flower styles */
+        .flower{position:absolute;cursor:pointer;user-select:none}
+        .flower:hover{transform:scale(1.05)}
+        
+        .flower-stem{width:4px;height:40px;background:linear-gradient(180deg,#4caf50,#388e3c);border-radius:2px;margin:0 auto}
+        
+        .flower-petals{position:relative;width:30px;height:30px;margin:0 auto;margin-bottom:-5px}
+        
+        .petal{position:absolute;width:12px;height:20px;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;transform-origin:center bottom}
+        
+        .petal:nth-child(1){transform:rotate(0deg) translateY(-8px)}
+        .petal:nth-child(2){transform:rotate(45deg) translateY(-8px)}
+        .petal:nth-child(3){transform:rotate(90deg) translateY(-8px)}
+        .petal:nth-child(4){transform:rotate(135deg) translateY(-8px)}
+        .petal:nth-child(5){transform:rotate(180deg) translateY(-8px)}
+        .petal:nth-child(6){transform:rotate(225deg) translateY(-8px)}
+        .petal:nth-child(7){transform:rotate(270deg) translateY(-8px)}
+        .petal:nth-child(8){transform:rotate(315deg) translateY(-8px)}
+        
+        .flower-center{position:absolute;width:8px;height:8px;background:#ffeb3b;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10}
+        
+        /* Different flower types */
+        .tulip .flower-petals{width:25px;height:35px}
+        .tulip .petal{width:10px;height:25px;border-radius:50% 50% 50% 50% / 80% 80% 20% 20%}
+        .tulip .petal:nth-child(n+7){display:none} /* Only 6 petals for tulips */
+        
+        .rose .flower-petals{width:35px;height:35px}
+        .rose .petal{width:14px;height:18px;border-radius:70% 30% 70% 30%}
+        
+        .daisy .flower-petals{width:40px;height:40px}
+        .daisy .petal{width:8px;height:18px;border-radius:50% 50% 50% 50% / 90% 90% 10% 10%}
+        .daisy .flower-center{background:#fff;border:2px solid #ffeb3b}
+        
+        /* New flower types */
+        .sunflower .flower-petals{width:45px;height:45px}
+        .sunflower .petal{width:15px;height:22px;border-radius:40% 60% 40% 60%}
+        .sunflower .flower-center{width:12px;height:12px;background:#8d6e63;border:3px solid #6d4c41}
+        
+        .lily .flower-petals{width:32px;height:42px}
+        .lily .petal{width:12px;height:28px;border-radius:80% 20% 80% 20%}
+        .lily .petal:nth-child(n+7){display:none} /* Only 6 petals for lilies */
+        .lily .flower-center{background:#fff;border:2px solid #ffb74d}
+        
+        .carnation .flower-petals{width:28px;height:28px}
+        .carnation .petal{width:10px;height:16px;border-radius:20% 80% 20% 80%;border:1px solid rgba(0,0,0,0.1)}
+        
+        .poppy .flower-petals{width:38px;height:38px}
+        .poppy .petal{width:16px;height:20px;border-radius:80% 20% 80% 20%}
+        .poppy .petal:nth-child(n+5){display:none} /* Only 4 petals for poppies */
+        .poppy .flower-center{background:#2e2e2e;width:6px;height:6px}
+        
+        .violet .flower-petals{width:22px;height:22px}
+        .violet .petal{width:8px;height:14px;border-radius:60% 40% 60% 40%}
+        .violet .petal:nth-child(n+6){display:none} /* Only 5 petals for violets */
+        .violet .flower-center{background:#fff;width:4px;height:4px}
+        
+        /* Grass decoration */
+        .grass{position:absolute;bottom:0;width:100%;height:30px;background:linear-gradient(90deg, transparent 0%, #4caf50 20%, #388e3c 40%, #2e7d32 60%, #388e3c 80%, transparent 100%);opacity:0.3}
+        
+        /* Color palette */
+        .colors{
+            --red:#e53935;
+            --pink:#ec407a;
+            --purple:#9c27b0;
+            --blue:#1e88e5;
+            --cyan:#00acc1;
+            --teal:#00796b;
+            --green:#43a047;
+            --lime:#689f38;
+            --yellow:#fbc02d;
+            --orange:#fb8c00;
+            --deep-orange:#f4511e;
+            --brown:#6d4c41;
+        }
+        
+        @media (max-width:768px){
+            .game-container{width:95vw;height:70vh;max-width:800px}
+            .flower{transform:scale(0.8)}
+        }
+    </style>
+</head>
+<body>
+    <!-- Back button fixed at top-left of the screen -->
+    <a href="home.html" class="back-btn">← Back to Hub</a>
+
+    <!-- Start screen -->
+    <div class="start-screen" id="startScreen">
+        <h2>🌺 Welcome to the Flower Shop</h2>
+        <p>Click on any flower to change its color!</p>
+        <p>Watch as your garden transforms with beautiful colors.</p>
+        <p>Each click creates a magical color change!</p>
+        <button class="start-btn" id="startBtn">Start Gardening</button>
+    </div>
+
+    <div class="game-container" id="gameContainer" style="display:none">
+        <div class="topbar">
+            <div class="title">🌻 Flower Shop Garden</div>
+            <div class="subtitle">Click flowers to change their colors!</div>
+        </div>
+        
+        <div class="garden" id="garden">
+            <div class="grass"></div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            let isGameRunning = false;
+            const startScreen = document.getElementById('startScreen');
+            const startBtn = document.getElementById('startBtn');
+            const gameContainer = document.getElementById('gameContainer');
+            const garden = document.getElementById('garden');
+
+            // Color palette
+            const colors = [
+                '#e53935', '#ec407a', '#9c27b0', '#673ab7', '#3f51b5',
+                '#1e88e5', '#039be5', '#00acc1', '#00897b', '#43a047',
+                '#689f38', '#9e9d24', '#f9a825', '#ff8f00', '#ff5722',
+                '#8d6e63', '#546e7a'
+            ];
+
+            // Flower types
+            const flowerTypes = ['rose', 'tulip', 'daisy', 'sunflower', 'lily', 'carnation', 'poppy', 'violet'];
+
+            function showStartScreen(){ 
+                startScreen.style.display = 'block'; 
+                gameContainer.style.display = 'none';
+                isGameRunning = false; 
+            }
+            
+            function startGame(){ 
+                startScreen.style.display = 'none'; 
+                gameContainer.style.display = 'block';
+                isGameRunning = true;
+                initializeGarden();
+            }
+
+            function playSound(freq, duration){
+                try{
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = freq;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.1;
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + duration);
+                }catch(e){}
+            }
+
+            function createFlower(x, y, type){
+                const flower = document.createElement('div');
+                flower.className = `flower ${type}`;
+                flower.style.left = x + 'px';
+                flower.style.top = y + 'px';
+
+                // Create flower structure
+                const petals = document.createElement('div');
+                petals.className = 'flower-petals';
+                
+                // Add petals
+                for(let i = 0; i < 8; i++){
+                    const petal = document.createElement('div');
+                    petal.className = 'petal';
+                    petal.style.background = getRandomColor();
+                    petals.appendChild(petal);
+                }
+                
+                // Add center
+                const center = document.createElement('div');
+                center.className = 'flower-center';
+                petals.appendChild(center);
+                
+                // Add stem
+                const stem = document.createElement('div');
+                stem.className = 'flower-stem';
+                
+                flower.appendChild(petals);
+                flower.appendChild(stem);
+                
+                // Add click handler
+                flower.addEventListener('click', () => changeFlowerColor(flower));
+                
+                return flower;
+            }
+
+            function getRandomColor(){
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            function changeFlowerColor(flower){
+                if(!isGameRunning) return;
+                
+                const petals = flower.querySelectorAll('.petal');
+                const newColor = getRandomColor();
+                
+                // Simple color change without hiding transforms
+                petals.forEach((petal, index) => {
+                    setTimeout(() => {
+                        petal.style.background = newColor;
+                        // Brief highlight effect without scaling
+                        petal.style.boxShadow = '0 0 8px rgba(255,255,255,0.8)';
+                        setTimeout(() => {
+                            petal.style.boxShadow = '';
+                        }, 300);
+                    }, index * 30);
+                });
+                
+                // Play sound
+                playSound(400 + Math.random() * 400, 0.2);
+                
+                // Add sparkle effect
+                createSparkle(flower);
+            }
+
+            function createSparkle(flower){
+                const sparkle = document.createElement('div');
+                sparkle.style.position = 'absolute';
+                sparkle.style.left = flower.style.left;
+                sparkle.style.top = flower.style.top;
+                sparkle.style.width = '20px';
+                sparkle.style.height = '20px';
+                sparkle.style.background = 'radial-gradient(circle, #fff 0%, transparent 70%)';
+                sparkle.style.borderRadius = '50%';
+                sparkle.style.pointerEvents = 'none';
+                sparkle.style.zIndex = '100';
+                
+                garden.appendChild(sparkle);
+                
+                sparkle.animate([
+                    { transform: 'scale(0) rotate(0deg)', opacity: 1 },
+                    { transform: 'scale(1.5) rotate(180deg)', opacity: 0 }
+                ], {
+                    duration: 600,
+                    easing: 'ease-out'
+                });
+                
+                setTimeout(() => sparkle.remove(), 650);
+            }
+
+            function initializeGarden(){
+                garden.innerHTML = '<div class="grass"></div>';
+                
+                const gardenWidth = garden.offsetWidth;
+                const gardenHeight = garden.offsetHeight;
+                
+                // Create flowers in a natural pattern
+                for(let row = 0; row < 4; row++){
+                    for(let col = 0; col < 8; col++){
+                        const x = (col * 90) + (row % 2 * 45) + Math.random() * 25 + 40;
+                        const y = (row * 100) + Math.random() * 30 + 80;
+                        
+                        if(x < gardenWidth - 60 && y < gardenHeight - 100){
+                            const flowerType = flowerTypes[Math.floor(Math.random() * flowerTypes.length)];
+                            const flower = createFlower(x, y, flowerType);
+                            garden.appendChild(flower);
+                            
+                            // Stagger the appearance
+                            flower.style.opacity = '0';
+                            setTimeout(() => {
+                                flower.style.transition = 'opacity 0.5s ease';
+                                flower.style.opacity = '1';
+                            }, (row * col * 50) + Math.random() * 200);
+                        }
+                    }
+                }
+                
+                // Add some scattered flowers
+                for(let i = 0; i < 15; i++){
+                    const x = Math.random() * (gardenWidth - 100) + 50;
+                    const y = Math.random() * (gardenHeight - 150) + 50;
+                    const flowerType = flowerTypes[Math.floor(Math.random() * flowerTypes.length)];
+                    const flower = createFlower(x, y, flowerType);
+                    garden.appendChild(flower);
+                    
+                    flower.style.opacity = '0';
+                    setTimeout(() => {
+                        flower.style.transition = 'opacity 0.5s ease';
+                        flower.style.opacity = '1';
+                    }, Math.random() * 1500);
+                }
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', startGame);
+            
+            // Allow spacebar to start
+            document.addEventListener('keydown', (e) => {
+                if(e.code === 'Space' && !isGameRunning){
+                    e.preventDefault();
+                    startGame();
+                }
+            });
+
+            // Show start screen on load
+            showStartScreen();
+        })();
+    </script>
+</body>
+</html>

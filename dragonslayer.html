@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Slayer - Mini Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(700px, 90vh);
+            background: linear-gradient(135deg, #87CEEB 0%, #4FC3F7 50%, #29B6F6 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-container.playing {
+            cursor: none;
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .health-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .score-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .level-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        /* Dragon Parts */
+        .dragon {
+            position: absolute;
+            z-index: 5;
+        }
+
+        .dragon-body {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #58d68d 0%, #27ae60 100%);
+            border-radius: 40px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dragon-body::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            width: 8px;
+            height: 8px;
+            background: #27ae60;
+            border-radius: 50%;
+            box-shadow: 20px 0 0 #27ae60, 
+                        40px 0 0 #27ae60,
+                        60px 0 0 #27ae60,
+                        10px 20px 0 #27ae60,
+                        30px 20px 0 #27ae60,
+                        50px 20px 0 #27ae60;
+        }
+
+        .dragon-head {
+            position: absolute;
+            width: 80px;
+            height: 60px;
+            background: linear-gradient(135deg, #58d68d 0%, #27ae60 100%);
+            border-radius: 35px 35px 20px 20px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dragon-head::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 18px;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle, #f1c40f 0%, #f39c12 100%);
+            border: 3px solid #2c3e50;
+            border-radius: 50%;
+            box-shadow: 28px 0 0 0 #f1c40f, 28px 0 0 3px #2c3e50;
+        }
+
+        .dragon-head::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 24px;
+            width: 6px;
+            height: 6px;
+            background: #2c3e50;
+            border-radius: 50%;
+            box-shadow: 28px 0 0 #2c3e50, 
+                        14px 16px 0 -2px #2c3e50, 
+                        20px 16px 0 -2px #2c3e50,
+                        10px 25px 0 -1px #e74c3c,
+                        16px 25px 0 -1px white,
+                        22px 25px 0 -1px white,
+                        28px 25px 0 -1px white;
+        }
+
+        .dragon-wing {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #d68910 0%, #b7950b 100%);
+            border-radius: 30px 5px 30px 5px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dragon-wing::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 25px;
+            height: 3px;
+            background: #85651d;
+            box-shadow: 0 8px 0 #85651d, 
+                        0 16px 0 #85651d,
+                        0 24px 0 #85651d;
+        }
+
+        .dragon-wing.left {
+            transform: rotate(-15deg);
+        }
+
+        .dragon-wing.right {
+            transform: rotate(15deg);
+        }
+
+        .dragon-tail {
+            position: absolute;
+            width: 40px;
+            height: 100px;
+            background: linear-gradient(135deg, #58d68d 0%, #27ae60 100%);
+            border-radius: 20px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            transform: rotate(20deg);
+        }
+
+        .dragon-tail::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #27ae60;
+            border-radius: 50%;
+            box-shadow: 0 15px 0 #27ae60, 
+                        0 30px 0 #27ae60,
+                        0 45px 0 #27ae60;
+        }
+
+        .dragon-leg {
+            position: absolute;
+            width: 25px;
+            height: 40px;
+            background: linear-gradient(135deg, #58d68d 0%, #27ae60 100%);
+            border-radius: 12px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dragon-leg::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 8px;
+            background: #2c3e50;
+            border-radius: 10px;
+        }
+
+        /* Sword */
+        .sword {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            z-index: 10;
+            pointer-events: none;
+            transform-origin: center center;
+        }
+
+        .sword img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Slash Effect */
+        .slash-effect {
+            position: absolute;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent 0%, #f1c40f 20%, #ffffff 50%, #f1c40f 80%, transparent 100%);
+            border-radius: 2px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 15;
+        }
+
+        /* Detached Parts Animation */
+        .detached {
+            animation: detachFall 2s ease-out forwards;
+            z-index: 2;
+        }
+
+        @keyframes detachFall {
+            0% {
+                opacity: 1;
+                transform: rotate(0deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: rotate(720deg) scale(0.3) translateY(200px);
+            }
+        }
+
+        /* Damage Effect */
+        .damage-flash {
+            animation: damageFlash 0.3s ease;
+        }
+
+        @keyframes damageFlash {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(2) hue-rotate(180deg); }
+        }
+
+        /* Blood Splatter Effect */
+        .blood-splatter {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #e74c3c 0%, #c0392b 70%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: bloodSplatter 1s ease-out forwards;
+            z-index: 8;
+        }
+
+        @keyframes bloodSplatter {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        /* Game Over */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-over-content {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .mobile-controls {
+                display: block;
+            }
+
+            .sword {
+                width: 90px;
+                height: 90px;
+            }
+
+            .dragon-body {
+                width: 100px;
+                height: 60px;
+            }
+
+            .dragon-head {
+                width: 60px;
+                height: 45px;
+            }
+        }
+
+        /* Victory Animation */
+        .victory-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(241, 196, 15, 0.3) 0%, transparent 70%);
+            animation: victoryPulse 1s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes victoryPulse {
+            0%, 100% { opacity: 0; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container" id="gameContainer">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🏰 Dragon Slayer</h2>
+                <p><strong>Slay the mighty dragon!</strong></p>
+                <p>🗡️ Move your mouse to control the sword</p>
+                <p>⚔️ Slash through dragon parts to detach them</p>
+                <p>💀 Reduce dragon's health to 0 to win</p>
+                <p>🐉 Dragon will try to dodge your attacks</p>
+                <p>🎯 Aim for wings, tail, and legs for bonus damage!</p>
+                <button class="close-instructions" id="closeInstructions">Start Slaying!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <div class="game-ui">
+                <div class="health-display">Dragon Health: <span id="dragonHealth">100</span></div>
+                <div class="score-display">Score: <span id="score">0</span></div>
+                <div class="level-display">Level: <span id="level">1</span></div>
+            </div>
+
+            <div class="game-canvas" id="gameCanvas">
+                <!-- Dragon parts will be dynamically created here -->
+                <!-- Sword will be positioned here -->
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2>🏆 Dragon Defeated!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Level Reached: <span id="finalLevel">1</span></p>
+                <p>Dragons Slain: <span id="dragonsSlain">1</span></p>
+                <p id="performanceText">You are a legendary dragon slayer!</p>
+                <button class="restart-btn" id="restartBtn">Next Dragon</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div class="mobile-controls" id="mobileControls">
+        <button class="mobile-btn" id="mobileSlash">⚔️ Slash</button>
+    </div>
+
+    <script>
+        class DragonSlayer {
+            constructor() {
+                // Game dimensions - EXACT Castle Defense pattern
+                this.gameWidth = 900;
+                this.gameHeight = 700;
+                
+                // Sword dimensions - Updated for sword image
+                this.swordWidth = 120;
+                this.swordHeight = 120;
+                
+                this.score = 0;
+                this.level = 1;
+                this.dragonsSlain = 0;
+                this.dragonHealth = 100;
+                this.maxDragonHealth = 100;
+                this.isPlaying = false;
+                this.mouseX = 450;
+                this.mouseY = 350;
+                this.swordX = 450;
+                this.swordY = 350;
+                this.isSlashing = false;
+                this.slashCooldown = false;
+                
+                // Dragon properties
+                this.dragon = {
+                    x: 400,
+                    y: 300,
+                    targetX: 400,
+                    targetY: 300,
+                    speed: 1.5,
+                    angle: 0,
+                    sinOffset: 0,
+                    parts: {
+                        body: { attached: true, health: 40 },
+                        head: { attached: true, health: 30 },
+                        leftWing: { attached: true, health: 20 },
+                        rightWing: { attached: true, health: 20 },
+                        tail: { attached: true, health: 25 },
+                        leftLeg: { attached: true, health: 15 },
+                        rightLeg: { attached: true, health: 15 }
+                    }
+                };
+
+                this.initializeElements();
+                this.setupEventListeners();
+            }
+
+            initializeElements() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.gameContainer = document.getElementById('gameContainer');
+                this.gameCanvas = document.getElementById('gameCanvas');
+                this.dragonHealthElement = document.getElementById('dragonHealth');
+                this.scoreElement = document.getElementById('score');
+                this.levelElement = document.getElementById('level');
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Game over
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.nextLevel();
+                });
+
+                // Mouse movement - EXACT Castle Defense pattern
+                this.gameContainer.addEventListener('mousemove', (e) => {
+                    if (!this.isPlaying) return;
+                    
+                    const rect = this.gameContainer.getBoundingClientRect();
+                    this.swordX = e.clientX - rect.left - this.swordWidth / 2;
+                    this.swordY = e.clientY - rect.top - this.swordHeight / 2;
+                    
+                    // Keep sword within bounds - EXACT Castle Defense pattern
+                    this.swordX = Math.max(0, Math.min(this.gameWidth - this.swordWidth, this.swordX));
+                    this.swordY = Math.max(0, Math.min(this.gameHeight - this.swordHeight, this.swordY));
+                });
+
+                // Mouse click for slashing
+                this.gameContainer.addEventListener('mousedown', (e) => {
+                    if (!this.isPlaying || this.slashCooldown) return;
+                    e.preventDefault();
+                    this.performSlash();
+                });
+
+                // Prevent context menu on right click
+                this.gameContainer.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+
+                // Touch controls - EXACT Castle Defense pattern
+                this.gameContainer.addEventListener('touchmove', (e) => {
+                    if (!this.isPlaying) return;
+                    e.preventDefault();
+                    const rect = this.gameContainer.getBoundingClientRect();
+                    
+                    this.swordX = e.touches[0].clientX - rect.left - this.swordWidth / 2;
+                    this.swordY = e.touches[0].clientY - rect.top - this.swordHeight / 2;
+                    
+                    // Keep sword within bounds - EXACT Castle Defense pattern
+                    this.swordX = Math.max(0, Math.min(this.gameWidth - this.swordWidth, this.swordX));
+                    this.swordY = Math.max(0, Math.min(this.gameHeight - this.swordHeight, this.swordY));
+                });
+
+                this.gameContainer.addEventListener('touchstart', (e) => {
+                    if (!this.isPlaying || this.slashCooldown) return;
+                    e.preventDefault();
+                    this.performSlash();
+                });
+
+                // Mobile slash button
+                document.getElementById('mobileSlash').addEventListener('click', () => {
+                    if (!this.isPlaying || this.slashCooldown) return;
+                    this.performSlash();
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    const popupVisible = this.instructionsPopup.style.display !== 'none' && 
+                                       window.getComputedStyle(this.instructionsPopup).display !== 'none';
+                    
+                    if (e.key === ' ' && popupVisible) {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Slash with spacebar
+                    if (e.key === ' ' && this.isPlaying && !this.slashCooldown) {
+                        e.preventDefault();
+                        this.performSlash();
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.nextLevel();
+                    }
+                });
+
+                // Mobile detection
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'block';
+                }
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.gameContainer.classList.add('playing');
+                this.startGame();
+            }
+
+            startGame() {
+                this.isPlaying = true;
+                this.createDragon();
+                this.createSword();
+                this.updateDragonAI();
+                this.gameLoop();
+            }
+
+            createDragon() {
+                // Create dragon body
+                const body = document.createElement('div');
+                body.className = 'dragon dragon-body';
+                body.id = 'dragonBody';
+                this.gameCanvas.appendChild(body);
+
+                // Create dragon head
+                const head = document.createElement('div');
+                head.className = 'dragon dragon-head';
+                head.id = 'dragonHead';
+                this.gameCanvas.appendChild(head);
+
+                // Create wings
+                const leftWing = document.createElement('div');
+                leftWing.className = 'dragon dragon-wing left';
+                leftWing.id = 'dragonLeftWing';
+                this.gameCanvas.appendChild(leftWing);
+
+                const rightWing = document.createElement('div');
+                rightWing.className = 'dragon dragon-wing right';
+                rightWing.id = 'dragonRightWing';
+                this.gameCanvas.appendChild(rightWing);
+
+                // Create tail
+                const tail = document.createElement('div');
+                tail.className = 'dragon dragon-tail';
+                tail.id = 'dragonTail';
+                this.gameCanvas.appendChild(tail);
+
+                // Create legs
+                const leftLeg = document.createElement('div');
+                leftLeg.className = 'dragon dragon-leg';
+                leftLeg.id = 'dragonLeftLeg';
+                this.gameCanvas.appendChild(leftLeg);
+
+                const rightLeg = document.createElement('div');
+                rightLeg.className = 'dragon dragon-leg';
+                rightLeg.id = 'dragonRightLeg';
+                this.gameCanvas.appendChild(rightLeg);
+
+                this.updateDragonParts();
+            }
+
+            createSword() {
+                this.sword = document.createElement('div');
+                this.sword.className = 'sword';
+                this.sword.id = 'sword';
+                
+                // Add sword image
+                const swordImg = document.createElement('img');
+                swordImg.src = 'assets/sword.png';
+                swordImg.alt = 'Sword';
+                this.sword.appendChild(swordImg);
+                
+                this.gameCanvas.appendChild(this.sword);
+                
+                // Initial positioning - center of screen using Castle Defense coordinate system
+                this.swordX = this.gameWidth / 2 - this.swordWidth / 2;
+                this.swordY = this.gameHeight / 2 - this.swordHeight / 2;
+                this.updateSwordPosition();
+            }
+
+            updateSwordPosition() {
+                // EXACT Castle Defense pattern - direct style update
+                this.sword.style.left = this.swordX + 'px';
+                this.sword.style.top = this.swordY + 'px';
+            }
+
+            updateDragonParts() {
+                const parts = this.dragon.parts;
+                const wingFlap = Math.sin(this.dragon.sinOffset * 2) * 5; // Reduced wing flap
+                const scale = this.dragon.scale || 1.0;
+                const color = this.dragon.color || '#e74c3c';
+                
+                // Dragon body - center piece
+                if (parts.body.attached) {
+                    const body = document.getElementById('dragonBody');
+                    if (body) {
+                        body.style.left = (this.dragon.x - (60 * scale)) + 'px';
+                        body.style.top = (this.dragon.y - (40 * scale)) + 'px';
+                        body.style.transform = `scale(${scale}) rotate(0deg)`;
+                        body.style.background = `linear-gradient(135deg, ${color} 0%, ${this.darkenColor(color)} 100%)`;
+                    }
+                }
+
+                // Dragon head - in front of body
+                if (parts.head.attached) {
+                    const head = document.getElementById('dragonHead');
+                    if (head) {
+                        head.style.left = (this.dragon.x - (40 * scale)) + 'px';
+                        head.style.top = (this.dragon.y - (65 * scale)) + 'px';
+                        head.style.transform = `scale(${scale}) rotate(0deg)`;
+                        head.style.background = `linear-gradient(135deg, ${color} 0%, ${this.darkenColor(color)} 100%)`;
+                    }
+                }
+
+                // Left wing - attached to left side of body
+                if (parts.leftWing.attached) {
+                    const leftWing = document.getElementById('dragonLeftWing');
+                    if (leftWing) {
+                        leftWing.style.left = (this.dragon.x - (120 * scale)) + 'px';
+                        leftWing.style.top = (this.dragon.y - (60 * scale)) + 'px';
+                        leftWing.style.transform = `scale(${scale}) rotate(${-15 + wingFlap}deg)`;
+                        leftWing.style.background = `linear-gradient(135deg, ${this.lightenColor(color)} 0%, ${color} 100%)`;
+                    }
+                }
+
+                // Right wing - attached to right side of body
+                if (parts.rightWing.attached) {
+                    const rightWing = document.getElementById('dragonRightWing');
+                    if (rightWing) {
+                        rightWing.style.left = (this.dragon.x + (60 * scale)) + 'px';
+                        rightWing.style.top = (this.dragon.y - (60 * scale)) + 'px';
+                        rightWing.style.transform = `scale(${scale}) rotate(${15 - wingFlap}deg)`;
+                        rightWing.style.background = `linear-gradient(135deg, ${this.lightenColor(color)} 0%, ${color} 100%)`;
+                    }
+                }
+
+                // Tail - behind the body
+                if (parts.tail.attached) {
+                    const tail = document.getElementById('dragonTail');
+                    if (tail) {
+                        const tailSway = Math.sin(this.dragon.sinOffset * 1.5) * 10;
+                        tail.style.left = (this.dragon.x + (60 * scale)) + 'px';
+                        tail.style.top = (this.dragon.y - (30 * scale)) + 'px';
+                        tail.style.transform = `scale(${scale}) rotate(${20 + tailSway}deg)`;
+                        tail.style.background = `linear-gradient(135deg, ${color} 0%, ${this.darkenColor(color)} 100%)`;
+                    }
+                }
+
+                // Left leg - bottom left of body
+                if (parts.leftLeg.attached) {
+                    const leftLeg = document.getElementById('dragonLeftLeg');
+                    if (leftLeg) {
+                        leftLeg.style.left = (this.dragon.x - (45 * scale)) + 'px';
+                        leftLeg.style.top = (this.dragon.y + (20 * scale)) + 'px';
+                        leftLeg.style.transform = `scale(${scale}) rotate(0deg)`;
+                        leftLeg.style.background = `linear-gradient(135deg, ${this.lightenColor(color)} 0%, ${this.darkenColor(color)} 100%)`;
+                    }
+                }
+
+                // Right leg - bottom right of body
+                if (parts.rightLeg.attached) {
+                    const rightLeg = document.getElementById('dragonRightLeg');
+                    if (rightLeg) {
+                        rightLeg.style.left = (this.dragon.x - (15 * scale)) + 'px';
+                        rightLeg.style.top = (this.dragon.y + (20 * scale)) + 'px';
+                        rightLeg.style.transform = `scale(${scale}) rotate(0deg)`;
+                        rightLeg.style.background = `linear-gradient(135deg, ${this.lightenColor(color)} 0%, ${this.darkenColor(color)} 100%)`;
+                    }
+                }
+            }
+
+            darkenColor(color) {
+                // Simple color darkening
+                const colorMap = {
+                    '#e74c3c': '#c0392b',
+                    '#9b59b6': '#8e44ad',
+                    '#27ae60': '#229954',
+                    '#f39c12': '#e67e22',
+                    '#2c3e50': '#1b2631',
+                    '#3498db': '#2980b9',
+                    '#8e44ad': '#7d3c98'
+                };
+                return colorMap[color] || '#c0392b';
+            }
+
+            lightenColor(color) {
+                // Simple color lightening
+                const colorMap = {
+                    '#e74c3c': '#ec7063',
+                    '#9b59b6': '#bb8fce',
+                    '#27ae60': '#58d68d',
+                    '#f39c12': '#f8c471',
+                    '#2c3e50': '#5d6d7e',
+                    '#3498db': '#85c1e9',
+                    '#8e44ad': '#af7ac5'
+                };
+                return colorMap[color] || '#ec7063';
+            }
+
+            updateDragonAI() {
+                if (!this.isPlaying) return;
+
+                // Dragon movement based on level and style
+                this.dragon.sinOffset += 0.02 + (this.dragon.speed * 0.01);
+                
+                // Different movement patterns based on dragon style
+                this.executeMovementStyle();
+                
+                // Dragon tries to avoid the sword with varying aggressiveness
+                const distance = Math.sqrt(Math.pow(this.dragon.x - this.swordX, 2) + Math.pow(this.dragon.y - this.swordY, 2));
+                const avoidanceRange = 120 + (this.dragon.aggressiveness * 60);
+                
+                if (distance < avoidanceRange) {
+                    // Move away from sword with level-based intelligence
+                    const avoidAngle = Math.atan2(this.dragon.y - this.swordY, this.dragon.x - this.swordX);
+                    const avoidDistance = 80 + (this.dragon.aggressiveness * 40);
+                    this.dragon.targetX = this.dragon.x + Math.cos(avoidAngle) * avoidDistance;
+                    this.dragon.targetY = this.dragon.y + Math.sin(avoidAngle) * avoidDistance;
+                }
+
+                // Keep dragon within bounds with scaling consideration
+                const margin = 100 * (this.dragon.scale || 1.0);
+                this.dragon.targetX = Math.max(margin, Math.min(900 - margin, this.dragon.targetX));
+                this.dragon.targetY = Math.max(margin, Math.min(700 - margin, this.dragon.targetY));
+
+                // Smooth movement toward target with level-based speed
+                const dx = this.dragon.targetX - this.dragon.x;
+                const dy = this.dragon.targetY - this.dragon.y;
+                
+                // Calculate movement angle
+                this.dragon.angle = Math.atan2(dy, dx);
+                
+                // Apply movement with style-specific modifications
+                const moveSpeed = 0.02 * this.dragon.speed * (this.dragon.aggressiveness || 1.0);
+                this.dragon.x += dx * moveSpeed;
+                this.dragon.y += dy * moveSpeed;
+
+                this.updateDragonParts();
+
+                // Update frequency based on dragon speed
+                const updateDelay = Math.max(20, 80 - (this.dragon.speed * 10));
+                setTimeout(() => this.updateDragonAI(), updateDelay);
+            }
+
+            executeMovementStyle() {
+                const style = this.dragon.movementStyle || 'erratic';
+                
+                switch(style) {
+                    case 'erratic':
+                        // Quick, unpredictable movements
+                        if (Math.random() < 0.03) {
+                            this.dragon.targetX = 200 + Math.random() * 500;
+                            this.dragon.targetY = 150 + Math.random() * 400;
+                        }
+                        break;
+                        
+                    case 'circular':
+                        // Circular patrol pattern
+                        const centerX = 450;
+                        const centerY = 350;
+                        const radius = 150;
+                        const circleAngle = this.dragon.sinOffset * 0.5;
+                        this.dragon.targetX = centerX + Math.cos(circleAngle) * radius;
+                        this.dragon.targetY = centerY + Math.sin(circleAngle) * radius;
+                        break;
+                        
+                    case 'aggressive':
+                        // More frequent direction changes, aggressive positioning
+                        if (Math.random() < 0.05) {
+                            // Sometimes move toward player position
+                            if (Math.random() < 0.3) {
+                                this.dragon.targetX = this.swordX + (Math.random() - 0.5) * 200;
+                                this.dragon.targetY = this.swordY + (Math.random() - 0.5) * 200;
+                            } else {
+                                this.dragon.targetX = 150 + Math.random() * 600;
+                                this.dragon.targetY = 100 + Math.random() * 500;
+                            }
+                        }
+                        break;
+                        
+                    case 'predatory':
+                        // Stalking behavior - follows at distance
+                        const huntingDistance = 200;
+                        const angleToPlayer = Math.atan2(this.swordY - this.dragon.y, this.swordX - this.dragon.x);
+                        this.dragon.targetX = this.swordX - Math.cos(angleToPlayer) * huntingDistance;
+                        this.dragon.targetY = this.swordY - Math.sin(angleToPlayer) * huntingDistance;
+                        break;
+                        
+                    case 'chaotic':
+                        // Completely unpredictable
+                        if (Math.random() < 0.08) {
+                            this.dragon.targetX = Math.random() * 800 + 50;
+                            this.dragon.targetY = Math.random() * 600 + 50;
+                        }
+                        // Add chaotic serpentine motion
+                        const chaosX = Math.sin(this.dragon.sinOffset * 3) * 20;
+                        const chaosY = Math.cos(this.dragon.sinOffset * 2.5) * 15;
+                        this.dragon.x += chaosX * 0.01;
+                        this.dragon.y += chaosY * 0.01;
+                        break;
+                        
+                    default:
+                        // Default gentle movement
+                        if (Math.random() < 0.01) {
+                            this.dragon.targetX = 200 + Math.random() * 500;
+                            this.dragon.targetY = 150 + Math.random() * 350;
+                        }
+                        break;
+                }
+            }
+
+            performSlash() {
+                if (this.slashCooldown) return;
+                
+                this.slashCooldown = true;
+                this.isSlashing = true;
+
+                // Create slash effect
+                this.createSlashEffect();
+
+                // Check for hits on dragon parts
+                this.checkSlashHits();
+
+                // Play slash sound
+                this.playSlashSound();
+
+                // Reset slash cooldown
+                setTimeout(() => {
+                    this.slashCooldown = false;
+                    this.isSlashing = false;
+                }, 300);
+            }
+
+            createSlashEffect() {
+                const slashEffect = document.createElement('div');
+                slashEffect.className = 'slash-effect';
+                slashEffect.style.left = (this.swordX + 10) + 'px';
+                slashEffect.style.top = (this.swordY + 10) + 'px';
+                
+                const angle = Math.atan2(this.mouseY - this.swordY, this.mouseX - this.swordX) * 180 / Math.PI;
+                slashEffect.style.transform = `rotate(${angle}deg)`;
+                slashEffect.style.opacity = '1';
+                
+                this.gameCanvas.appendChild(slashEffect);
+
+                setTimeout(() => {
+                    slashEffect.style.opacity = '0';
+                    setTimeout(() => {
+                        if (slashEffect.parentNode) {
+                            slashEffect.remove();
+                        }
+                    }, 300);
+                }, 100);
+            }
+
+            checkSlashHits() {
+                const slashRange = 80;
+                const parts = this.dragon.parts;
+
+                // Check each dragon part for hits using sword position
+                Object.keys(parts).forEach(partName => {
+                    if (!parts[partName].attached) return;
+
+                    const element = document.getElementById(`dragon${partName.charAt(0).toUpperCase() + partName.slice(1).replace(/([A-Z])/g, '$1')}`);
+                    if (!element) return;
+
+                    const partRect = element.getBoundingClientRect();
+                    const canvasRect = this.gameCanvas.getBoundingClientRect();
+                    
+                    const partCenterX = partRect.left - canvasRect.left + partRect.width / 2;
+                    const partCenterY = partRect.top - canvasRect.top + partRect.height / 2;
+                    
+                    const distance = Math.sqrt(Math.pow(partCenterX - this.swordX, 2) + Math.pow(partCenterY - this.swordY, 2));
+                    
+                    if (distance < slashRange) {
+                        this.hitDragonPart(partName, element, partCenterX, partCenterY);
+                    }
+                });
+            }
+
+            hitDragonPart(partName, element, x, y) {
+                const parts = this.dragon.parts;
+                const damage = 10 + (this.level * 2);
+                
+                parts[partName].health -= damage;
+                this.dragonHealth -= damage;
+
+                // Create blood splatter effect
+                this.createBloodSplatter(x, y);
+
+                // Flash damage effect
+                element.classList.add('damage-flash');
+                setTimeout(() => {
+                    element.classList.remove('damage-flash');
+                }, 300);
+
+                // Check if part should detach
+                if (parts[partName].health <= 0) {
+                    this.detachPart(partName, element);
+                    this.updateScore(100);
+                } else {
+                    this.updateScore(25);
+                }
+
+                // Check for dragon defeat - either health depleted OR all parts detached
+                const allPartsDetached = Object.values(parts).every(part => !part.attached);
+                if (this.dragonHealth <= 0 || allPartsDetached) {
+                    // Ensure health shows 0 when defeated
+                    this.dragonHealth = 0;
+                    this.defeatDragon();
+                }
+
+                this.updateDisplay();
+            }
+
+            createBloodSplatter(x, y) {
+                for (let i = 0; i < 3; i++) {
+                    const splatter = document.createElement('div');
+                    splatter.className = 'blood-splatter';
+                    splatter.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
+                    splatter.style.top = (y + (Math.random() - 0.5) * 40) + 'px';
+                    this.gameCanvas.appendChild(splatter);
+
+                    setTimeout(() => {
+                        if (splatter.parentNode) {
+                            splatter.remove();
+                        }
+                    }, 1000);
+                }
+            }
+
+            detachPart(partName, element) {
+                this.dragon.parts[partName].attached = false;
+                element.classList.add('detached');
+                
+                // Reduce dragon speed when parts are detached
+                this.dragon.speed *= 0.85;
+
+                setTimeout(() => {
+                    if (element.parentNode) {
+                        element.remove();
+                    }
+                }, 2000);
+            }
+
+            defeatDragon() {
+                this.isPlaying = false;
+                this.gameContainer.classList.remove('playing');
+                this.dragonsSlain++;
+                this.updateScore(1000);
+                
+                // Ensure dragon health is set to 0 for display
+                this.dragonHealth = 0;
+                this.updateDisplay();
+
+                // Create victory effect
+                const victoryEffect = document.createElement('div');
+                victoryEffect.className = 'victory-effect';
+                this.gameCanvas.appendChild(victoryEffect);
+
+                setTimeout(() => {
+                    this.nextLevel();
+                }, 1500);
+            }
+
+            playSlashSound() {
+                // Simple sound effect using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }
+
+            updateScore(points) {
+                this.score += points;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.dragonHealthElement.textContent = Math.max(0, this.dragonHealth);
+                this.scoreElement.textContent = this.score;
+                this.levelElement.textContent = this.level;
+            }
+
+            showGameOver() {
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalLevel').textContent = this.level;
+                document.getElementById('dragonsSlain').textContent = this.dragonsSlain;
+                
+                let performanceText = "You are a legendary dragon slayer!";
+                if (this.level >= 5) performanceText = "🏆 Master Dragon Slayer! You're unstoppable!";
+                else if (this.level >= 3) performanceText = "⚔️ Skilled Warrior! Dragons fear you!";
+                else if (this.score > 2000) performanceText = "🗡️ Brave Knight! Well fought!";
+                
+                document.getElementById('performanceText').textContent = performanceText;
+                this.gameOver.style.display = 'flex';
+            }
+
+            nextLevel() {
+                this.level++;
+                this.dragonHealth = this.maxDragonHealth + (this.level * 20);
+                this.maxDragonHealth = this.dragonHealth;
+                
+                // Dynamic dragon properties based on level
+                this.setupDragonForLevel();
+
+                // Reset dragon position
+                this.dragon.x = 400;
+                this.dragon.y = 300;
+                this.dragon.targetX = 400;
+                this.dragon.targetY = 300;
+                this.dragon.angle = 0;
+                this.dragon.sinOffset = 0;
+                
+                // Reset dragon parts with level-based health scaling
+                Object.keys(this.dragon.parts).forEach(partName => {
+                    this.dragon.parts[partName].attached = true;
+                    // Scale part health with level
+                    const baseHealth = this.getBasePartHealth(partName);
+                    this.dragon.parts[partName].health = baseHealth + (this.level * 5);
+                });
+
+                // Clear canvas and restart
+                this.gameCanvas.querySelectorAll('.dragon, .sword, .slash-effect, .blood-splatter, .victory-effect').forEach(el => el.remove());
+                
+                this.gameOver.style.display = 'none';
+                this.gameContainer.classList.add('playing');
+                this.updateDisplay();
+                this.startGame();
+            }
+
+            setupDragonForLevel() {
+                // Define unique dragon characteristics for each level
+                switch(this.level) {
+                    case 1:
+                        // Baby Dragon - Small and quick
+                        this.dragon.scale = 0.8;
+                        this.dragon.speed = 2.0;
+                        this.dragon.aggressiveness = 0.7;
+                        this.dragon.color = '#e74c3c'; // Red
+                        this.dragon.movementStyle = 'erratic';
+                        break;
+                    case 2:
+                        // Adolescent Dragon - Normal size, moderate speed
+                        this.dragon.scale = 1.0;
+                        this.dragon.speed = 1.8;
+                        this.dragon.aggressiveness = 0.8;
+                        this.dragon.color = '#9b59b6'; // Purple
+                        this.dragon.movementStyle = 'circular';
+                        break;
+                    case 3:
+                        // Adult Dragon - Large and powerful
+                        this.dragon.scale = 1.3;
+                        this.dragon.speed = 1.5;
+                        this.dragon.aggressiveness = 0.9;
+                        this.dragon.color = '#27ae60'; // Green
+                        this.dragon.movementStyle = 'aggressive';
+                        break;
+                    case 4:
+                        // Ancient Dragon - Huge but slower
+                        this.dragon.scale = 1.6;
+                        this.dragon.speed = 1.2;
+                        this.dragon.aggressiveness = 1.0;
+                        this.dragon.color = '#f39c12'; // Gold
+                        this.dragon.movementStyle = 'predatory';
+                        break;
+                    case 5:
+                        // Elder Dragon - Massive and unpredictable
+                        this.dragon.scale = 2.0;
+                        this.dragon.speed = 1.0;
+                        this.dragon.aggressiveness = 1.2;
+                        this.dragon.color = '#2c3e50'; // Dark
+                        this.dragon.movementStyle = 'chaotic';
+                        break;
+                    default:
+                        // Legendary Dragons - Scale continues to grow
+                        this.dragon.scale = 1.5 + (this.level * 0.2);
+                        this.dragon.speed = 1.5 + (this.level * 0.1);
+                        this.dragon.aggressiveness = 1.0 + (this.level * 0.1);
+                        this.dragon.color = this.getRandomDragonColor();
+                        this.dragon.movementStyle = this.getRandomMovementStyle();
+                        break;
+                }
+            }
+
+            getBasePartHealth(partName) {
+                const baseHealthMap = {
+                    body: 40,
+                    head: 30,
+                    leftWing: 20,
+                    rightWing: 20,
+                    tail: 25,
+                    leftLeg: 15,
+                    rightLeg: 15
+                };
+                return baseHealthMap[partName] || 20;
+            }
+
+            getRandomDragonColor() {
+                const colors = ['#e74c3c', '#9b59b6', '#27ae60', '#f39c12', '#2c3e50', '#e67e22', '#3498db', '#8e44ad'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            getRandomMovementStyle() {
+                const styles = ['erratic', 'circular', 'aggressive', 'predatory', 'chaotic'];
+                return styles[Math.floor(Math.random() * styles.length)];
+            }
+
+            gameLoop() {
+                if (!this.isPlaying) return;
+                
+                // Update sword position - EXACT Castle Defense pattern
+                this.updateSwordPosition();
+                
+                // Update dragon AI and other game elements
+                this.updateDragonAI();
+                this.updateDragonParts();
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new DragonSlayer();
+        });
+    </script>
+</body>
+</html>

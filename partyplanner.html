@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Planner - Guest Emotion Balancer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .party-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            overflow: hidden;
+        }
+
+        .zone {
+            position: absolute;
+            border: 3px dashed rgba(255,255,255,0.5);
+            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .zone:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.8);
+        }
+
+        .zone-label {
+            font-weight: bold;
+            color: rgba(0,0,0,0.7);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .zone-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .games-zone {
+            top: 20px;
+            left: 20px;
+            width: 150px;
+            height: 120px;
+        }
+
+        .food-zone {
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 120px;
+        }
+
+        .quiet-zone {
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            height: 120px;
+        }
+
+        .dance-zone {
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 120px;
+        }
+
+        .guest {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: grab;
+            transition: all 0.3s ease;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .guest:hover {
+            transform: scale(1.1);
+            z-index: 20;
+        }
+
+        .guest.dragging {
+            cursor: grabbing;
+            z-index: 30;
+            transform: scale(1.2);
+        }
+
+        .emotion-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        .happy { background: #00b894; }
+        .neutral { background: #fdcb6e; }
+        .sad { background: #e17055; }
+        .angry { background: #d63031; }
+
+        .personality-shy { background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); }
+        .personality-energetic { background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); }
+        .personality-tired { background: linear-gradient(135deg, #81ecec 0%, #00cec9 100%); }
+        .personality-picky { background: linear-gradient(135deg, #fab1a0 0%, #e17055 100%); }
+        .personality-social { background: linear-gradient(135deg, #55a3ff 0%, #003ee5 100%); }
+
+        .influence-circle {
+            position: absolute;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .start-screen, .level-complete-screen, .game-over-screen, .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 100;
+        }
+
+        .screen-content {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .start-btn, .next-btn, .restart-btn {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .start-btn:hover, .next-btn:hover, .restart-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .instructions-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .instructions-list li {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .level-timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .happiness-meter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .conflict-warning {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #d63031;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: bold;
+            z-index: 60;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                height: min(600px, 90vh);
+            }
+            
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .zone {
+                width: 100px;
+                height: 80px;
+            }
+            
+            .zone-label {
+                font-size: 0.7rem;
+            }
+            
+            .zone-icon {
+                font-size: 1.5rem;
+            }
+            
+            .guest {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .screen-content {
+                padding: 20px;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+    
+    <div class="game-container">
+        <div class="header">
+            <h1>🎊 Party Planner</h1>
+            <p>Balance guest emotions for the perfect party!</p>
+        </div>
+        
+        <div class="hud">
+            <div class="hud-item">
+                <span>📊</span>
+                <span>Level: <span id="levelDisplay">1</span></span>
+            </div>
+            <div class="hud-item">
+                <span>😊</span>
+                <span>Happy: <span id="happyCount">0</span>/<span id="totalGuests">0</span></span>
+            </div>
+            <div class="hud-item">
+                <span>⭐</span>
+                <span>Score: <span id="scoreDisplay">0</span></span>
+            </div>
+        </div>
+        
+        <div class="party-area" id="partyArea">
+            <div class="zone games-zone">
+                <div class="zone-icon">🎯</div>
+                <div class="zone-label">Games</div>
+            </div>
+            
+            <div class="zone food-zone">
+                <div class="zone-icon">🍕</div>
+                <div class="zone-label">Food</div>
+            </div>
+            
+            <div class="zone quiet-zone">
+                <div class="zone-icon">🪑</div>
+                <div class="zone-label">Quiet</div>
+            </div>
+            
+            <div class="zone dance-zone">
+                <div class="zone-icon">💃</div>
+                <div class="zone-label">Dance</div>
+            </div>
+            
+            <div class="level-timer" id="levelTimer">Time: 60s</div>
+            <div class="happiness-meter" id="happinessMeter">Overall Happiness: 0%</div>
+        </div>
+        
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <div class="screen-content">
+                <h2>🎊 Welcome to Party Planner!</h2>
+                <p>You're the ultimate party host! Your goal is to make all your guests happy by managing their emotions and interactions.</p>
+                <button class="start-btn" id="startBtn">Start Party Planning!</button>
+            </div>
+        </div>
+        
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup" style="display: none;">
+            <div class="screen-content">
+                <h2>🎯 How to Play</h2>
+                <ul class="instructions-list">
+                    <li>😊 Drag guests to different party zones to change their moods</li>
+                    <li>🎯 Games Zone: Energizes shy/tired guests</li>
+                    <li>🍕 Food Zone: Calms picky/angry guests</li>
+                    <li>🪑 Quiet Zone: Soothes overwhelmed guests</li>
+                    <li>💃 Dance Zone: Boosts social guests' happiness</li>
+                    <li>⚡ Happy guests spread good vibes to nearby guests</li>
+                    <li>⚠️ Prevent conflicts by separating incompatible personalities</li>
+                    <li>🎯 Get all guests happy before time runs out!</li>
+                </ul>
+                <button class="start-btn" id="startGameBtn">Let's Party! 🎉</button>
+            </div>
+        </div>
+        
+        <!-- Level Complete Screen -->
+        <div class="level-complete-screen" id="levelCompleteScreen" style="display: none;">
+            <div class="screen-content">
+                <h2>🎉 Party Success!</h2>
+                <p>All guests are happy! You're an amazing party planner!</p>
+                <p id="levelStats">Time bonus: +50 points</p>
+                <button class="next-btn" id="nextLevelBtn">Next Party!</button>
+            </div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div class="game-over-screen" id="gameOverScreen" style="display: none;">
+            <div class="screen-content">
+                <h2>😔 Party Over</h2>
+                <p>Some guests left unhappy. Try again!</p>
+                <p id="finalScore">Final Score: 0</p>
+                <button class="restart-btn" id="restartBtn">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PartyPlannerGame {
+            constructor() {
+                this.level = 1;
+                this.score = 0;
+                this.timeLeft = 60;
+                this.guests = [];
+                this.gameRunning = false;
+                this.draggedGuest = null;
+                this.gameTimer = null;
+                this.emotionTimer = null;
+                
+                // Guest personality types with their effects
+                this.personalities = {
+                    shy: { emoji: '😳', baseEmotion: 'sad', zones: { games: 'happy', quiet: 'neutral' } },
+                    energetic: { emoji: '🤩', baseEmotion: 'happy', zones: { games: 'happy', dance: 'happy' } },
+                    tired: { emoji: '😴', baseEmotion: 'sad', zones: { quiet: 'happy', food: 'neutral' } },
+                    picky: { emoji: '🤔', baseEmotion: 'neutral', zones: { food: 'happy', quiet: 'neutral' } },
+                    social: { emoji: '😄', baseEmotion: 'happy', zones: { dance: 'happy', games: 'happy' } }
+                };
+                
+                this.emotions = {
+                    happy: '😊',
+                    neutral: '😐', 
+                    sad: '😢',
+                    angry: '😠'
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                // Start directly with instructions popup
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('instructionsPopup').style.display = 'flex';
+            }
+            
+            setupEventListeners() {
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+                
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.showInstructions();
+                });
+                
+                document.getElementById('startGameBtn').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+                
+                document.getElementById('nextLevelBtn').addEventListener('click', () => {
+                    this.nextLevel();
+                });
+                
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        if (document.getElementById('startScreen').style.display !== 'none') {
+                            this.showInstructions();
+                        } else if (document.getElementById('instructionsPopup').style.display !== 'none') {
+                            this.hideInstructions();
+                        } else if (document.getElementById('levelCompleteScreen').style.display !== 'none') {
+                            this.nextLevel();
+                        } else if (document.getElementById('gameOverScreen').style.display !== 'none') {
+                            this.restartGame();
+                        }
+                    }
+                });
+                
+                // Touch/Mouse events for dragging
+                this.setupDragControls();
+            }
+            
+            setupDragControls() {
+                const partyArea = document.getElementById('partyArea');
+                
+                // Mouse events
+                partyArea.addEventListener('mousedown', this.handleDragStart.bind(this));
+                document.addEventListener('mousemove', this.handleDragMove.bind(this));
+                document.addEventListener('mouseup', this.handleDragEnd.bind(this));
+                
+                // Touch events
+                partyArea.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.handleDragStart({ clientX: touch.clientX, clientY: touch.clientY, target: e.target });
+                });
+                
+                document.addEventListener('touchmove', (e) => {
+                    if (this.draggedGuest) {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        this.handleDragMove({ clientX: touch.clientX, clientY: touch.clientY });
+                    }
+                });
+                
+                document.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.handleDragEnd();
+                });
+            }
+            
+            handleDragStart(e) {
+                if (!this.gameRunning) return;
+                
+                if (e.target.classList.contains('guest')) {
+                    this.draggedGuest = e.target;
+                    this.draggedGuest.classList.add('dragging');
+                    
+                    const rect = this.draggedGuest.getBoundingClientRect();
+                    this.dragOffset = {
+                        x: e.clientX - rect.left - rect.width / 2,
+                        y: e.clientY - rect.top - rect.height / 2
+                    };
+                }
+            }
+            
+            handleDragMove(e) {
+                if (!this.draggedGuest) return;
+                
+                const partyRect = document.getElementById('partyArea').getBoundingClientRect();
+                const x = e.clientX - partyRect.left - this.dragOffset.x - 25;
+                const y = e.clientY - partyRect.top - this.dragOffset.y - 25;
+                
+                // Keep within bounds
+                const maxX = partyRect.width - 50;
+                const maxY = partyRect.height - 50;
+                
+                this.draggedGuest.style.left = Math.max(0, Math.min(maxX, x)) + 'px';
+                this.draggedGuest.style.top = Math.max(0, Math.min(maxY, y)) + 'px';
+            }
+            
+            handleDragEnd() {
+                if (!this.draggedGuest) return;
+                
+                this.draggedGuest.classList.remove('dragging');
+                
+                // Check if dropped in a zone
+                const guestRect = this.draggedGuest.getBoundingClientRect();
+                const guestCenter = {
+                    x: guestRect.left + guestRect.width / 2,
+                    y: guestRect.top + guestRect.height / 2
+                };
+                
+                const zones = document.querySelectorAll('.zone');
+                let inZone = null;
+                
+                zones.forEach(zone => {
+                    const zoneRect = zone.getBoundingClientRect();
+                    if (guestCenter.x >= zoneRect.left && guestCenter.x <= zoneRect.right &&
+                        guestCenter.y >= zoneRect.top && guestCenter.y <= zoneRect.bottom) {
+                        inZone = zone;
+                    }
+                });
+                
+                if (inZone) {
+                    this.handleZoneInteraction(this.draggedGuest, inZone);
+                }
+                
+                this.draggedGuest = null;
+                this.updateEmotionSpreading();
+            }
+            
+            handleZoneInteraction(guestElement, zone) {
+                const guestId = parseInt(guestElement.dataset.guestId);
+                const guest = this.guests.find(g => g.id === guestId);
+                
+                if (!guest) return;
+                
+                const zoneType = zone.classList.contains('games-zone') ? 'games' :
+                               zone.classList.contains('food-zone') ? 'food' :
+                               zone.classList.contains('quiet-zone') ? 'quiet' :
+                               zone.classList.contains('dance-zone') ? 'dance' : null;
+                
+                if (zoneType && this.personalities[guest.personality].zones[zoneType]) {
+                    const newEmotion = this.personalities[guest.personality].zones[zoneType];
+                    guest.emotion = newEmotion;
+                    this.updateGuestDisplay(guest);
+                    this.playSound(440, 0.2);
+                    this.score += 10;
+                    this.updateUI();
+                }
+            }
+            
+            showInstructions() {
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('instructionsPopup').style.display = 'flex';
+            }
+            
+            hideInstructions() {
+                document.getElementById('instructionsPopup').style.display = 'none';
+                this.startGame();
+            }
+            
+            startGame() {
+                document.getElementById('instructionsPopup').style.display = 'none';
+                document.getElementById('levelCompleteScreen').style.display = 'none';
+                document.getElementById('gameOverScreen').style.display = 'none';
+                
+                this.gameRunning = true;
+                this.timeLeft = 60 + (this.level * 10); // More time for higher levels
+                this.generateGuests();
+                this.updateUI();
+                
+                this.gameTimer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateUI();
+                    
+                    if (this.timeLeft <= 0) {
+                        this.checkGameEnd();
+                    }
+                }, 1000);
+                
+                this.emotionTimer = setInterval(() => {
+                    this.updateEmotionSpreading();
+                    this.checkConflicts();
+                }, 2000);
+            }
+            
+            generateGuests() {
+                // Clear existing guests
+                document.querySelectorAll('.guest').forEach(g => g.remove());
+                document.querySelectorAll('.influence-circle').forEach(c => c.remove());
+                this.guests = [];
+                
+                const numGuests = Math.min(3 + this.level, 8);
+                const personalityTypes = Object.keys(this.personalities);
+                const partyArea = document.getElementById('partyArea');
+                
+                for (let i = 0; i < numGuests; i++) {
+                    const personality = personalityTypes[Math.floor(Math.random() * personalityTypes.length)];
+                    const personalityData = this.personalities[personality];
+                    
+                    const guest = {
+                        id: i,
+                        personality: personality,
+                        emotion: personalityData.baseEmotion,
+                        x: 200 + Math.random() * 300,
+                        y: 160 + Math.random() * 200,
+                        lastEmotionChange: Date.now()
+                    };
+                    
+                    this.guests.push(guest);
+                    this.createGuestElement(guest);
+                }
+            }
+            
+            createGuestElement(guest) {
+                const guestElement = document.createElement('div');
+                guestElement.className = `guest personality-${guest.personality}`;
+                guestElement.dataset.guestId = guest.id;
+                guestElement.style.left = guest.x + 'px';
+                guestElement.style.top = guest.y + 'px';
+                guestElement.innerHTML = this.personalities[guest.personality].emoji;
+                
+                const emotionIndicator = document.createElement('div');
+                emotionIndicator.className = `emotion-indicator ${guest.emotion}`;
+                emotionIndicator.innerHTML = this.emotions[guest.emotion];
+                guestElement.appendChild(emotionIndicator);
+                
+                document.getElementById('partyArea').appendChild(guestElement);
+                
+                // Create influence circle
+                const influenceCircle = document.createElement('div');
+                influenceCircle.className = 'influence-circle';
+                influenceCircle.style.left = (guest.x - 50) + 'px';
+                influenceCircle.style.top = (guest.y - 50) + 'px';
+                influenceCircle.style.width = '150px';
+                influenceCircle.style.height = '150px';
+                document.getElementById('partyArea').appendChild(influenceCircle);
+            }
+            
+            updateGuestDisplay(guest) {
+                const guestElement = document.querySelector(`[data-guest-id="${guest.id}"]`);
+                if (guestElement) {
+                    const emotionIndicator = guestElement.querySelector('.emotion-indicator');
+                    emotionIndicator.className = `emotion-indicator ${guest.emotion}`;
+                    emotionIndicator.innerHTML = this.emotions[guest.emotion];
+                    
+                    // Update guest position
+                    guest.x = parseInt(guestElement.style.left);
+                    guest.y = parseInt(guestElement.style.top);
+                    
+                    // Update influence circle
+                    const influenceCircles = document.querySelectorAll('.influence-circle');
+                    if (influenceCircles[guest.id]) {
+                        influenceCircles[guest.id].style.left = (guest.x - 50) + 'px';
+                        influenceCircles[guest.id].style.top = (guest.y - 50) + 'px';
+                    }
+                }
+            }
+            
+            updateEmotionSpreading() {
+                const now = Date.now();
+                
+                this.guests.forEach(guest => {
+                    if (guest.emotion === 'happy' && now - guest.lastEmotionChange > 3000) {
+                        // Happy guests influence nearby guests
+                        this.guests.forEach(otherGuest => {
+                            if (otherGuest.id !== guest.id) {
+                                const distance = Math.sqrt(
+                                    Math.pow(guest.x - otherGuest.x, 2) + 
+                                    Math.pow(guest.y - otherGuest.y, 2)
+                                );
+                                
+                                if (distance < 100 && otherGuest.emotion !== 'happy' && 
+                                    now - otherGuest.lastEmotionChange > 2000) {
+                                    
+                                    if (Math.random() < 0.3) { // 30% chance to influence
+                                        if (otherGuest.emotion === 'angry') otherGuest.emotion = 'neutral';
+                                        else if (otherGuest.emotion === 'sad') otherGuest.emotion = 'neutral';
+                                        else if (otherGuest.emotion === 'neutral') otherGuest.emotion = 'happy';
+                                        
+                                        otherGuest.lastEmotionChange = now;
+                                        this.updateGuestDisplay(otherGuest);
+                                        this.playSound(550, 0.1);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+            
+            checkConflicts() {
+                // Check for incompatible personalities in close proximity
+                const conflicts = [];
+                
+                this.guests.forEach(guest => {
+                    this.guests.forEach(otherGuest => {
+                        if (guest.id !== otherGuest.id) {
+                            const distance = Math.sqrt(
+                                Math.pow(guest.x - otherGuest.x, 2) + 
+                                Math.pow(guest.y - otherGuest.y, 2)
+                            );
+                            
+                            if (distance < 80) {
+                                // Check for incompatible pairs
+                                if ((guest.personality === 'energetic' && otherGuest.personality === 'tired') ||
+                                    (guest.personality === 'tired' && otherGuest.personality === 'energetic') ||
+                                    (guest.personality === 'picky' && otherGuest.personality === 'social')) {
+                                    
+                                    conflicts.push([guest, otherGuest]);
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                if (conflicts.length > 0) {
+                    conflicts.forEach(([guest1, guest2]) => {
+                        if (guest1.emotion !== 'angry') {
+                            guest1.emotion = 'angry';
+                            guest1.lastEmotionChange = Date.now();
+                            this.updateGuestDisplay(guest1);
+                        }
+                        if (guest2.emotion !== 'angry') {
+                            guest2.emotion = 'angry';
+                            guest2.lastEmotionChange = Date.now();
+                            this.updateGuestDisplay(guest2);
+                        }
+                    });
+                    
+                    this.showConflictWarning();
+                    this.playSound(200, 0.3);
+                }
+            }
+            
+            showConflictWarning() {
+                const warning = document.createElement('div');
+                warning.className = 'conflict-warning';
+                warning.textContent = '⚠️ Conflict! Separate incompatible guests!';
+                document.getElementById('partyArea').appendChild(warning);
+                
+                setTimeout(() => {
+                    warning.remove();
+                }, 2000);
+            }
+            
+            checkGameEnd() {
+                const happyGuests = this.guests.filter(g => g.emotion === 'happy').length;
+                const totalGuests = this.guests.length;
+                
+                if (happyGuests === totalGuests) {
+                    this.levelComplete();
+                } else if (this.timeLeft <= 0) {
+                    this.gameOver();
+                }
+            }
+            
+            levelComplete() {
+                this.gameRunning = false;
+                clearInterval(this.gameTimer);
+                clearInterval(this.emotionTimer);
+                
+                const timeBonus = this.timeLeft * 5;
+                this.score += timeBonus + 100;
+                
+                document.getElementById('levelStats').textContent = 
+                    `Time bonus: +${timeBonus} points | Level bonus: +100 points`;
+                document.getElementById('levelCompleteScreen').style.display = 'flex';
+                
+                this.playSound(660, 0.5);
+            }
+            
+            gameOver() {
+                this.gameRunning = false;
+                clearInterval(this.gameTimer);
+                clearInterval(this.emotionTimer);
+                
+                document.getElementById('finalScore').textContent = `Final Score: ${this.score}`;
+                document.getElementById('gameOverScreen').style.display = 'flex';
+                
+                this.playSound(200, 0.5);
+            }
+            
+            nextLevel() {
+                this.level++;
+                document.getElementById('levelCompleteScreen').style.display = 'none';
+                this.startGame();
+            }
+            
+            restartGame() {
+                this.level = 1;
+                this.score = 0;
+                document.getElementById('gameOverScreen').style.display = 'none';
+                this.startGame();
+            }
+            
+            updateUI() {
+                document.getElementById('levelDisplay').textContent = this.level;
+                document.getElementById('scoreDisplay').textContent = this.score;
+                document.getElementById('levelTimer').textContent = `Time: ${this.timeLeft}s`;
+                
+                const happyGuests = this.guests.filter(g => g.emotion === 'happy').length;
+                const totalGuests = this.guests.length;
+                document.getElementById('happyCount').textContent = happyGuests;
+                document.getElementById('totalGuests').textContent = totalGuests;
+                
+                const happinessPercent = totalGuests > 0 ? Math.round((happyGuests / totalGuests) * 100) : 0;
+                document.getElementById('happinessMeter').textContent = `Overall Happiness: ${happinessPercent}%`;
+                
+                // Check for level completion
+                if (happyGuests === totalGuests && totalGuests > 0 && this.gameRunning) {
+                    setTimeout(() => this.checkGameEnd(), 500);
+                }
+            }
+            
+            playSound(frequency, duration) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+        }
+        
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new PartyPlannerGame();
+        });
+    </script>
+</body>
+</html>

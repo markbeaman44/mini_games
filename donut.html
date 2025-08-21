@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Silly Bounce — Playable 2D Web Game</title>
+  <style>
+    html,body{
+      height:100%;
+      margin:0;
+      background:linear-gradient(#b3ecff,#e8f9ff);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;
+      user-select:none;
+      -webkit-user-select:none;
+      -moz-user-select:none;
+      -ms-user-select:none;
+    }
+    .game-wrapper{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      box-sizing:border-box;
+    }
+    .game-container{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+    }
+    canvas{
+      display:block;
+      background:linear-gradient(#c5f0ff 0%, #e9ffff 60%);
+      border-radius:16px;
+      border:4px solid rgba(255,255,255,0.6);
+      box-shadow:0 8px 30px rgba(0,0,0,0.15);
+      box-sizing:border-box;
+      touch-action:none;
+    }
+    #hud {
+      width: 760px;
+      max-width: 95vw;
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      color: #065a8b;
+      font-weight: 600;
+      user-select:none;
+    }
+    #restart {
+      background:#00a3ff;
+      color:white;
+      border:none;
+      border-radius:8px;
+      padding:6px 14px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:16px;
+    }
+    #backButton {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      z-index: 1000;
+    }
+    #backButton:hover {
+      background: #ff5252;
+      transform: translateY(-2px);
+    }
+    #backButton:active {
+      transform: translateY(0);
+    }
+    #touchControls {
+      max-width: 760px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      user-select:none;
+    }
+    .touch-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      font-size: 28px;
+      cursor: pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (min-width: 721px) {
+      #touchControls {
+        display: none;
+      }
+    }
+
+    /* Instructions Popup */
+    .instructions-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .instructions-content {
+      background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+      padding: 30px;
+      border-radius: 15px;
+      border: 3px solid #fff;
+      max-width: 500px;
+      text-align: center;
+      color: white;
+    }
+
+    .instructions-content h2 {
+      color: white;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .instructions-content p {
+      margin-bottom: 15px;
+      font-size: 16px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .close-instructions {
+      background: white;
+      color: #ff6b6b;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  
+  <!-- Instructions Popup -->
+  <div class="instructions-popup" id="instructionsPopup">
+    <div class="instructions-content">
+      <h2>🍩 Silly Bounce Instructions</h2>
+      <p><strong>🎯 Goal:</strong> Help the silly donut bounce through levels and collect items!</p>
+      <p><strong>🕹️ Controls:</strong> Arrow keys or A/D to move, Spacebar or W to jump</p>
+      <p><strong>📱 Mobile:</strong> Use the touch buttons below the game</p>
+      <p><strong>⚡ Special:</strong> Some donuts can fly for short periods!</p>
+      <p><strong>💝 Tip:</strong> Watch out for obstacles and enemies!</p>
+      <button class="close-instructions" id="closeInstructions">Start Bouncing!</button>
+    </div>
+  </div>
+
+  <div class="game-wrapper">
+    <div class="game-container">
+      <canvas id="gameCanvas" width="760" height="480"></canvas>
+      <div id="hud">
+        <div>Score: <span id="score">0</span></div>
+        <button id="restart">Restart</button>
+        <div>Lives: <span id="lives">3</span></div>
+      </div>
+      <div id="touchControls">
+        <button id="leftTouch" class="touch-btn">◀</button>
+        <button id="jumpTouch" class="touch-btn">⬆</button>
+        <button id="rightTouch" class="touch-btn">▶</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const scoreEl = document.getElementById('score');
+  const livesEl = document.getElementById('lives');
+  const restartBtn = document.getElementById('restart');
+  const backBtn = document.getElementById('backButton');
+
+  let keys = {};
+  let score = 0;
+  let lives = 3;
+  let gameOver = false;
+  let frame = 0;
+
+  let player = {x: 50, y: 300, w: 34, h: 34, vx: 0, vy: 0, onGround: false, color:'#ff6b6b', invincible: false, invincibleTime: 0, dropThrough: false, canFly: false, isFlying: false};
+  let gravity = 0.5;
+  let flyingTimer = 0;
+  let flyingActivated = false;
+
+  // Platforms
+  let platforms = [
+    {x:0,y:440,w:760,h:40, originalX:0, originalY:440, moving:false, moveSpeed:0, moveDir:1, targetX:0},
+    {x:120,y:370,w:120,h:10, originalX:120, originalY:370, moving:false, moveSpeed:0, moveDir:1, targetX:120},
+    {x:280,y:310,w:130,h:10, originalX:280, originalY:310, moving:false, moveSpeed:0, moveDir:1, targetX:280},
+    {x:450,y:250,w:120,h:10, originalX:450, originalY:250, moving:false, moveSpeed:0, moveDir:1, targetX:450},
+    {x:200,y:190,w:140,h:10, originalX:200, originalY:190, moving:false, moveSpeed:0, moveDir:1, targetX:200}
+  ];
+
+  function makePlatformsMove(){
+    for(let i=1; i<platforms.length; i++){ // Skip the ground platform (index 0)
+      const p = platforms[i];
+      p.moving = true;
+      p.moveSpeed = 1.5 + Math.random() * 1.5; // Speed between 1.5-3 for moderate movement
+      
+      // Set a new target position with smaller movement range
+      const maxMove = 80; // Reduced maximum distance to move
+      const direction = Math.random() > 0.5 ? 1 : -1;
+      const moveDistance = 30 + Math.random() * maxMove; // Random distance between 30-110
+      
+      p.targetX = p.x + (moveDistance * direction);
+      
+      // Keep target within screen bounds with more padding
+      if(p.targetX < 30) p.targetX = 30 + Math.random() * 50;
+      if(p.targetX + p.w > W - 30) p.targetX = W - p.w - 30 - Math.random() * 50;
+      
+      // Set direction to move toward target
+      p.moveDir = p.targetX > p.x ? 1 : -1;
+    }
+  }
+
+  function resetPlatforms(){
+    // Reset all platforms to their original positions
+    for(let p of platforms){
+      p.x = p.originalX;
+      p.y = p.originalY;
+      p.moving = false;
+      p.moveSpeed = 0;
+      p.moveDir = 1;
+      p.targetX = p.originalX;
+    }
+  }
+
+  // Donuts (collectibles)
+  let donuts = [];
+  function spawnDonuts(){
+    donuts = [];
+    for(let i=0; i<6; i++){
+      donuts.push({x:80 + i*100 + (Math.random()*60-30), y:260 - (i%3)*40 + (Math.random()*30-15), r:12, wobble:Math.random()*6});
+    }
+  }
+
+  // Cakes (extra life collectibles)
+  let chickenWings = [];
+  let nextWingScore = 50;
+  function spawnChickenWing(){
+    if(score >= nextWingScore && chickenWings.length === 0){
+      chickenWings.push({
+        x: 100 + Math.random() * (W - 200),
+        y: 100 + Math.random() * 150,
+        r: 16,
+        wobble: Math.random() * 6,
+        collected: false
+      });
+      nextWingScore += 50;
+    }
+  }
+
+  // Enemies (grumpy blobs)
+  let enemies = [];
+  function spawnEnemies(){
+    enemies = [
+      {x:420,y:168,w:36,h:24,dir:1,speed:1.2,ang:0},
+      {x:240,y:268,w:40,h:28,dir:-1,speed:1,ang:0}
+    ];
+  }
+
+  // Particles for confetti effect
+  let particles = [];
+  function popConfetti(x,y){
+    for(let i=0; i<18; i++){
+      particles.push({
+        x,y,
+        vx:(Math.random()*6-3),
+        vy:(Math.random()*-6-1),
+        life:40+Math.random()*40,
+        col:['#ffde59','#ff7ab6','#7bf1a8','#8fd1ff'][Math.floor(Math.random()*4)]
+      });
+    }
+  }
+
+  function reset(){
+    score = 0; lives = 3; gameOver = false; frame = 0;
+    player.x = 50; player.y = 300; player.vx = 0; player.vy = 0; player.onGround = false;
+    player.invincible = false; player.invincibleTime = 0; player.dropThrough = false;
+    player.canFly = false; player.isFlying = false;
+    flyingTimer = 0; flyingActivated = false;
+    spawnDonuts();
+    spawnEnemies();
+    particles.length = 0;
+    chickenWings.length = 0;
+    nextWingScore = 50;
+    resetPlatforms();
+    updateHUD();
+  }
+
+  function updateHUD(){
+    scoreEl.textContent = Math.floor(score);
+    livesEl.textContent = lives;
+  }
+
+  function rectsOverlap(a,b){
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function circleRectOverlap(cx,cy,r,rect){
+    const rx = Math.max(rect.x, Math.min(cx, rect.x+rect.w));
+    const ry = Math.max(rect.y, Math.min(cy, rect.y+rect.h));
+    const dx = rx - cx, dy = ry - cy;
+    return dx*dx + dy*dy <= r*r;
+  }
+
+  function update(){
+    if(gameOver) return;
+    frame++;
+
+    // Update flying timer (30 seconds = 1800 frames at 60fps)
+    if(donuts.length > 0 && !flyingActivated){
+      flyingTimer++;
+      if(flyingTimer >= 1800){ // 30 seconds
+        player.canFly = true;
+        flyingActivated = true;
+      }
+    }
+
+    // Update player invincibility
+    if(player.invincible){
+      player.invincibleTime--;
+      if(player.invincibleTime <= 0){
+        player.invincible = false;
+      }
+    }
+
+    // Movement input
+    if(keys.ArrowLeft || keys.KeyA) player.vx -= 0.5;
+    if(keys.ArrowRight || keys.KeyD) player.vx += 0.5;
+    
+    // Flying controls
+    if(player.canFly){
+      if(keys.ArrowUp || keys.Space || keys.KeyW){
+        player.vy -= 0.8; // Upward thrust when flying
+        player.isFlying = true;
+        player.onGround = false;
+      } else if(keys.ArrowDown || keys.KeyS){
+        player.vy += 0.5; // Downward thrust when flying
+        player.isFlying = true;
+      } else {
+        player.isFlying = false;
+      }
+    } else {
+      // Normal jump when not flying
+      if((keys.ArrowUp || keys.Space || keys.KeyW) && player.onGround){
+        player.vy = -10;
+        player.onGround = false;
+      }
+    }
+    
+    // Drop through platforms when down arrow is pressed (only if not flying)
+    if(!player.canFly && (keys.ArrowDown || keys.KeyS)){
+      player.dropThrough = true;
+    } else if(!player.canFly) {
+      player.dropThrough = false;
+    }
+
+    // Physics
+    if(player.canFly){
+      // Flying physics - reduced gravity and velocity damping
+      player.vy *= 0.85; // Air resistance when flying
+      player.x += player.vx;
+      player.y += player.vy;
+      player.vx *= 0.9;
+      
+      // Limit flying speed
+      player.vy = Math.max(-8, Math.min(8, player.vy));
+    } else {
+      // Normal physics
+      player.vy += gravity;
+      player.x += player.vx;
+      player.y += player.vy;
+      player.vx *= 0.9;
+    }
+
+    // Keep player in bounds
+    if(player.x < 0){
+      player.x = 0;
+      player.vx *= -0.2;
+    }
+    if(player.x + player.w > W){
+      player.x = W - player.w;
+      player.vx *= -0.2;
+    }
+    
+    // Keep flying player within vertical bounds
+    if(player.canFly){
+      if(player.y < 0){
+        player.y = 0;
+        player.vy = 0;
+      }
+      if(player.y + player.h > H){
+        player.y = H - player.h;
+        player.vy = 0;
+      }
+    }
+
+    // Update moving platforms
+    for(let p of platforms){
+      if(p.moving){
+        // Move toward target position
+        const distanceToTarget = Math.abs(p.targetX - p.x);
+        
+        if(distanceToTarget > p.moveSpeed){
+          // Still moving toward target
+          p.x += p.moveSpeed * p.moveDir;
+        } else {
+          // Reached target, stop moving
+          p.x = p.targetX;
+          p.moving = false;
+        }
+      }
+    }
+
+    // Platform collisions (only when not flying)
+    if(!player.canFly){
+      player.onGround = false;
+      for(let p of platforms){
+        // Skip collision if player is dropping through and it's not the ground platform
+        if(player.dropThrough && p.y < 400) continue; // Ground platform is at y=440, so anything above y=400 can be dropped through
+        
+        if(player.x < p.x + p.w &&
+           player.x + player.w > p.x &&
+           player.y + player.h > p.y &&
+           player.y + player.h - player.vy <= p.y){
+          player.y = p.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+          // Move player with moving platform
+          if(p.moving){
+            player.x += p.moveSpeed * p.moveDir;
+          }
+        }
+      }
+    } else {
+      player.onGround = false; // Can't be on ground when flying
+    }
+
+    // Donuts collection
+    for(let i=donuts.length-1; i>=0; i--){
+      const d = donuts[i];
+      const wob = Math.sin((frame + d.wobble) * 0.08) * 6;
+      if(Math.hypot((player.x+player.w/2) - d.x, (player.y+player.h/2) - (d.y + wob)) < d.r + Math.max(player.w, player.h)/2){
+        donuts.splice(i,1);
+        score += 10;
+        popConfetti(d.x, d.y);
+        updateHUD();
+      }
+    }
+
+    // Cake collection
+    for(let i=chickenWings.length-1; i>=0; i--){
+      const w = chickenWings[i];
+      const wob = Math.sin((frame + w.wobble) * 0.1) * 8;
+      if(Math.hypot((player.x+player.w/2) - w.x, (player.y+player.h/2) - (w.y + wob)) < w.r + Math.max(player.w, player.h)/2){
+        chickenWings.splice(i,1);
+        lives++;
+        popConfetti(w.x, w.y);
+        updateHUD();
+      }
+    }
+
+    // Check if we should spawn a chicken wing
+    spawnChickenWing();
+
+    // Enemies movement and collision
+    for(let e of enemies){
+      e.x += e.speed * e.dir;
+      if(e.x < 50 || e.x > W-90) e.dir *= -1;
+      e.ang += 0.08 * e.dir;
+
+      // Only take damage if not invincible
+      if(!player.invincible && rectsOverlap(player, e)){
+        lives--;
+        updateHUD();
+        player.vy = -8;
+        player.y -= 8;
+        // Make player invincible for 2 seconds (120 frames at 60fps)
+        player.invincible = true;
+        player.invincibleTime = 120;
+        
+        if(lives <= 0){
+          gameOver = true;
+          setTimeout(() => {
+            popConfetti(W/2,H/2);
+          }, 400);
+        }
+      }
+    }
+
+    // Respawn donuts if none left
+    if(donuts.length === 0){
+      spawnDonuts();
+      makePlatformsMove(); // Make platforms move when donuts respawn
+      // Remove flying ability when all donuts are collected
+      player.canFly = false;
+      player.isFlying = false;
+      flyingTimer = 0;
+      flyingActivated = false;
+    }
+
+    // Update particles
+    for(let i=particles.length-1; i>=0; i--){
+      let p = particles[i];
+      p.vy += 0.2;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life--;
+      if(p.life <= 0){
+        particles.splice(i,1);
+      }
+    }
+  }
+
+  function drawRoundedRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // Platforms
+    ctx.fillStyle = '#2b9fff';
+    for(let p of platforms){
+      drawRoundedRect(p.x, p.y, p.w, p.h, 6);
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.fillRect(p.x+8, p.y+2, Math.max(0,p.w-16), 3);
+      ctx.fillStyle = '#2b9fff'; // Reset to blue for next platform
+    }
+
+    // Donuts
+    for(let d of donuts){
+      const wob = Math.sin((frame + d.wobble) * 0.08) * 6;
+      ctx.save();
+      ctx.translate(d.x, d.y + wob);
+      // donut ring
+      ctx.beginPath();
+      ctx.fillStyle = '#ffb86b';
+      ctx.arc(0,0,d.r,0,Math.PI*2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(0,0,d.r*0.5,0,Math.PI*2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      // sprinkles
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(-4,-2,3,2);
+      ctx.fillRect(6,2,3,2);
+      ctx.restore();
+    }
+
+    // Cakes
+    for(let w of chickenWings){
+      const wob = Math.sin((frame + w.wobble) * 0.1) * 8;
+      ctx.save();
+      ctx.translate(w.x, w.y + wob);
+      
+      // Cake base (brown)
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(-12, -2, 24, 16);
+      
+      // Cake layers
+      ctx.fillStyle = '#DEB887';
+      ctx.fillRect(-11, -1, 22, 6);
+      ctx.fillRect(-11, 7, 22, 6);
+      
+      // Pink frosting on top
+      ctx.fillStyle = '#FFB6C1';
+      ctx.beginPath();
+      ctx.ellipse(0, -8, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Frosting decorations (dollops)
+      ctx.fillStyle = '#FF69B4';
+      ctx.beginPath();
+      ctx.arc(-8, -6, 3, 0, Math.PI * 2);
+      ctx.arc(0, -9, 3, 0, Math.PI * 2);
+      ctx.arc(8, -6, 3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Cherry on top
+      ctx.fillStyle = '#DC143C';
+      ctx.beginPath();
+      ctx.arc(0, -12, 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Cherry stem
+      ctx.strokeStyle = '#228B22';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, -14);
+      ctx.lineTo(1, -16);
+      ctx.stroke();
+      
+      ctx.restore();
+    }
+
+    // Enemies (grumpy blobs)
+    for(let e of enemies){
+      ctx.save();
+      ctx.translate(e.x + e.w/2, e.y + e.h/2);
+      ctx.rotate(Math.sin(e.ang)*0.2);
+      
+      // Angel wings (behind the body) with flapping animation
+      ctx.fillStyle = '#F0F8FF'; // Alice blue color for wings
+      ctx.strokeStyle = '#E6E6FA'; // Lavender outline
+      ctx.lineWidth = 1;
+      
+      // Wing flapping animation
+      const wingFlap = Math.sin(frame * 0.25) * 0.4;
+      
+      // Left wing
+      ctx.beginPath();
+      ctx.ellipse(-16, -8, 10, 15, -0.3 + wingFlap, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Right wing
+      ctx.beginPath();
+      ctx.ellipse(16, -8, 10, 15, 0.3 - wingFlap, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Wing details (feather lines)
+      ctx.strokeStyle = '#D3D3D3'; // Light gray
+      ctx.lineWidth = 0.5;
+      // Left wing feathers
+      ctx.beginPath();
+      ctx.moveTo(-20, -12); ctx.lineTo(-12, -5);
+      ctx.moveTo(-18, -8); ctx.lineTo(-14, -2);
+      ctx.moveTo(-16, -4); ctx.lineTo(-16, 2);
+      ctx.stroke();
+      // Right wing feathers
+      ctx.beginPath();
+      ctx.moveTo(20, -12); ctx.lineTo(12, -5);
+      ctx.moveTo(18, -8); ctx.lineTo(14, -2);
+      ctx.moveTo(16, -4); ctx.lineTo(16, 2);
+      ctx.stroke();
+      
+      // body
+      ctx.fillStyle = '#6b6bff';
+      ctx.beginPath();
+      ctx.ellipse(0,0,e.w/2,e.h/2,0,0,Math.PI*2);
+      ctx.fill();
+      // eyes
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(-6,-4,6,6,0,0,Math.PI*2);
+      ctx.ellipse(6,-4,6,6,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.arc(-6,-2,2,0,Math.PI*2);
+      ctx.arc(6,-2,2,0,Math.PI*2);
+      ctx.fill();
+      // grumpy mouth
+      ctx.strokeStyle = '#2a1b1b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-8,6);
+      ctx.quadraticCurveTo(0,3,8,6);
+      ctx.stroke();
+      
+      ctx.restore();
+    }
+
+    // Player with tilt and eyes
+    ctx.save();
+    ctx.translate(player.x + player.w/2, player.y + player.h/2);
+    let tilt = Math.max(-0.3, Math.min(0.3, player.vx * 0.03));
+    ctx.rotate(tilt);
+
+    // Flash effect when invincible
+    if(player.invincible && Math.floor(frame/8) % 2 === 0){
+      ctx.globalAlpha = 0.5; // Make player semi-transparent when flashing
+    }
+
+    // Player wings when flying
+    if(player.canFly){
+      ctx.fillStyle = '#FFD700'; // Golden wings
+      ctx.strokeStyle = '#FFA500'; // Orange outline
+      ctx.lineWidth = 1;
+      
+      // Wing animation
+      const wingFlap = Math.sin(frame * 0.3) * 0.3;
+      
+      // Left wing
+      ctx.beginPath();
+      ctx.ellipse(-18, -5, 8, 12, -0.5 + wingFlap, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Right wing
+      ctx.beginPath();
+      ctx.ellipse(18, -5, 8, 12, 0.5 - wingFlap, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Wing details
+      ctx.strokeStyle = '#FF8C00'; // Dark orange
+      ctx.lineWidth = 0.5;
+      // Left wing feathers
+      ctx.beginPath();
+      ctx.moveTo(-22, -8); ctx.lineTo(-14, -2);
+      ctx.moveTo(-20, -4); ctx.lineTo(-16, 2);
+      ctx.stroke();
+      // Right wing feathers
+      ctx.beginPath();
+      ctx.moveTo(22, -8); ctx.lineTo(14, -2);
+      ctx.moveTo(20, -4); ctx.lineTo(16, 2);
+      ctx.stroke();
+    }
+
+    // Body
+    ctx.fillStyle = player.color;
+    drawRoundedRect(-player.w/2, -player.h/2, player.w, player.h, 8);
+
+    // Eyes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(-6,-4,6,6,0,0,Math.PI*2);
+    ctx.ellipse(8,-4,6,6,0,0,Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(-6,-2,2.5,0,Math.PI*2);
+    ctx.arc(8,-2,2.5,0,Math.PI*2);
+    ctx.fill();
+
+    // Silly tongue when jumping or flying
+    if(!player.onGround || player.isFlying){
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillRect(-6,6,12,4);
+    }
+    
+    ctx.globalAlpha = 1; // Reset alpha
+    ctx.restore();
+
+    // Particles
+    for(let p of particles){
+      ctx.fillStyle = p.col;
+      ctx.fillRect(p.x, p.y, 4, 6);
+    }
+
+    // HUD text overlay
+    ctx.fillStyle = 'rgba(6,90,139,0.9)';
+    ctx.font = '20px system-ui';
+    ctx.fillText('Silly Bounce', 12, 28);
+
+    if(gameOver){
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = '#fff';
+      ctx.font = '44px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', W/2, H/2 - 6);
+      ctx.font = '20px system-ui';
+      ctx.fillText('Press Restart to try again — you were very silly!', W/2, H/2 + 26);
+      ctx.textAlign = 'start';
+    }
+  }
+
+  function loop(){
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('keydown', e => {
+    if(gameOver) {
+      reset();
+      return;
+    }
+    keys[e.code] = true;
+    if(['Space','ArrowUp'].includes(e.code)) e.preventDefault();
+  });
+  window.addEventListener('keyup', e => keys[e.code] = false);
+
+  // Touch controls
+  document.getElementById('leftTouch').addEventListener('touchstart', e => { keys.ArrowLeft = true; e.preventDefault(); });
+  document.getElementById('leftTouch').addEventListener('touchend', e => { keys.ArrowLeft = false; e.preventDefault(); });
+  document.getElementById('rightTouch').addEventListener('touchstart', e => { keys.ArrowRight = true; e.preventDefault(); });
+  document.getElementById('rightTouch').addEventListener('touchend', e => { keys.ArrowRight = false; e.preventDefault(); });
+  document.getElementById('jumpTouch').addEventListener('touchstart', e => {
+    keys.ArrowUp = true;
+    setTimeout(() => keys.ArrowUp = false, 150);
+    e.preventDefault();
+  });
+
+  restartBtn.addEventListener('click', () => reset());
+  backBtn.addEventListener('click', () => {
+    window.location.href = 'home.html';
+  });
+
+  // Instructions popup handling
+  let gameStarted = false;
+  const instructionsPopup = document.getElementById('instructionsPopup');
+  const closeInstructions = document.getElementById('closeInstructions');
+
+  function hideInstructions() {
+    instructionsPopup.style.display = 'none';
+    if (!gameStarted) {
+      gameStarted = true;
+      reset();
+      loop();
+    }
+  }
+
+  closeInstructions.addEventListener('click', hideInstructions);
+
+  // Handle spacebar for instructions
+  document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && instructionsPopup.style.display !== 'none') {
+      e.preventDefault();
+      hideInstructions();
+    }
+  });
+
+  // Show instructions on start
+  instructionsPopup.style.display = 'flex';
+})();
+</script>
+</body>
+</html>

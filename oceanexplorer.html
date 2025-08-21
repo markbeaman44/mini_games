@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Explorer - Wave Master</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 50%, #191970 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #00CED1;
+            color: #191970;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 206, 209, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: #20B2AA;
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 50%, #1E90FF 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #00CED1;
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #191970, #4682B4);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #00CED1;
+            max-width: 500px;
+            text-align: center;
+            color: white;
+        }
+
+        .instructions-content h2 {
+            color: #00CED1;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .close-instructions {
+            background: #00CED1;
+            color: #191970;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            background: #20B2AA;
+            transform: scale(1.05);
+        }
+
+        /* Game Area */
+        .game-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 60%, #1E90FF 100%);
+            cursor: crosshair;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .hud-item {
+            background: rgba(0, 206, 209, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid #00CED1;
+            color: white;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Wave Power Meter */
+        .wave-power {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .power-label {
+            color: #00CED1;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .power-bar {
+            width: 200px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #00CED1;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .power-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00FF7F 0%, #FFD700 50%, #FF4500 100%);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            color: #00CED1;
+            font-size: 12px;
+            text-align: right;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+
+        /* Game Over Screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            text-align: center;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #191970, #4682B4);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #00CED1;
+        }
+
+        .game-over h2 {
+            color: #00CED1;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #00CED1, #20B2AA);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            color: #191970;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            position: absolute;
+            bottom: 60px;
+            left: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+        }
+
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 206, 209, 0.2);
+            border: 2px solid #00CED1;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-btn:active {
+            background: rgba(0, 206, 209, 0.4);
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                margin: 20px auto;
+                height: min(500px, 85vh);
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+
+            .instructions {
+                display: none;
+            }
+
+            .power-bar {
+                width: 150px;
+            }
+        }
+
+        /* Particle Effects */
+        @keyframes splash {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(3) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .splash-effect {
+            animation: splash 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🌊 Ocean Wave Master</h2>
+                <p><strong>🎯 Goal:</strong> Launch people as far as possible with powerful waves!</p>
+                <p><strong>🌊 Controls:</strong> Click and hold to charge wave power, release to create a wave</p>
+                <p><strong>🚀 Physics:</strong> Bigger waves launch people further - aim for maximum distance!</p>
+                <p><strong>🏆 Scoring:</strong> Points based on distance and people launched</p>
+                <p><strong>⚡ Power:</strong> Longer you hold, stronger the wave becomes</p>
+                <p><strong>📱 Mobile:</strong> Touch and hold the wave button</p>
+                <button class="close-instructions" id="closeInstructions">Master the Waves!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <canvas class="game-canvas" id="gameCanvas" width="900" height="600"></canvas>
+            
+            <!-- HUD -->
+            <div class="hud">
+                <div class="hud-item">Score: <span id="currentScore">0</span></div>
+                <div class="hud-item">People Launched: <span id="peopleLaunched">0</span></div>
+                <div class="hud-item">Best Distance: <span id="bestDistance">0</span>m</div>
+                <div class="hud-item">Waves: <span id="waveCount">0</span></div>
+            </div>
+
+            <!-- Wave Power Meter -->
+            <div class="wave-power">
+                <div class="power-label">Wave Power</div>
+                <div class="power-bar">
+                    <div class="power-fill" id="powerFill"></div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                Click & Hold to charge wave power<br>
+                Release to create wave!<br>
+                Launch people as far as possible!
+            </div>
+
+            <!-- Mobile Controls -->
+            <div class="mobile-controls" id="mobileControls">
+                <div class="mobile-btn" id="waveBtn">🌊</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2 id="gameOverTitle">Wave Session Complete!</h2>
+                <p id="gameOverText">The ocean grows calm...</p>
+                <p id="finalStats">
+                    Final Score: <span id="finalScore">0</span><br>
+                    People Launched: <span id="finalPeople">0</span><br>
+                    Longest Launch: <span id="longestLaunch">0</span>m
+                </p>
+                <button class="restart-btn" id="restartBtn">New Wave Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class OceanExplorer {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                // Game state
+                this.gameRunning = false;
+                this.score = 0;
+                this.peopleLaunched = 0;
+                this.bestDistance = 0;
+                this.waveCount = 0;
+                
+                // Wave system
+                this.charging = false;
+                this.wavePower = 0;
+                this.maxPower = 100;
+                this.powerIncrement = 2;
+                this.waves = [];
+                this.waveRipples = [];
+                
+                // People system
+                this.people = [];
+                this.maxPeople = 8;
+                this.launchedPeople = [];
+                
+                // Physics
+                this.gravity = 0.5;
+                this.waterLevel = 450; // Y position of water surface
+                this.friction = 0.98;
+                
+                // Particles
+                this.particles = [];
+                this.splashes = [];
+                
+                // Input
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.mouseDown = false;
+                
+                this.audioContext = null;
+                this.setupEventListeners();
+                this.showInstructions();
+            }
+
+            setupEventListeners() {
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Canvas events
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleMouseDown(e);
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleMouseMove(e);
+                });
+
+                this.canvas.addEventListener('mouseup', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleMouseUp(e);
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    if (e.key === ' ' && this.gameRunning) {
+                        e.preventDefault();
+                        if (!this.charging) {
+                            this.startCharging();
+                        }
+                    }
+
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    if (e.key === ' ' && this.charging) {
+                        e.preventDefault();
+                        this.releaseWave();
+                    }
+                });
+
+                // Mobile controls
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'flex';
+                    
+                    const waveBtn = document.getElementById('waveBtn');
+                    waveBtn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.startCharging();
+                    });
+
+                    waveBtn.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        if (this.charging) {
+                            this.releaseWave();
+                        }
+                    });
+                }
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.startGame();
+            }
+
+            startGame() {
+                this.gameArea.style.display = 'block';
+                this.gameRunning = true;
+                this.score = 0;
+                this.peopleLaunched = 0;
+                this.bestDistance = 0;
+                this.waveCount = 0;
+                this.spawnPeople();
+                this.gameLoop();
+                this.playSound(220, 300, 'sine');
+            }
+
+            spawnPeople() {
+                this.people = [];
+                for (let i = 0; i < this.maxPeople; i++) {
+                    this.people.push({
+                        x: 100 + Math.random() * 700,
+                        y: this.waterLevel - 20,
+                        vx: 0,
+                        vy: 0,
+                        width: 16,
+                        height: 20,
+                        launched: false,
+                        distance: 0,
+                        bobOffset: Math.random() * Math.PI * 2,
+                        color: this.getRandomPersonColor()
+                    });
+                }
+            }
+
+            getRandomPersonColor() {
+                const colors = ['#FFB6C1', '#87CEEB', '#DDA0DD', '#F0E68C', '#98FB98', '#FFA07A'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = e.clientX - rect.left;
+                this.mouseY = e.clientY - rect.top;
+                this.startCharging();
+            }
+
+            handleMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = e.clientX - rect.left;
+                this.mouseY = e.clientY - rect.top;
+            }
+
+            handleMouseUp(e) {
+                if (this.charging) {
+                    this.releaseWave();
+                }
+            }
+
+            startCharging() {
+                this.charging = true;
+                this.wavePower = 0;
+            }
+
+            releaseWave() {
+                if (!this.charging) return;
+                
+                this.charging = false;
+                this.createWave(this.mouseX, this.wavePower);
+                this.waveCount++;
+                this.updateUI();
+                
+                // Sound effect based on power
+                const frequency = 150 + (this.wavePower / 100) * 200;
+                this.playSound(frequency, 400, 'sawtooth');
+                
+                this.wavePower = 0;
+                this.updatePowerMeter();
+            }
+
+            createWave(x, power) {
+                const wave = {
+                    x: x,
+                    y: this.waterLevel,
+                    radius: 0,
+                    maxRadius: 50 + (power / 100) * 100,
+                    power: power,
+                    life: 60,
+                    expanding: true
+                };
+                
+                this.waves.push(wave);
+                
+                // Create wave ripples
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        this.waveRipples.push({
+                            x: x,
+                            y: this.waterLevel,
+                            radius: 0,
+                            maxRadius: wave.maxRadius * 0.7,
+                            life: 40,
+                            alpha: 0.3
+                        });
+                    }, i * 100);
+                }
+                
+                // Check collision with people
+                this.people.forEach(person => {
+                    if (!person.launched) {
+                        const distance = Math.sqrt(
+                            Math.pow(person.x - x, 2) + Math.pow(person.y - this.waterLevel, 2)
+                        );
+                        
+                        if (distance < wave.maxRadius) {
+                            this.launchPerson(person, x, power, distance);
+                        }
+                    }
+                });
+                
+                // Create splash particles
+                this.createSplash(x, this.waterLevel, power);
+            }
+
+            launchPerson(person, waveX, power, distance) {
+                person.launched = true;
+                this.peopleLaunched++;
+                
+                // Calculate launch velocity based on wave power and distance from epicenter
+                const powerMultiplier = 1 - (distance / (50 + (power / 100) * 100));
+                const launchPower = Math.max(0, powerMultiplier) * (power / 100);
+                
+                // Launch angle and velocity
+                const angle = Math.atan2(person.y - this.waterLevel, person.x - waveX);
+                const baseVelocity = 8 + launchPower * 12;
+                
+                person.vx = Math.cos(angle) * baseVelocity;
+                person.vy = -Math.abs(Math.sin(angle)) * baseVelocity - 5; // Always launch upward
+                
+                // Create impact ripples at person's launch position
+                this.createImpactRipples(person.x, person.y, power, launchPower);
+                
+                // Add to launched people for tracking
+                this.launchedPeople.push(person);
+                
+                // Remove from regular people array
+                const index = this.people.indexOf(person);
+                if (index > -1) {
+                    this.people.splice(index, 1);
+                }
+                
+                // Sound effect
+                this.playSound(400 + Math.random() * 200, 200, 'square');
+            }
+
+            createSplash(x, y, power) {
+                const particleCount = Math.floor(5 + (power / 100) * 15);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    this.particles.push({
+                        x: x + (Math.random() - 0.5) * 20,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: -Math.random() * 8 - 2,
+                        life: 30 + Math.random() * 20,
+                        size: 2 + Math.random() * 4,
+                        color: '#87CEEB'
+                    });
+                }
+                
+                // Big splash effect
+                this.splashes.push({
+                    x: x,
+                    y: y,
+                    radius: 0,
+                    maxRadius: 30 + (power / 100) * 20,
+                    life: 20,
+                    alpha: 0.6
+                });
+            }
+
+            createImpactRipples(x, y, power, launchPower) {
+                // Create multiple impact ripples at the person's launch position
+                const rippleCount = 3 + Math.floor(launchPower * 3);
+                
+                for (let i = 0; i < rippleCount; i++) {
+                    setTimeout(() => {
+                        // Main impact ripples
+                        this.waveRipples.push({
+                            x: x + (Math.random() - 0.5) * 15,
+                            y: this.waterLevel + (Math.random() - 0.5) * 10,
+                            radius: 0,
+                            maxRadius: 25 + (launchPower * 40) + (Math.random() * 20),
+                            life: 45 + Math.random() * 15,
+                            alpha: 0.4 + (launchPower * 0.3),
+                            color: '#00CED1'
+                        });
+                        
+                        // Secondary smaller ripples for water disturbance
+                        this.waveRipples.push({
+                            x: x + (Math.random() - 0.5) * 30,
+                            y: this.waterLevel + (Math.random() - 0.5) * 15,
+                            radius: 0,
+                            maxRadius: 15 + (launchPower * 25),
+                            life: 30 + Math.random() * 10,
+                            alpha: 0.2 + (launchPower * 0.2),
+                            color: '#87CEEB'
+                        });
+                    }, i * 50);
+                }
+                
+                // Create water spray particles around the launch point
+                const sprayCount = Math.floor(8 + (launchPower * 12));
+                for (let i = 0; i < sprayCount; i++) {
+                    this.particles.push({
+                        x: x + (Math.random() - 0.5) * 25,
+                        y: y + (Math.random() - 0.5) * 10,
+                        vx: (Math.random() - 0.5) * 6 * (1 + launchPower),
+                        vy: -Math.random() * 4 * (1 + launchPower) - 2,
+                        life: 35 + Math.random() * 15,
+                        size: 2 + Math.random() * 3 + (launchPower * 2),
+                        color: i % 3 === 0 ? '#00CED1' : '#87CEEB',
+                        type: 'spray'
+                    });
+                }
+                
+                // Add some foam effects
+                for (let i = 0; i < 5; i++) {
+                    this.particles.push({
+                        x: x + (Math.random() - 0.5) * 20,
+                        y: this.waterLevel + (Math.random() - 0.5) * 8,
+                        vx: (Math.random() - 0.5) * 3,
+                        vy: -Math.random() * 2,
+                        life: 50 + Math.random() * 20,
+                        size: 3 + Math.random() * 4,
+                        color: '#FFFFFF',
+                        type: 'foam'
+                    });
+                }
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                // Update wave power if charging
+                if (this.charging) {
+                    this.wavePower = Math.min(this.maxPower, this.wavePower + this.powerIncrement);
+                    this.updatePowerMeter();
+                }
+
+                // Update waves
+                for (let i = this.waves.length - 1; i >= 0; i--) {
+                    const wave = this.waves[i];
+                    
+                    if (wave.expanding && wave.radius < wave.maxRadius) {
+                        wave.radius += 3;
+                    } else {
+                        wave.expanding = false;
+                        wave.life--;
+                    }
+                    
+                    if (wave.life <= 0) {
+                        this.waves.splice(i, 1);
+                    }
+                }
+
+                // Update wave ripples
+                for (let i = this.waveRipples.length - 1; i >= 0; i--) {
+                    const ripple = this.waveRipples[i];
+                    ripple.radius += 2;
+                    ripple.life--;
+                    ripple.alpha = ripple.life / 40 * 0.3;
+                    
+                    if (ripple.life <= 0 || ripple.radius > ripple.maxRadius) {
+                        this.waveRipples.splice(i, 1);
+                    }
+                }
+
+                // Update floating people
+                this.people.forEach(person => {
+                    // Gentle bobbing motion
+                    person.bobOffset += 0.05;
+                    person.y = this.waterLevel - 20 + Math.sin(person.bobOffset) * 3;
+                });
+
+                // Update launched people
+                for (let i = this.launchedPeople.length - 1; i >= 0; i--) {
+                    const person = this.launchedPeople[i];
+                    
+                    // Apply physics
+                    person.vx *= this.friction;
+                    person.vy += this.gravity;
+                    person.x += person.vx;
+                    person.y += person.vy;
+                    
+                    // Calculate distance traveled
+                    person.distance = Math.max(0, person.x - 100);
+                    
+                    // Update best distance
+                    if (person.distance > this.bestDistance) {
+                        this.bestDistance = Math.floor(person.distance / 10);
+                        this.score += Math.floor(person.distance / 10);
+                    }
+                    
+                    // Remove if off screen or landed in water
+                    if (person.x > this.canvas.width + 100 || person.y > this.canvas.height + 100) {
+                        this.launchedPeople.splice(i, 1);
+                        this.score += 50; // Bonus for successful launch
+                    }
+                }
+
+                // Update particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const particle = this.particles[i];
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.vy += 0.2; // gravity
+                    particle.life--;
+                    
+                    if (particle.life <= 0 || particle.y > this.canvas.height) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+
+                // Update splashes
+                for (let i = this.splashes.length - 1; i >= 0; i--) {
+                    const splash = this.splashes[i];
+                    splash.radius += 2;
+                    splash.life--;
+                    splash.alpha = splash.life / 20 * 0.6;
+                    
+                    if (splash.life <= 0) {
+                        this.splashes.splice(i, 1);
+                    }
+                }
+
+                // Check if all people launched (optional end condition)
+                if (this.people.length === 0 && this.launchedPeople.length === 0 && this.waves.length === 0) {
+                    setTimeout(() => {
+                        this.spawnPeople(); // Respawn for continuous play
+                    }, 2000);
+                }
+                
+                this.updateUI();
+            }
+
+            render() {
+                // Clear canvas with sky gradient
+                this.ctx.fillStyle = '#87CEEB';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw sun
+                this.ctx.fillStyle = '#FFD700';
+                this.ctx.beginPath();
+                this.ctx.arc(150, 80, 30, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Draw clouds
+                this.drawClouds();
+                
+                // Draw ocean
+                this.ctx.fillStyle = '#4682B4';
+                this.ctx.fillRect(0, this.waterLevel, this.canvas.width, this.canvas.height - this.waterLevel);
+                
+                // Draw water surface with gentle waves
+                this.drawWaterSurface();
+                
+                // Draw wave ripples
+                this.waveRipples.forEach(ripple => {
+                    // Use ripple color if available, otherwise default white
+                    const color = ripple.color || '#FFFFFF';
+                    let r, g, b;
+                    
+                    if (color.startsWith('#')) {
+                        r = parseInt(color.slice(1, 3), 16);
+                        g = parseInt(color.slice(3, 5), 16);
+                        b = parseInt(color.slice(5, 7), 16);
+                    } else {
+                        // Default to white
+                        r = g = b = 255;
+                    }
+                    
+                    this.ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${ripple.alpha})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                });
+                
+                // Draw waves
+                this.waves.forEach(wave => {
+                    const alpha = wave.expanding ? 0.8 : wave.life / 60 * 0.8;
+                    this.ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    this.ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    
+                    // Inner wave effect
+                    this.ctx.strokeStyle = `rgba(0, 206, 209, ${alpha * 0.5})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(wave.x, wave.y, wave.radius * 0.7, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                });
+                
+                // Draw splashes
+                this.splashes.forEach(splash => {
+                    this.ctx.fillStyle = `rgba(255, 255, 255, ${splash.alpha})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(splash.x, splash.y, splash.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+                
+                // Draw floating people
+                this.people.forEach(person => {
+                    this.drawPerson(person);
+                });
+                
+                // Draw launched people
+                this.launchedPeople.forEach(person => {
+                    this.drawPerson(person);
+                    
+                    // Draw trail
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(person.x, person.y);
+                    this.ctx.lineTo(person.x - person.vx * 2, person.y - person.vy * 2);
+                    this.ctx.stroke();
+                });
+                
+                // Draw particles
+                this.particles.forEach(particle => {
+                    const alpha = particle.life / 50;
+                    
+                    // Use particle color if available, otherwise default blue
+                    let color = particle.color || '#87CEEB';
+                    let r, g, b;
+                    
+                    if (color.startsWith('#')) {
+                        r = parseInt(color.slice(1, 3), 16);
+                        g = parseInt(color.slice(3, 5), 16);
+                        b = parseInt(color.slice(5, 7), 16);
+                    } else {
+                        // Default to blue
+                        r = 135; g = 206; b = 235;
+                    }
+                    
+                    this.ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                    
+                    // Special rendering for different particle types
+                    if (particle.type === 'foam') {
+                        // Foam particles are more bubbly
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        
+                        // Add inner highlight for foam effect
+                        this.ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x - particle.size * 0.3, particle.y - particle.size * 0.3, particle.size * 0.4, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    } else if (particle.type === 'spray') {
+                        // Spray particles are more droplet-like
+                        this.ctx.beginPath();
+                        this.ctx.ellipse(particle.x, particle.y, particle.size, particle.size * 1.2, 0, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    } else {
+                        // Regular particles
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                });
+                
+                // Draw charging indicator
+                if (this.charging) {
+                    this.ctx.strokeStyle = '#00CED1';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.mouseX, this.mouseY, 20 + (this.wavePower / 100) * 50, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                }
+            }
+
+            drawWaterSurface() {
+                const time = Date.now() * 0.002;
+                
+                this.ctx.strokeStyle = '#87CEEB';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                
+                for (let x = 0; x <= this.canvas.width; x += 5) {
+                    const y = this.waterLevel + Math.sin(time + x * 0.01) * 2;
+                    if (x === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                }
+                
+                this.ctx.stroke();
+            }
+
+            drawClouds() {
+                const time = Date.now() * 0.0005;
+                
+                // Cloud 1
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                this.drawCloud(300 + Math.sin(time) * 20, 60, 1);
+                
+                // Cloud 2
+                this.drawCloud(600 + Math.sin(time * 0.7) * 15, 100, 0.8);
+                
+                // Cloud 3
+                this.drawCloud(750 + Math.sin(time * 0.5) * 25, 40, 1.2);
+            }
+
+            drawCloud(x, y, scale) {
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                this.ctx.scale(scale, scale);
+                
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                this.ctx.arc(20, 0, 20, 0, Math.PI * 2);
+                this.ctx.arc(40, 0, 15, 0, Math.PI * 2);
+                this.ctx.arc(10, -10, 15, 0, Math.PI * 2);
+                this.ctx.arc(30, -10, 15, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                this.ctx.restore();
+            }
+
+            drawPerson(person) {
+                this.ctx.save();
+                this.ctx.translate(person.x, person.y);
+                
+                // Body
+                this.ctx.fillStyle = person.color;
+                this.ctx.fillRect(-8, -10, 16, 20);
+                
+                // Head
+                this.ctx.fillStyle = '#FFDBAC';
+                this.ctx.beginPath();
+                this.ctx.arc(0, -18, 6, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Arms (if launched, show flailing)
+                this.ctx.strokeStyle = '#FFDBAC';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                
+                if (person.launched) {
+                    // Flailing arms
+                    const armAngle = Date.now() * 0.02;
+                    this.ctx.moveTo(-8, -5);
+                    this.ctx.lineTo(-15 + Math.sin(armAngle) * 5, -10 + Math.cos(armAngle) * 5);
+                    this.ctx.moveTo(8, -5);
+                    this.ctx.lineTo(15 + Math.sin(armAngle + Math.PI) * 5, -10 + Math.cos(armAngle + Math.PI) * 5);
+                } else {
+                    // Normal swimming position
+                    this.ctx.moveTo(-8, -5);
+                    this.ctx.lineTo(-12, -8);
+                    this.ctx.moveTo(8, -5);
+                    this.ctx.lineTo(12, -8);
+                }
+                
+                this.ctx.stroke();
+                
+                // Legs
+                this.ctx.beginPath();
+                this.ctx.moveTo(-4, 10);
+                this.ctx.lineTo(-4, 18);
+                this.ctx.moveTo(4, 10);
+                this.ctx.lineTo(4, 18);
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+
+            updatePowerMeter() {
+                const fill = document.getElementById('powerFill');
+                fill.style.width = (this.wavePower / this.maxPower * 100) + '%';
+            }
+
+            updateUI() {
+                document.getElementById('currentScore').textContent = this.score;
+                document.getElementById('peopleLaunched').textContent = this.peopleLaunched;
+                document.getElementById('bestDistance').textContent = this.bestDistance;
+                document.getElementById('waveCount').textContent = this.waveCount;
+            }
+
+            endGame() {
+                this.gameRunning = false;
+                
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalPeople').textContent = this.peopleLaunched;
+                document.getElementById('longestLaunch').textContent = this.bestDistance;
+                
+                this.gameOver.style.display = 'flex';
+                
+                // Save high score
+                const bestScore = parseInt(localStorage.getItem('oceanExplorerBest') || '0');
+                if (this.score > bestScore) {
+                    localStorage.setItem('oceanExplorerBest', this.score.toString());
+                }
+            }
+
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.waves = [];
+                this.waveRipples = [];
+                this.launchedPeople = [];
+                this.particles = [];
+                this.splashes = [];
+                this.startGame();
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    if (!this.audioContext) {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                    
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start();
+                    oscillator.stop(this.audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not available
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new OceanExplorer();
+        });
+    </script>
+</body>
+</html>

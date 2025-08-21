@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Runner - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.95);
+            color: #FF6B35;
+            border: 2px solid #FF6B35;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-decoration: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #FF6B35;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Game container */
+        .game-container {
+            width: 1000px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            border: 3px solid #FF6B35;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Start screen */
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,107,53,0.9), rgba(255,210,63,0.9));
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #F7931E;
+            z-index: 100;
+        }
+
+        .start-screen h1 {
+            font-size: 2.2rem;
+            color: #D32F2F;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .start-screen p {
+            font-size: 1.1rem;
+            color: #BF360C;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #D32F2F, #FF5722);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        /* Game area */
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 60%, #90EE90 60%, #228B22 100%);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .game-viewport {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.5s ease-out;
+        }
+
+        /* UI */
+        .ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            color: #333;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .speed-meter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 10px;
+            border: 2px solid #333;
+            overflow: hidden;
+        }
+
+        .speed-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #FFEB3B, #FF5722);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .speed-text {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Track */
+        .track {
+            position: absolute;
+            bottom: 120px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #8B4513;
+            border-top: 4px solid #654321;
+            border-bottom: 4px solid #654321;
+        }
+
+        .track-lines {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: repeating-linear-gradient(
+                to right,
+                white 0px,
+                white 20px,
+                transparent 20px,
+                transparent 40px
+            );
+            transform: translateY(-50%);
+        }
+
+        .finish-line {
+            position: absolute;
+            bottom: 120px;
+            right: 50px;
+            width: 8px;
+            height: 80px;
+            background: repeating-linear-gradient(
+                to bottom,
+                black 0px,
+                black 10px,
+                white 10px,
+                white 20px
+            );
+            border-left: 2px solid #333;
+            border-right: 2px solid #333;
+        }
+
+        /* Character */
+        .character {
+            position: absolute;
+            bottom: 200px;
+            left: 50px;
+            width: 40px;
+            height: 60px;
+            transition: transform 0.1s ease;
+            z-index: 5;
+        }
+
+        .character-body {
+            width: 100%;
+            height: 100%;
+            background: #FFE0B2;
+            border-radius: 20px 20px 5px 5px;
+            position: relative;
+            border: 2px solid #D4A574;
+        }
+
+        .character-head {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 25px;
+            background: #FFE0B2;
+            border-radius: 50%;
+            border: 2px solid #D4A574;
+        }
+
+        .character-eyes {
+            position: absolute;
+            top: 8px;
+            left: 6px;
+            width: 4px;
+            height: 4px;
+            background: #333;
+            border-radius: 50%;
+            box-shadow: 8px 0 0 #333;
+        }
+
+        .character-legs {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 10px;
+        }
+
+        .leg {
+            position: absolute;
+            width: 8px;
+            height: 10px;
+            background: #FFE0B2;
+            border-radius: 0 0 4px 4px;
+            border: 1px solid #D4A574;
+        }
+
+        .leg.left {
+            left: 4px;
+        }
+
+        .leg.right {
+            right: 4px;
+        }
+
+        /* Running animation */
+        .character.running .character-body {
+            animation: bobbing 0.2s ease-in-out infinite;
+        }
+
+        .character.running .leg.left {
+            animation: legLeft 0.3s ease-in-out infinite;
+        }
+
+        .character.running .leg.right {
+            animation: legRight 0.3s ease-in-out infinite;
+        }
+
+        @keyframes bobbing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        @keyframes legLeft {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+
+        @keyframes legRight {
+            0%, 100% { transform: rotate(10deg); }
+            50% { transform: rotate(-10deg); }
+        }
+
+        /* Flying animation */
+        .character.flying {
+            animation: none;
+            transition: all 0.1s ease-out;
+        }
+
+        .character.flying-arc {
+            transition: all 0.05s ease-out;
+        }
+
+        /* Blood stain */
+        .blood-stain {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: radial-gradient(ellipse, #8B0000 30%, #DC143C 60%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1;
+        }
+
+        .blood-stain.visible {
+            opacity: 0.8;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 2px solid #FF6B35;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        /* Results screen */
+        .results-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(255,107,53,0.95), rgba(255,210,63,0.95));
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #F7931E;
+            text-align: center;
+            z-index: 200;
+            display: none;
+        }
+
+        .results-screen h2 {
+            font-size: 2rem;
+            color: #D32F2F;
+            margin-bottom: 15px;
+        }
+
+        .distance-result {
+            font-size: 1.5rem;
+            color: #BF360C;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .play-again-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95vw;
+                height: 80vh;
+                padding: 15px;
+            }
+
+            .instructions {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+
+            .character {
+                width: 35px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="home.html" class="back-btn">← Back to Hub</a>
+
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <h1>🏃‍♀️ Speed Runner Challenge!</h1>
+            <p>🚀 Spam SPACEBAR to build up speed!</p>
+            <p>🏁 Reach the finish line as fast as possible!</p>
+            <p>🌟 Launch into the sky based on your speed!</p>
+            <p>📏 See how far you can fly!</p>
+            <button class="start-btn" id="startBtn">Start Running!</button>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <div class="game-viewport" id="gameViewport">
+                <div class="ui">
+                    <div>Distance to finish: <span id="distanceToFinish">950px</span></div>
+                    <div>Speed: <span id="speedDisplay">0</span> km/h</div>
+                </div>
+
+                <div class="speed-meter">
+                    <div class="speed-text">Speed Meter</div>
+                    <div class="speed-fill" id="speedFill"></div>
+                </div>
+
+                <div class="track">
+                    <div class="track-lines"></div>
+                </div>
+
+                <div class="finish-line"></div>
+
+                <div class="character" id="character">
+                    <div class="character-head">
+                        <div class="character-eyes"></div>
+                    </div>
+                    <div class="character-body"></div>
+                    <div class="character-legs">
+                        <div class="leg left"></div>
+                        <div class="leg right"></div>
+                    </div>
+                </div>
+
+                <div class="blood-stains-container" id="bloodStainsContainer"></div>
+
+                <div class="instructions" id="instructions">
+                    Press and hold SPACEBAR to build speed! 🚀
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-screen" id="resultsScreen">
+            <h2>🎯 Flight Results!</h2>
+            <div class="distance-result" id="distanceResult">
+                You flew 0 meters!
+            </div>
+            <div id="achievement"></div>
+            <button class="play-again-btn" id="playAgainBtn">Run Again!</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Game elements
+            const startScreen = document.getElementById('startScreen');
+            const gameArea = document.getElementById('gameArea');
+            const gameViewport = document.getElementById('gameViewport');
+            const resultsScreen = document.getElementById('resultsScreen');
+            const character = document.getElementById('character');
+            const speedFill = document.getElementById('speedFill');
+            const speedDisplay = document.getElementById('speedDisplay');
+            const distanceToFinish = document.getElementById('distanceToFinish');
+            const bloodStainsContainer = document.getElementById('bloodStainsContainer');
+            const distanceResult = document.getElementById('distanceResult');
+            const achievement = document.getElementById('achievement');
+            const instructions = document.getElementById('instructions');
+            const startBtn = document.getElementById('startBtn');
+            const playAgainBtn = document.getElementById('playAgainBtn');
+
+            // Game state
+            let gameRunning = false;
+            let speed = 0;
+            let maxSpeed = 100;
+            let characterPosition = 50;
+            let finishLinePosition = 950;
+            let spacePressed = false;
+            let reachedFinish = false;
+            let flying = false;
+            let flightX = 0;
+            let flightY = 0;
+            let flightVelocityX = 0;
+            let flightVelocityY = 0;
+            let flightTime = 0;
+            let cameraX = 0;
+            let highScore = parseInt(localStorage.getItem('speedRunnerBest') || '0');
+
+            // Sound effects
+            function playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+                    gainNode.gain.value = 0.1;
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Audio not available
+                }
+            }
+
+            function startGame() {
+                startScreen.style.display = 'none';
+                gameArea.style.display = 'block';
+                resultsScreen.style.display = 'none';
+                
+                // Reset game state
+                gameRunning = true;
+                speed = 0;
+                characterPosition = 50;
+                reachedFinish = false;
+                flying = false;
+                spacePressed = false;
+                flightX = 0;
+                flightY = 0;
+                flightVelocityX = 0;
+                flightVelocityY = 0;
+                flightTime = 0;
+                cameraX = 0;
+                
+                // Reset character
+                character.style.left = characterPosition + 'px';
+                character.style.bottom = '200px';
+                character.style.transform = 'none';
+                character.className = 'character';
+                
+                // Reset camera
+                gameViewport.style.transform = 'translateX(0px)';
+                
+                // Don't reset blood stains - they should persist!
+                
+                updateUI();
+                gameLoop();
+                playSound(440, 0.3);
+            }
+
+            function updateUI() {
+                speedFill.style.width = (speed / maxSpeed * 100) + '%';
+                speedDisplay.textContent = Math.round(speed);
+                
+                const distanceLeft = Math.max(0, finishLinePosition - characterPosition);
+                distanceToFinish.textContent = Math.round(distanceLeft) + 'px';
+            }
+
+            function gameLoop() {
+                if (!gameRunning) return;
+
+                if (flying) {
+                    // Handle flight physics
+                    flightTime += 0.016; // ~60fps
+                    
+                    // Calculate flight arc (parabolic motion) - reduced gravity for silly flight!
+                    flightX = finishLinePosition + flightVelocityX * flightTime;
+                    flightY = 200 + flightVelocityY * flightTime - 0.5 * 200 * flightTime * flightTime; // Much weaker gravity for unrealistic flight
+                    
+                    // Update character position
+                    character.style.left = flightX + 'px';
+                    character.style.bottom = Math.max(120, flightY) + 'px';
+                    
+                    // Rotate character based on velocity - more dramatic rotation
+                    const angle = Math.atan2(-flightVelocityY + 200 * flightTime, flightVelocityX) * 180 / Math.PI;
+                    character.style.transform = `rotate(${angle}deg)`;
+                    
+                    // Camera follows character during flight
+                    const targetCameraX = Math.max(0, flightX - 400); // Keep character centered-ish
+                    cameraX += (targetCameraX - cameraX) * 0.1; // Smooth camera movement
+                    gameViewport.style.transform = `translateX(-${cameraX}px)`;
+                    
+                    // Check if landed
+                    if (flightY <= 120) {
+                        landCharacter();
+                        return;
+                    }
+                    
+                    requestAnimationFrame(gameLoop);
+                    return;
+                }
+
+                // Handle speed based on spacebar
+                if (spacePressed && !reachedFinish) {
+                    speed = Math.min(speed + 0.8, maxSpeed);
+                    character.classList.add('running');
+                    
+                    // Random running sounds
+                    if (Math.random() < 0.1) {
+                        playSound(200 + speed * 2, 0.1, 'square');
+                    }
+                } else if (!reachedFinish) {
+                    speed = Math.max(speed - 0.3, 0);
+                    if (speed < 5) {
+                        character.classList.remove('running');
+                    }
+                }
+
+                // Move character
+                if (!reachedFinish && speed > 0) {
+                    characterPosition += speed * 0.5;
+                    character.style.left = characterPosition + 'px';
+                    
+                    // Add speed wobble effect
+                    if (speed > 50) {
+                        const wobble = Math.sin(Date.now() * 0.02) * (speed / 50);
+                        character.style.transform = `translateY(${wobble}px)`;
+                    }
+                }
+
+                // Check if reached finish line
+                if (characterPosition >= finishLinePosition && !reachedFinish) {
+                    reachedFinish = true;
+                    launchCharacter();
+                }
+
+                updateUI();
+                requestAnimationFrame(gameLoop);
+            }
+
+            function launchCharacter() {
+                character.classList.remove('running');
+                character.classList.add('flying');
+                
+                // Calculate initial flight velocity based on speed - MUCH more unrealistic!
+                flightVelocityX = speed * 6 + Math.random() * 100; // Much faster horizontal velocity
+                flightVelocityY = speed * 4 + 150; // MUCH higher upward velocity for silly flight
+                flightTime = 0;
+                
+                // Play launch sound
+                playSound(440, 0.5);
+                playSound(660, 0.3);
+                
+                flying = true;
+                instructions.textContent = `🚀 LAUNCHING INTO ORBIT! Speed: ${Math.round(speed)} km/h 🚀`;
+                
+                // Continue game loop to handle flight
+                requestAnimationFrame(gameLoop);
+            }
+
+            function landCharacter() {
+                // Calculate final distance
+                const finalDistance = Math.round(flightX - finishLinePosition);
+                
+                // Create a new blood stain for this landing
+                const newBloodStain = document.createElement('div');
+                newBloodStain.className = 'blood-stain visible';
+                newBloodStain.style.left = flightX + 'px';
+                newBloodStain.style.bottom = '120px';
+                bloodStainsContainer.appendChild(newBloodStain);
+                
+                // Position character at landing spot
+                character.style.left = flightX + 'px';
+                character.style.bottom = '120px';
+                character.classList.remove('flying');
+                character.classList.add('flying-arc');
+                
+                // Play crash sound
+                playSound(150, 0.5, 'sawtooth');
+                
+                // Show results after a short delay
+                setTimeout(() => {
+                    showResults(finalDistance);
+                }, 1000);
+            }
+
+            function showResults(distance) {
+                gameRunning = false;
+                
+                // Update high score
+                let newRecord = false;
+                if (distance > highScore) {
+                    highScore = distance;
+                    localStorage.setItem('speedRunnerBest', highScore.toString());
+                    newRecord = true;
+                }
+                
+                // Show results
+                distanceResult.textContent = `You flew ${distance} meters!`;
+                
+                // Add achievement message
+                let achievementText = '';
+                if (newRecord) {
+                    achievementText = '🏆 NEW RECORD! 🏆';
+                } else if (distance > 200) {
+                    achievementText = '🌟 Amazing flight!';
+                } else if (distance > 150) {
+                    achievementText = '👍 Great run!';
+                } else if (distance > 100) {
+                    achievementText = '🙂 Not bad!';
+                } else {
+                    achievementText = '😅 Keep practicing!';
+                }
+                
+                if (highScore > 0) {
+                    achievementText += `<br>Best: ${highScore}m`;
+                }
+                
+                achievement.innerHTML = achievementText;
+                
+                resultsScreen.style.display = 'block';
+                playSound(880, 0.7);
+            }
+
+            function restartGame() {
+                resultsScreen.style.display = 'none';
+                startGame();
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', startGame);
+            playAgainBtn.addEventListener('click', restartGame);
+
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    if (!gameRunning && startScreen.style.display !== 'none') {
+                        startGame();
+                    } else if (gameRunning && !reachedFinish) {
+                        spacePressed = true;
+                    } else if (!gameRunning && resultsScreen.style.display !== 'none') {
+                        restartGame();
+                    }
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'Space') {
+                    spacePressed = false;
+                }
+            });
+
+            // Touch controls for mobile
+            let touchRunning = false;
+
+            instructions.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameRunning && !reachedFinish) {
+                    touchRunning = true;
+                    spacePressed = true;
+                }
+            });
+
+            instructions.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touchRunning = false;
+                spacePressed = false;
+            });
+
+            document.addEventListener('touchstart', (e) => {
+                if (!gameRunning && startScreen.style.display !== 'none') {
+                    startGame();
+                } else if (!gameRunning && resultsScreen.style.display !== 'none') {
+                    restartGame();
+                }
+            });
+
+            // Initialize game
+            updateUI();
+        })();
+    </script>
+</body>
+</html>

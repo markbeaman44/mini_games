@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Rush Hour - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #FFE135 0%, #FFA500 50%, #FF6347 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 900px;
+            height: 600px;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+            border: 3px solid #8B4513;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .game-header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 100;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            color: #8B0000;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #8B0000;
+        }
+
+        .bus {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            z-index: 10;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        /* Main bus body */
+        .bus::before {
+            content: '';
+            position: absolute;
+            bottom: 15px;
+            left: 10px;
+            width: 100px;
+            height: 35px;
+            background: linear-gradient(45deg, #FF4500 0%, #DC143C 50%, #8B0000 100%);
+            border-radius: 8px;
+            border: 3px solid #4B0000;
+            box-shadow: 
+                0 4px 12px rgba(0,0,0,0.4),
+                inset 0 2px 0 rgba(255,255,255,0.3),
+                inset 0 -2px 0 rgba(0,0,0,0.3);
+        }
+
+        /* Safety bar across the bus */
+        .bus::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            width: 90px;
+            height: 8px;
+            background: linear-gradient(90deg, #C0C0C0 0%, #808080 50%, #C0C0C0 100%);
+            border-radius: 4px;
+            border: 1px solid #404040;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Left wheel */
+        .bus .wheel-left {
+            position: absolute;
+            bottom: 5px;
+            left: 20px;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, #555 0%, #222 50%, #000 100%);
+            border-radius: 50%;
+            border: 2px solid #333;
+            box-shadow: 
+                0 2px 6px rgba(0,0,0,0.5),
+                inset 0 2px 0 rgba(255,255,255,0.2);
+            animation: spin 0.5s linear infinite;
+        }
+
+        /* Right wheel */
+        .bus .wheel-right {
+            position: absolute;
+            bottom: 5px;
+            right: 20px;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, #555 0%, #222 50%, #000 100%);
+            border-radius: 50%;
+            border: 2px solid #333;
+            box-shadow: 
+                0 2px 6px rgba(0,0,0,0.5),
+                inset 0 2px 0 rgba(255,255,255,0.2);
+            animation: spin 0.5s linear infinite;
+        }
+
+        /* Wheel spokes */
+        .bus .wheel-left::before,
+        .bus .wheel-right::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 2px;
+            background: #666;
+            transform: translate(-50%, -50%);
+            border-radius: 1px;
+        }
+
+        .bus .wheel-left::after,
+        .bus .wheel-right::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            background: #666;
+            transform: translate(-50%, -50%);
+            border-radius: 1px;
+        }
+
+        /* Passenger silhouettes */
+        .bus .passenger1 {
+            position: absolute;
+            top: 15px;
+            left: 25px;
+            width: 12px;
+            height: 18px;
+            background: linear-gradient(180deg, #8B4513 0%, #654321 100%);
+            border-radius: 6px 6px 3px 3px;
+            border: 1px solid #4A4A4A;
+        }
+
+        .bus .passenger1::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 2px;
+            width: 8px;
+            height: 6px;
+            background: #4B0000;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .bus .passenger2 {
+            position: absolute;
+            top: 15px;
+            left: 45px;
+            width: 12px;
+            height: 18px;
+            background: linear-gradient(180deg, #FFB6C1 0%, #FF69B4 100%);
+            border-radius: 6px 6px 3px 3px;
+            border: 1px solid #4A4A4A;
+        }
+
+        .bus .passenger2::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 1px;
+            width: 10px;
+            height: 7px;
+            background: #FFD700;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .bus .passenger3 {
+            position: absolute;
+            top: 15px;
+            left: 65px;
+            width: 12px;
+            height: 18px;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 100%);
+            border-radius: 6px 6px 3px 3px;
+            border: 1px solid #4A4A4A;
+        }
+
+        .bus .passenger3::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 3px;
+            width: 6px;
+            height: 5px;
+            background: #000;
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* Bus decorative stripes */
+        .bus .stripe1 {
+            position: absolute;
+            bottom: 35px;
+            left: 15px;
+            width: 90px;
+            height: 4px;
+            background: linear-gradient(90deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .bus .stripe2 {
+            position: absolute;
+            bottom: 25px;
+            left: 15px;
+            width: 90px;
+            height: 2px;
+            background: linear-gradient(90deg, #FF6347 0%, #DC143C 50%, #FF6347 100%);
+            border-radius: 1px;
+        }
+
+        /* Falling items */
+        .falling-item {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: sparkle 2s ease-in-out infinite alternate;
+            z-index: 5;
+        }
+
+        .falling-item.good {
+            border: 3px solid #32CD32;
+            animation: sparkle 2s ease-in-out infinite alternate, glow-good 1.5s ease-in-out infinite;
+        }
+
+        .falling-item.bad {
+            border: 3px solid #FF4500;
+            animation: sparkle 2s ease-in-out infinite alternate, glow-bad 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.1) rotate(10deg); }
+        }
+
+        @keyframes glow-good {
+            0%, 100% { box-shadow: 0 4px 12px rgba(50, 205, 50, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(50, 205, 50, 0.8); }
+        }
+
+        @keyframes glow-bad {
+            0%, 100% { box-shadow: 0 4px 12px rgba(255, 69, 0, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(255, 69, 0, 0.8); }
+        }
+
+        /* Catch effect */
+        .catch-effect {
+            position: absolute;
+            font-size: 3rem;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+            animation: catch-animation 1s ease-out forwards;
+        }
+
+        .catch-effect.good {
+            color: #32CD32;
+            text-shadow: 0 0 10px #32CD32;
+        }
+
+        .catch-effect.bad {
+            color: #FF4500;
+            text-shadow: 0 0 10px #FF4500;
+        }
+
+        @keyframes catch-animation {
+            0% { transform: scale(0.5) translateY(0); opacity: 1; }
+            50% { transform: scale(1.2) translateY(-20px); opacity: 0.8; }
+            100% { transform: scale(1) translateY(-40px); opacity: 0; }
+        }
+
+        .start-screen {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(255, 69, 0, 0.95), rgba(220, 20, 60, 0.95));
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #FFD700;
+            color: white;
+        }
+
+        .start-screen h2 {
+            margin: 0 0 15px 0;
+            color: #FFD700;
+            font-size: 28px;
+            text-shadow: 0 0 15px #FFD700;
+        }
+
+        .start-screen p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.4;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .start-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 15px;
+            font-weight: 800;
+            border: 2px solid #FFD700;
+            background: linear-gradient(45deg, #FF4500 0%, #DC143C 100%);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            border: 3px solid #FF0000;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #FF6347;
+        }
+
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #FF4500 0%, #DC143C 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 100;
+        }
+
+        .instructions p {
+            margin: 2px 0;
+            font-size: 0.9rem;
+            color: #8B0000;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.2);
+            color: #8B0000;
+            border: 2px solid #8B0000;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: white;
+            color: #FF4500;
+            transform: scale(1.05);
+        }
+
+        .jumping {
+            animation: bounce 0.6s ease-out;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-15px) scale(1.1); }
+            60% { transform: translateY(-5px) scale(1.05); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 950px) {
+            .game-container {
+                width: 95vw;
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-btn">← Back to Hub</a>
+    
+    <div class="game-container" id="gameContainer">
+        <div class="game-header">
+            <div class="game-title">🌈 Rainbow Bus Collector</div>
+            <div class="score">Score: <span id="score">0</span> | Lives: <span id="lives">3</span> ❤️</div>
+        </div>
+
+        <div class="bus" id="bus">
+            <div class="wheel-left"></div>
+            <div class="wheel-right"></div>
+            <div class="passenger1"></div>
+            <div class="passenger2"></div>
+            <div class="passenger3"></div>
+            <div class="stripe1"></div>
+            <div class="stripe2"></div>
+        </div>
+
+        <div class="start-screen" id="startScreen">
+            <h2>🌈 Welcome to Rainbow Bus Collector! 🌈</h2>
+            <p>🚌 Move your colorful bus left and right!</p>
+            <p>⭐ Catch the good things falling from the sky!</p>
+            <p>👶👧👨‍⚕️ Pick up people who need a ride on your bus!</p>
+            <p>💎 Special diamonds give bonus points!</p>
+            <p>⚠️ Avoid the bad things like rocks and storm clouds!</p>
+            <p>❤️ You have 3 lives - don't lose them all!</p>
+            <button class="start-btn" id="startBtn">Start Collecting!</button>
+            <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
+                Use <strong>ARROW KEYS</strong> or <strong>A/D keys</strong> to move!
+            </p>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>Great Job Bus Driver!</h2>
+            <p>You helped so many people get rides!</p>
+            <p>Final Score: <span id="finalScore">0</span> points!</p>
+            <p>People Helped: <span id="finalItems">0</span></p>
+            <button class="btn" onclick="restartGame()">Play Again!</button>
+            <button class="btn" onclick="window.location.href='home.html'">Back to Hub</button>
+            <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
+                Press <strong>SPACEBAR</strong> to play again!
+            </p>
+        </div>
+
+        <div class="instructions">
+            <p><strong>Use ARROW KEYS or A/D to move your bus!</strong></p>
+            <p>Pick up people who need a ride, avoid the bad weather!</p>
+        </div>
+    </div>
+
+    <script>
+        class RainbowBusCollector {
+            constructor() {
+                this.gameContainer = document.getElementById('gameContainer');
+                this.bus = document.getElementById('bus');
+                this.scoreElement = document.getElementById('score');
+                this.livesElement = document.getElementById('lives');
+                this.gameOverElement = document.getElementById('gameOver');
+                this.finalScoreElement = document.getElementById('finalScore');
+                this.finalItemsElement = document.getElementById('finalItems');
+                this.startScreen = document.getElementById('startScreen');
+                this.startBtn = document.getElementById('startBtn');
+                
+                this.gameWidth = 900;
+                this.gameHeight = 600;
+                this.isGameRunning = false;
+                this.gameStarted = false;
+                this.score = 0;
+                this.lives = 3;
+                this.itemsCollected = 0;
+                this.fallingItems = [];
+                this.lastItemId = 0;
+                
+                // Bus properties
+                this.busX = 400;
+                this.busY = 480;
+                this.busWidth = 120;
+                this.busHeight = 60;
+                this.busSpeed = 8;
+                
+                // Game mechanics
+                this.itemFallSpeed = 2;
+                this.itemSpawnRate = 0.02;
+                this.keys = {};
+                
+                // Item types
+                this.goodItems = ['👶', '👧', '👦', '👩', '👨', '👵', '👴', '👩‍⚕️', '👨‍⚕️', '👩‍�', '👨‍�', '👩‍�', '👨‍🎓', '👮‍♀️', '👮‍♂️', '👩‍�', '👨‍🌾', '👩‍�', '👨‍🍳'];
+                this.badItems = ['⛈️', '🪨', '💥', '⚡', '🔥', '❄️'];
+                this.specialItems = ['💎', '🏆', '👑', '✨'];
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.updateBusPosition();
+                this.showStartScreen();
+                this.gameLoop();
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.code] = true;
+                    
+                    // Start game with spacebar
+                    if (!this.gameStarted && e.code === 'Space') {
+                        this.startGame();
+                    }
+                    
+                    // Restart game with spacebar if on game over screen
+                    if (!this.isGameRunning && this.gameStarted && e.code === 'Space') {
+                        this.quickRestart();
+                    }
+                    
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.code] = false;
+                    e.preventDefault();
+                });
+                
+                // Start button click
+                this.startBtn.addEventListener('click', () => {
+                    this.startGame();
+                });
+                
+                // Prevent page scrolling
+                document.addEventListener('keydown', (e) => {
+                    if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].indexOf(e.code) > -1) {
+                        e.preventDefault();
+                    }
+                }, false);
+            }
+            
+            showStartScreen() {
+                this.startScreen.style.display = 'block';
+                this.gameStarted = false;
+                this.isGameRunning = false;
+            }
+
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameStarted = true;
+                this.isGameRunning = true;
+                console.log('Rainbow Bus Collector started!');
+            }
+
+            quickRestart() {
+                // Reset game state
+                this.score = 0;
+                this.lives = 3;
+                this.itemsCollected = 0;
+                this.scoreElement.textContent = this.score;
+                this.livesElement.textContent = this.lives;
+                this.busX = 400;
+                this.busY = 480;
+                this.itemFallSpeed = 2;
+                
+                // Clear existing items
+                this.fallingItems.forEach(item => item.element.remove());
+                this.fallingItems = [];
+                this.lastItemId = 0;
+                
+                // Clear any catch effects
+                document.querySelectorAll('.catch-effect').forEach(effect => effect.remove());
+                
+                this.updateBusPosition();
+                
+                // Hide game over screen and start game immediately
+                this.gameOverElement.style.display = 'none';
+                this.isGameRunning = true;
+                console.log('Rainbow Bus Collector restarted!');
+            }
+
+            updateBusPosition() {
+                this.bus.style.left = this.busX + 'px';
+                this.bus.style.top = this.busY + 'px';
+            }
+            
+            handleBusMovement() {
+                // Move bus left and right based on key presses
+                if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
+                    this.busX -= this.busSpeed;
+                    if (this.busX < 0) this.busX = 0;
+                }
+                if (this.keys['ArrowRight'] || this.keys['KeyD']) {
+                    this.busX += this.busSpeed;
+                    if (this.busX + this.busWidth > this.gameWidth) {
+                        this.busX = this.gameWidth - this.busWidth;
+                    }
+                }
+            }
+            
+            spawnItem() {
+                if (Math.random() < this.itemSpawnRate) {
+                    const x = Math.random() * (this.gameWidth - 40);
+                    let emoji, type, points;
+                    
+                    const rand = Math.random();
+                    if (rand < 0.05) { // 5% chance for special items
+                        emoji = this.specialItems[Math.floor(Math.random() * this.specialItems.length)];
+                        type = 'special';
+                        points = 50;
+                    } else if (rand < 0.25) { // 20% chance for bad items
+                        emoji = this.badItems[Math.floor(Math.random() * this.badItems.length)];
+                        type = 'bad';
+                        points = 0;
+                    } else { // 75% chance for good items
+                        emoji = this.goodItems[Math.floor(Math.random() * this.goodItems.length)];
+                        type = 'good';
+                        points = 10;
+                    }
+                    
+                    this.createFallingItem(x, emoji, type, points);
+                }
+            }
+            
+            createFallingItem(x, emoji, type, points) {
+                const item = {
+                    id: this.lastItemId++,
+                    x: x,
+                    y: -40,
+                    emoji: emoji,
+                    type: type,
+                    points: points,
+                    element: document.createElement('div')
+                };
+                
+                item.element.className = `falling-item ${type}`;
+                item.element.style.left = x + 'px';
+                item.element.style.top = '-40px';
+                item.element.textContent = emoji;
+                
+                this.gameContainer.appendChild(item.element);
+                this.fallingItems.push(item);
+                
+                return item;
+            }
+            
+            updateFallingItems() {
+                for (let i = this.fallingItems.length - 1; i >= 0; i--) {
+                    const item = this.fallingItems[i];
+                    item.y += this.itemFallSpeed;
+                    item.element.style.top = item.y + 'px';
+                    
+                    // Check collision with bus
+                    if (this.checkItemCollision(item)) {
+                        this.catchItem(item);
+                        item.element.remove();
+                        this.fallingItems.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Remove items that fall off screen
+                    if (item.y > this.gameHeight) {
+                        item.element.remove();
+                        this.fallingItems.splice(i, 1);
+                    }
+                }
+            }
+            
+            checkItemCollision(item) {
+                const busLeft = this.busX;
+                const busRight = this.busX + this.busWidth;
+                const busTop = this.busY;
+                const busBottom = this.busY + this.busHeight;
+                
+                const itemLeft = item.x;
+                const itemRight = item.x + 40;
+                const itemTop = item.y;
+                const itemBottom = item.y + 40;
+                
+                return (itemRight > busLeft && 
+                        itemLeft < busRight && 
+                        itemBottom > busTop && 
+                        itemTop < busBottom);
+            }
+            
+            catchItem(item) {
+                // Create catch effect
+                this.createCatchEffect(item);
+                
+                // Add bounce animation to bus
+                this.bus.classList.add('jumping');
+                setTimeout(() => {
+                    this.bus.classList.remove('jumping');
+                }, 600);
+                
+                if (item.type === 'bad') {
+                    // Lose a life
+                    this.lives--;
+                    this.livesElement.textContent = this.lives;
+                    
+                    if (this.lives <= 0) {
+                        this.gameOver();
+                    }
+                } else {
+                    // Good or special item
+                    this.score += item.points;
+                    this.itemsCollected++;
+                    this.scoreElement.textContent = this.score;
+                    
+                    // Gradually increase difficulty
+                    if (this.itemsCollected % 20 === 0) {
+                        this.itemFallSpeed += 0.3;
+                        this.itemSpawnRate += 0.003;
+                    }
+                }
+            }
+            
+            createCatchEffect(item) {
+                const effect = document.createElement('div');
+                effect.className = `catch-effect ${item.type}`;
+                
+                let text = '';
+                if (item.type === 'good') {
+                    text = `+${item.points}`;
+                } else if (item.type === 'special') {
+                    text = `+${item.points}! ✨`;
+                } else if (item.type === 'bad') {
+                    text = '-1 ❤️';
+                }
+                
+                effect.textContent = text;
+                effect.style.left = (this.busX + this.busWidth/2) + 'px';
+                effect.style.top = (this.busY - 20) + 'px';
+                
+                this.gameContainer.appendChild(effect);
+                
+                // Remove effect after animation
+                setTimeout(() => {
+                    effect.remove();
+                }, 1000);
+            }
+            
+            updateGame() {
+                if (!this.isGameRunning) return;
+                
+                this.handleBusMovement();
+                this.spawnItem();
+                this.updateFallingItems();
+            }
+            
+            gameLoop() {
+                this.updateGame();
+                this.updateBusPosition();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            gameOver() {
+                this.isGameRunning = false;
+                this.finalScoreElement.textContent = this.score;
+                this.finalItemsElement.textContent = this.itemsCollected;
+                this.gameOverElement.style.display = 'block';
+            }
+            
+            restart() {
+                this.quickRestart();
+            }
+        }
+        
+        // Initialize game
+        let game;
+        
+        window.addEventListener('load', () => {
+            game = new RainbowBusCollector();
+        });
+        
+        function restartGame() {
+            game.restart();
+        }
+        
+        // Prevent context menu on right click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>

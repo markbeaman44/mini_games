@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Maker - Music Maker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(680px, 90vh);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        /* Instrument Palette */
+        .instrument-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .instrument {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            font-size: 1.5rem;
+            color: white;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .instrument:active {
+            cursor: grabbing;
+        }
+
+        .instrument:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        .instrument.drum {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .instrument.bass {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+
+        .instrument.melody {
+            background: linear-gradient(135deg, #45b7d1 0%, #2980b9 100%);
+        }
+
+        .instrument.fx {
+            background: linear-gradient(135deg, #a55eea 0%, #8b5cf6 100%);
+        }
+
+        /* Timeline */
+        .timeline-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+
+        .timeline-slot {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .timeline-slot.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .timeline-slot.playing {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            transform: scale(1.1);
+        }
+
+        .timeline-slot.occupied {
+            border: 2px solid white;
+        }
+
+        .beat-indicator {
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .beat-indicator.active {
+            opacity: 1;
+        }
+
+        /* Track Labels */
+        .track-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            display: inline-block;
+        }
+
+        .track-label.drum-track {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .track-label.bass-track {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .track-label.melody-track {
+            border-color: #45b7d1;
+            background: rgba(69, 183, 209, 0.1);
+        }
+
+        .track-label.fx-track {
+            border-color: #a55eea;
+            background: rgba(165, 94, 234, 0.1);
+        }
+
+        /* Score and Info */
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 15px;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .tempo {
+            font-size: 1rem;
+        }
+
+        .combo {
+            font-size: 1rem;
+            color: #4ecdc4;
+        }
+
+        /* Game Over */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-over-content {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .mobile-controls {
+                display: block;
+            }
+
+            .instrument-palette {
+                gap: 5px;
+            }
+
+            .instrument {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .timeline-slot {
+                width: 20px;
+                height: 20px;
+            }
+
+            .timeline {
+                grid-template-columns: repeat(16, 1fr);
+                gap: 1px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .timeline {
+                grid-template-columns: repeat(8, 1fr);
+            }
+
+            .instrument {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Animation classes */
+        .slot-pulse {
+            animation: pulse 0.2s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .combo-animation {
+            animation: comboGlow 0.5s ease;
+        }
+
+        @keyframes comboGlow {
+            0% { transform: scale(1); color: #4ecdc4; }
+            50% { transform: scale(1.2); color: #ff6b6b; }
+            100% { transform: scale(1); color: #4ecdc4; }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🎵 Music Maker</h2>
+                <p><strong>Create amazing beats!</strong></p>
+                <p>🥁 Drag instruments from the palette to the timeline</p>
+                <p>▶️ Press PLAY to hear your creation</p>
+                <p>🎯 Build complex rhythms and avoid dissonance zones</p>
+                <p>🔥 Chain compatible instruments for combo bonuses</p>
+                <p>🎼 Higher tempos = more points but harder timing!</p>
+                <button class="close-instructions" id="closeInstructions">Start Making Music!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <div class="header">
+                <h1>🎵 Music Maker</h1>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" id="playBtn">▶️ Play</button>
+                <button class="control-btn" id="stopBtn">⏹️ Stop</button>
+                <button class="control-btn" id="clearBtn">🗑️ Clear</button>
+                <button class="control-btn" id="tempoBtn">🎼 Tempo: 120</button>
+            </div>
+
+            <div class="instrument-palette">
+                <div class="instrument drum" draggable="true" data-type="drum" data-sound="kick">🥁</div>
+                <div class="instrument drum" draggable="true" data-type="drum" data-sound="snare">🎯</div>
+                <div class="instrument drum" draggable="true" data-type="drum" data-sound="hihat">⚡</div>
+                <div class="instrument bass" draggable="true" data-type="bass" data-sound="bass1">🎸</div>
+                <div class="instrument bass" draggable="true" data-type="bass" data-sound="bass2">🔊</div>
+                <div class="instrument melody" draggable="true" data-type="melody" data-sound="piano">🎹</div>
+                <div class="instrument melody" draggable="true" data-type="melody" data-sound="synth">🎛️</div>
+                <div class="instrument fx" draggable="true" data-type="fx" data-sound="fx1">✨</div>
+            </div>
+
+            <div class="timeline-container">
+                <div class="track-label drum-track">🥁 Drums</div>
+                <div class="timeline" id="drumTrack" data-track="drum"></div>
+                
+                <div class="track-label bass-track">🎸 Bass</div>
+                <div class="timeline" id="bassTrack" data-track="bass"></div>
+                
+                <div class="track-label melody-track">🎹 Melody</div>
+                <div class="timeline" id="melodyTrack" data-track="melody"></div>
+                
+                <div class="track-label fx-track">✨ Effects</div>
+                <div class="timeline" id="fxTrack" data-track="fx"></div>
+            </div>
+
+            <div class="info-panel">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="combo">Combo: <span id="combo">0</span></div>
+                <div class="tempo">♪ <span id="currentTempo">120</span> BPM</div>
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2>🎵 Beat Complete!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Max Combo: <span id="maxCombo">0</span></p>
+                <p id="performanceText">Keep creating amazing beats!</p>
+                <button class="restart-btn" id="restartBtn">Create New Beat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div class="mobile-controls" id="mobileControls">
+        <button class="mobile-btn" id="mobilePlay">▶️</button>
+        <button class="mobile-btn" id="mobileStop">⏹️</button>
+        <button class="mobile-btn" id="mobileClear">🗑️</button>
+    </div>
+
+    <script>
+        class BeatBuilder {
+            constructor() {
+                this.score = 0;
+                this.combo = 0;
+                this.maxCombo = 0;
+                this.tempo = 120;
+                this.isPlaying = false;
+                this.currentBeat = 0;
+                this.timeline = {
+                    drum: new Array(16).fill(null),
+                    bass: new Array(16).fill(null),
+                    melody: new Array(16).fill(null),
+                    fx: new Array(16).fill(null)
+                };
+                this.playInterval = null;
+                this.audioContext = null;
+                this.dissonanceZones = [];
+                
+                this.initializeElements();
+                this.initializeAudio();
+                this.setupEventListeners();
+                this.createTimeline();
+                this.generateDissonanceZones();
+                this.initializeDragAndDrop(); // Move this after timeline creation
+            }
+
+            initializeElements() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.scoreElement = document.getElementById('score');
+                this.comboElement = document.getElementById('combo');
+                this.tempoElement = document.getElementById('currentTempo');
+            }
+
+            initializeAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Control buttons
+                document.getElementById('playBtn').addEventListener('click', () => this.togglePlay());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearTimeline());
+                document.getElementById('tempoBtn').addEventListener('click', () => this.changeTempo());
+
+                // Mobile controls
+                document.getElementById('mobilePlay').addEventListener('click', () => this.togglePlay());
+                document.getElementById('mobileStop').addEventListener('click', () => this.stop());
+                document.getElementById('mobileClear').addEventListener('click', () => this.clearTimeline());
+
+                // Game over
+                document.getElementById('restartBtn').addEventListener('click', () => this.restart());
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup (check if popup is visible)
+                    const popupVisible = this.instructionsPopup.style.display !== 'none' && 
+                                       window.getComputedStyle(this.instructionsPopup).display !== 'none';
+                    
+                    if (e.key === ' ' && popupVisible) {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Game controls during gameplay
+                    if (e.key === ' ' && this.gameArea.style.display === 'block') {
+                        e.preventDefault();
+                        this.togglePlay();
+                        return;
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restart();
+                    }
+                });
+
+                // Mobile detection
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'block';
+                }
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                // Resume audio context if needed
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+            }
+
+            createTimeline() {
+                const tracks = ['drumTrack', 'bassTrack', 'melodyTrack', 'fxTrack'];
+                
+                tracks.forEach(trackId => {
+                    const track = document.getElementById(trackId);
+                    track.innerHTML = '';
+                    
+                    for (let i = 0; i < 16; i++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'timeline-slot';
+                        slot.dataset.position = i;
+                        
+                        const indicator = document.createElement('div');
+                        indicator.className = 'beat-indicator';
+                        slot.appendChild(indicator);
+                        
+                        track.appendChild(slot);
+                    }
+                });
+            }
+
+            initializeDragAndDrop() {
+                const instruments = document.querySelectorAll('.instrument');
+                
+                instruments.forEach(instrument => {
+                    instrument.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                            type: instrument.dataset.type,
+                            sound: instrument.dataset.sound,
+                            emoji: instrument.textContent
+                        }));
+                        e.dataTransfer.effectAllowed = 'copy';
+                    });
+                });
+
+                // Add drop zones to all timeline slots
+                const timelineSlots = document.querySelectorAll('.timeline-slot');
+                
+                timelineSlots.forEach(slot => {
+                    slot.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'copy';
+                        slot.classList.add('active');
+                    });
+
+                    slot.addEventListener('dragleave', (e) => {
+                        // Only remove active if we're actually leaving the slot
+                        if (!slot.contains(e.relatedTarget)) {
+                            slot.classList.remove('active');
+                        }
+                    });
+
+                    slot.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        slot.classList.remove('active');
+                        
+                        try {
+                            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                            const track = slot.parentElement.dataset.track;
+                            const position = parseInt(slot.dataset.position);
+                            
+                            console.log('Drop attempt:', { data, track, position, slotHasData: !!slot.textContent });
+                            
+                            // Check if the instrument type matches the track
+                            if (data.type === track) {
+                                const success = this.placeInstrument(track, position, data);
+                                console.log('Place instrument result:', success);
+                                if (!success) {
+                                    // Visual feedback for failed drop (dissonance zone)
+                                    slot.style.background = 'rgba(255, 0, 0, 0.5)';
+                                    setTimeout(() => {
+                                        slot.style.background = '';
+                                    }, 500);
+                                }
+                            } else {
+                                console.log('Wrong track type:', data.type, 'vs', track);
+                                // Visual feedback for wrong track
+                                slot.style.background = 'rgba(255, 107, 107, 0.5)';
+                                setTimeout(() => {
+                                    slot.style.background = '';
+                                }, 300);
+                                this.playErrorSound();
+                            }
+                        } catch (error) {
+                            console.log('Error parsing drop data:', error);
+                        }
+                    });
+
+                    // Click to remove
+                    slot.addEventListener('click', (e) => {
+                        const track = slot.parentElement.dataset.track;
+                        const position = parseInt(slot.dataset.position);
+                        this.removeInstrument(track, position);
+                    });
+                });
+            }
+
+            placeInstrument(track, position, data) {
+                // Check for dissonance zones
+                if (this.isDissonanceZone(track, position)) {
+                    this.playErrorSound();
+                    this.showDissonanceWarning(position);
+                    return false;
+                }
+
+                this.timeline[track][position] = data;
+                this.updateSlotVisual(track, position, data);
+                this.updateScore(10);
+                this.playInstrumentSound(data.sound);
+                this.checkForCombo(track, position);
+                return true;
+            }
+
+            removeInstrument(track, position) {
+                if (this.timeline[track][position]) {
+                    this.timeline[track][position] = null;
+                    this.updateSlotVisual(track, position, null);
+                }
+            }
+
+            updateSlotVisual(track, position, data) {
+                const trackElement = document.querySelector(`[data-track="${track}"]`);
+                const slot = trackElement.children[position];
+                
+                if (data) {
+                    // Preserve the beat indicator and add emoji
+                    const indicator = slot.querySelector('.beat-indicator');
+                    slot.textContent = data.emoji;
+                    if (indicator) {
+                        slot.appendChild(indicator); // Re-add the indicator after setting text
+                    }
+                    slot.classList.add('occupied');
+                    slot.classList.add('slot-pulse');
+                    setTimeout(() => slot.classList.remove('slot-pulse'), 200);
+                } else {
+                    // Clear emoji but preserve beat indicator
+                    const indicator = slot.querySelector('.beat-indicator');
+                    slot.textContent = '';
+                    if (indicator) {
+                        slot.appendChild(indicator); // Re-add the indicator after clearing text
+                    }
+                    slot.classList.remove('occupied');
+                }
+            }
+
+            generateDissonanceZones() {
+                this.dissonanceZones = [];
+                // Randomly place 3-5 dissonance zones
+                const numZones = 3 + Math.floor(Math.random() * 3);
+                
+                for (let i = 0; i < numZones; i++) {
+                    const track = ['drum', 'bass', 'melody', 'fx'][Math.floor(Math.random() * 4)];
+                    const position = Math.floor(Math.random() * 16);
+                    
+                    this.dissonanceZones.push({ track, position });
+                    
+                    // Visual indicator
+                    setTimeout(() => {
+                        const trackElement = document.querySelector(`[data-track="${track}"]`);
+                        const slot = trackElement.children[position];
+                        slot.style.background = 'rgba(255, 107, 107, 0.3)';
+                        slot.style.border = '2px dashed #ff6b6b';
+                    }, 2000 + i * 500);
+                }
+            }
+
+            isDissonanceZone(track, position) {
+                return this.dissonanceZones.some(zone => 
+                    zone.track === track && zone.position === position
+                );
+            }
+
+            showDissonanceWarning(position) {
+                const tracks = document.querySelectorAll('.timeline');
+                tracks.forEach(track => {
+                    const slot = track.children[position];
+                    slot.style.background = 'rgba(255, 107, 107, 0.8)';
+                    slot.style.transform = 'scale(1.2)';
+                    
+                    setTimeout(() => {
+                        slot.style.background = '';
+                        slot.style.transform = '';
+                    }, 500);
+                });
+            }
+
+            checkForCombo(track, position) {
+                // Check adjacent slots for compatible instruments
+                const adjacent = [position - 1, position + 1].filter(p => p >= 0 && p < 16);
+                const compatible = adjacent.some(p => this.timeline[track][p] !== null);
+                
+                if (compatible) {
+                    this.combo++;
+                    this.updateScore(this.combo * 5);
+                    this.comboElement.classList.add('combo-animation');
+                    setTimeout(() => this.comboElement.classList.remove('combo-animation'), 500);
+                } else {
+                    this.combo = 0;
+                }
+                
+                this.maxCombo = Math.max(this.maxCombo, this.combo);
+                this.updateDisplay();
+            }
+
+            togglePlay() {
+                if (this.isPlaying) {
+                    this.pause();
+                } else {
+                    this.play();
+                }
+            }
+
+            play() {
+                if (!this.audioContext) {
+                    this.initializeAudio();
+                }
+                
+                this.isPlaying = true;
+                this.currentBeat = 0;
+                
+                const beatDuration = (60 / this.tempo) * 1000 / 4; // 16th notes
+                
+                this.playInterval = setInterval(() => {
+                    this.playBeat();
+                    this.currentBeat = (this.currentBeat + 1) % 16;
+                }, beatDuration);
+
+                document.getElementById('playBtn').classList.add('active');
+            }
+
+            pause() {
+                this.isPlaying = false;
+                if (this.playInterval) {
+                    clearInterval(this.playInterval);
+                    this.playInterval = null;
+                }
+                this.clearBeatIndicators();
+                document.getElementById('playBtn').classList.remove('active');
+            }
+
+            stop() {
+                this.pause();
+                this.currentBeat = 0;
+            }
+
+            playBeat() {
+                this.clearBeatIndicators();
+                
+                // Highlight current beat
+                const tracks = document.querySelectorAll('.timeline');
+                tracks.forEach(track => {
+                    const slot = track.children[this.currentBeat];
+                    const indicator = slot.querySelector('.beat-indicator');
+                    if (indicator) {
+                        indicator.classList.add('active');
+                    }
+                    
+                    // Play sounds for this beat
+                    const trackName = track.dataset.track;
+                    const instrument = this.timeline[trackName][this.currentBeat];
+                    if (instrument) {
+                        this.playInstrumentSound(instrument.sound);
+                        slot.classList.add('playing');
+                        setTimeout(() => slot.classList.remove('playing'), 100);
+                    }
+                });
+            }
+
+            clearBeatIndicators() {
+                const indicators = document.querySelectorAll('.beat-indicator');
+                indicators.forEach(indicator => indicator.classList.remove('active'));
+            }
+
+            clearTimeline() {
+                this.stop();
+                // Only clear placed instruments, not dissonance zones
+                Object.keys(this.timeline).forEach(track => {
+                    this.timeline[track].fill(null);
+                });
+                
+                // Reset visual appearance of slots but preserve dissonance zone styling
+                const timelineSlots = document.querySelectorAll('.timeline-slot');
+                timelineSlots.forEach((slot, index) => {
+                    const track = slot.parentElement.dataset.track;
+                    const position = parseInt(slot.dataset.position);
+                    
+                    // Clear instrument content and styling
+                    slot.textContent = '';
+                    slot.classList.remove('occupied');
+                    
+                    // Restore dissonance zone styling if this slot is a dissonance zone
+                    const isDissonanceZone = this.dissonanceZones.some(zone => 
+                        zone.track === track && zone.position === position
+                    );
+                    
+                    if (isDissonanceZone) {
+                        slot.style.background = 'rgba(255, 107, 107, 0.3)';
+                        slot.style.border = '2px dashed #ff6b6b';
+                    } else {
+                        // Reset to default styling
+                        slot.style.background = '';
+                        slot.style.border = '';
+                    }
+                });
+                
+                this.combo = 0;
+                this.updateDisplay();
+            }
+
+            changeTempo() {
+                const tempos = [60, 80, 100, 120, 140, 160, 180];
+                const currentIndex = tempos.indexOf(this.tempo);
+                const nextIndex = (currentIndex + 1) % tempos.length;
+                this.tempo = tempos[nextIndex];
+                
+                document.getElementById('tempoBtn').textContent = `🎼 Tempo: ${this.tempo}`;
+                this.updateDisplay();
+                
+                if (this.isPlaying) {
+                    this.stop();
+                    this.play();
+                }
+            }
+
+            playInstrumentSound(soundType) {
+                if (!this.audioContext) return;
+                
+                const frequencies = {
+                    kick: 60,
+                    snare: 200,
+                    hihat: 8000,
+                    bass1: 80,
+                    bass2: 100,
+                    piano: 440,
+                    synth: 880,
+                    fx1: 1200
+                };
+                
+                const frequency = frequencies[soundType] || 440;
+                this.playSound(frequency, 0.1, soundType === 'kick' ? 'sawtooth' : 'sine');
+            }
+
+            playErrorSound() {
+                this.playSound(150, 0.2, 'square');
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                if (!this.audioContext) return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration);
+                } catch (e) {
+                    console.log('Error playing sound:', e);
+                }
+            }
+
+            updateScore(points) {
+                this.score += points;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.scoreElement.textContent = this.score;
+                this.comboElement.textContent = this.combo;
+                this.tempoElement.textContent = this.tempo;
+            }
+
+            showGameOver() {
+                this.stop();
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('maxCombo').textContent = this.maxCombo;
+                
+                let performanceText = "Keep creating amazing beats!";
+                if (this.score > 500) performanceText = "🎵 Beat Master! Incredible rhythm!";
+                else if (this.score > 300) performanceText = "🎶 Great beat! You're a natural!";
+                else if (this.score > 100) performanceText = "🎼 Nice work! Keep practicing!";
+                
+                document.getElementById('performanceText').textContent = performanceText;
+                this.gameOver.style.display = 'flex';
+            }
+
+            restart() {
+                this.score = 0;
+                this.combo = 0;
+                this.maxCombo = 0;
+                this.tempo = 120;
+                this.clearTimeline();
+                this.generateDissonanceZones();
+                this.updateDisplay();
+                this.gameOver.style.display = 'none';
+                document.getElementById('tempoBtn').textContent = '🎼 Tempo: 120';
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new BeatBuilder();
+        });
+    </script>
+</body>
+</html>

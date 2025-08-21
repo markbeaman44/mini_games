@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Dice Adventures - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4CAF50 0%, #81C784 50%, #FFA726 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2E7D32;
+        }
+
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.95);
+            color: #4CAF50;
+            border: 2px solid #4CAF50;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-decoration: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #4CAF50;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Game container */
+        .game-container {
+            width: 1100px;
+            height: 700px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            border: 3px solid #4CAF50;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Start screen */
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,235,59,0.9), rgba(255,193,7,0.9));
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #FF6F00;
+            z-index: 100;
+        }
+
+        .start-screen h1 {
+            font-size: 2.2rem;
+            color: #E65100;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .start-screen p {
+            font-size: 1.1rem;
+            color: #BF360C;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #FF5722, #FF9800);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        /* Game board */
+        .game-board {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+            border-radius: 15px;
+            border: 2px solid #2196F3;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-weight: bold;
+            color: #1565C0;
+        }
+
+        .pokemon-caught {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+        }
+
+        /* Board path */
+        .board-path {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #F1F8E9, #DCEDC8);
+            border-radius: 15px;
+            border: 2px solid #689F38;
+        }
+
+        .board-space {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #8BC34A;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: #C8E6C9;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .board-space.active {
+            background: linear-gradient(135deg, #FFEB3B, #FFC107);
+            border-color: #FF6F00;
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(255,193,7,0.6);
+        }
+
+        .space-number {
+            font-size: 0.8rem;
+            color: #2E7D32;
+            font-weight: bold;
+            position: absolute;
+            top: 2px;
+            left: 4px;
+        }
+
+        /* Player token */
+        .player-token {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 25px;
+            height: 25px;
+            background: #E91E63;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        /* Dice area */
+        .dice-area {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border-radius: 15px;
+            border: 2px solid #FF9800;
+        }
+
+        .dice {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .dice.rolling {
+            animation: rollDice 0.8s ease-in-out;
+        }
+
+        @keyframes rollDice {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg) scale(1.2); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            75% { transform: rotate(270deg) scale(1.2); }
+        }
+
+        .roll-btn {
+            background: linear-gradient(135deg, #2196F3, #03A9F4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .roll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .roll-btn:disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Pokemon encounter */
+        .pokemon-encounter {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #E8F5E8, #F1F8E9);
+            padding: 25px;
+            border-radius: 20px;
+            border: 3px solid #4CAF50;
+            text-align: center;
+            z-index: 200;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .pokemon-sprite {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            display: block;
+            animation: bounce 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
+        .pokemon-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2E7D32;
+            margin-bottom: 10px;
+        }
+
+        .catch-challenge {
+            font-size: 1.1rem;
+            color: #FF5722;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .encounter-dice-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .encounter-dice {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            border: 3px solid #E65100;
+            transition: all 0.3s ease;
+        }
+
+        .encounter-dice.rolling {
+            animation: rollDice 0.8s ease-in-out;
+        }
+
+        .catch-btn {
+            background: linear-gradient(135deg, #FF5722, #F44336);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .catch-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .skip-btn {
+            background: #757575;
+        }
+
+        /* Pokemon collection */
+        .pokemon-collection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+            border-radius: 15px;
+            border: 2px solid #9C27B0;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .caught-pokemon {
+            background: white;
+            border: 2px solid #9C27B0;
+            border-radius: 10px;
+            padding: 5px 8px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .pokemon-count {
+            font-size: 0.8rem;
+            background: #9C27B0;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Pokemon collection popup */
+        .pokemon-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+            padding: 25px;
+            border-radius: 20px;
+            border: 3px solid #9C27B0;
+            text-align: center;
+            z-index: 400;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            display: none;
+            width: 500px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .popup-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9C27B0;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .popup-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            min-height: 300px;
+        }
+
+        .popup-pokemon {
+            background: white;
+            border: 3px solid #9C27B0;
+            border-radius: 15px;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            min-height: 80px;
+            justify-content: center;
+        }
+
+        .popup-pokemon:hover {
+            transform: scale(1.05);
+        }
+
+        .popup-pokemon-sprite {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .popup-pokemon-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #9C27B0;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .empty-slot {
+            background: #F5F5F5;
+            border: 3px dashed #BDBDBD;
+            color: #BDBDBD;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 0px;
+            right: -5px;
+            background: #FF5722;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+
+        .close-popup:hover {
+            background: #D32F2F;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .close-popup:active {
+            transform: scale(0.95);
+        }
+        /* Game complete screen */
+        .game-complete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFEB3B, #FFC107);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #FF6F00;
+            text-align: center;
+            z-index: 300;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .game-complete h2 {
+            font-size: 2rem;
+            color: #E65100;
+            margin-bottom: 15px;
+        }
+
+        .final-stats {
+            font-size: 1.2rem;
+            color: #BF360C;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95vw;
+                height: 80vh;
+                padding: 15px;
+            }
+
+            .board-path {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 3px;
+            }
+
+            .board-space {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .dice {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+
+            .start-screen h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="home.html" class="back-btn">← Back to Hub</a>
+
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <h1>🎲 Pokemon Dice Adventures</h1>
+            <p>🌟 Roll dice to move around the board!</p>
+            <p>🔍 Find and catch amazing Pokemon!</p>
+            <p>🎯 Different dice help you catch different Pokemon!</p>
+            <p>🏆 Collect them all to become a Pokemon Master!</p>
+            <button class="start-btn" id="startBtn">Start Adventure!</button>
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board" id="gameBoard">
+            <div class="header">
+                <div class="stats">
+                    <div>Turn: <span id="turnCount">1</span></div>
+                    <div>Moves: <span id="moveCount">0</span>/30</div>
+                </div>
+                <div class="pokemon-caught" id="pokemonCounter" style="cursor: pointer;" title="Click to view your Pokemon collection">
+                    Pokemon: <span id="pokemonCount">0</span>/12
+                </div>
+            </div>
+
+            <div class="board-path" id="boardPath">
+                <!-- Board spaces will be generated here -->
+            </div>
+
+            <div class="dice-area">
+                <div class="dice" id="dice1">🎲</div>
+                <button class="roll-btn" id="rollBtn">Roll Dice!</button>
+            </div>
+        </div>
+
+        <!-- Pokemon Encounter -->
+        <div class="pokemon-encounter" id="pokemonEncounter">
+            <div class="pokemon-sprite" id="pokemonSprite">🔥</div>
+            <div class="pokemon-name" id="pokemonName">Wild Charmander appeared!</div>
+            <div class="catch-challenge" id="challengeText">You need to roll: EVEN</div>
+            <div class="encounter-dice-area">
+                <div class="encounter-dice" id="encounterDice">🎲</div>
+                <button class="catch-btn" id="rollChallengeBtn">Roll Dice</button>
+            </div>
+        </div>
+
+        <!-- Game Complete -->
+        <div class="game-complete" id="gameComplete">
+            <h2>🏆 Congratulations Pokemon Master!</h2>
+            <div class="final-stats" id="finalStats">
+                You caught all 12 Pokemon in 25 moves!
+            </div>
+            <button class="play-again-btn" id="playAgainBtn">Play Again!</button>
+        </div>
+
+        <!-- Pokemon Collection Popup -->
+        <div class="pokemon-popup" id="pokemon-popup">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3>Your Pokemon Collection</h3>
+                    <button class="close-popup">&times;</button>
+                </div>
+                <div class="popup-grid" id="pokemon-grid">
+                    <!-- Pokemon cards will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Game state
+            let playerPosition = 0;
+            let turnCount = 1;
+            let moveCount = 0;
+            let caughtPokemon = {};
+            let isGameRunning = false;
+            let isRolling = false;
+
+            // Pokemon data with odd/even requirements
+            const pokemonData = {
+                1: { name: 'Pikachu', sprite: '⚡', requirement: 'odd' },
+                2: { name: 'Charmander', sprite: '🔥', requirement: 'even' },
+                3: { name: 'Squirtle', sprite: '💧', requirement: 'odd' },
+                4: { name: 'Bulbasaur', sprite: '🌱', requirement: 'even' },
+                5: { name: 'Jigglypuff', sprite: '🎵', requirement: 'odd' },
+                6: { name: 'Psyduck', sprite: '🦆', requirement: 'even' },
+                7: { name: 'Geodude', sprite: '🗿', requirement: 'odd' },
+                8: { name: 'Magikarp', sprite: '🐟', requirement: 'even' },
+                9: { name: 'Eevee', sprite: '🦊', requirement: 'odd' },
+                10: { name: 'Snorlax', sprite: '😴', requirement: 'even' },
+                11: { name: 'Mewtwo', sprite: '👁️', requirement: 'odd' },
+                12: { name: 'Mew', sprite: '✨', requirement: 'even' }
+            };
+
+            // Board spaces - different types give different encounters
+            const boardSpaces = [
+                '🏠', '🌳', '🌊', '⛰️', '🌸', '🌳', '🌊', '⚡', '🔥', '🌳',
+                '🌸', '⛰️', '🌊', '🌳', '💎', '🌸', '⛰️', '🌳', '🌸', '⚡',
+                '🌳', '🌊', '🔥', '💎', '�', '�🌳', '�', '⛰️', '🌸', '🌳',
+                '🌊', '⚡', '�', '🌳', '🌸', '⛰️', '🌊', '🌳', '💎', '🌸',
+                '⛰️', '🌳', '🌸', '⚡', '🌳', '🌊', '🔥', '💎', '🌺', '🏁'
+            ];
+
+            // Function to determine space type for Pokemon encounters
+            function getSpaceType(position) {
+                if (position >= boardSpaces.length) return 'normal';
+                
+                const space = boardSpaces[position];
+                
+                // Define Pokemon encounter spaces
+                const pokemonSpaces = ['🌳', '🌊', '⛰️', '🌸', '💎', '⚡', '🔥', '🌺'];
+                
+                if (pokemonSpaces.includes(space)) {
+                    return 'pokemon';
+                }
+                
+                return 'normal';
+            }
+
+            // Elements
+            const startScreen = document.getElementById('startScreen');
+            const gameBoard = document.getElementById('gameBoard');
+            const startBtn = document.getElementById('startBtn');
+            const rollBtn = document.getElementById('rollBtn');
+            const dice1 = document.getElementById('dice1');
+            const boardPath = document.getElementById('boardPath');
+            const pokemonEncounter = document.getElementById('pokemonEncounter');
+            const gameComplete = document.getElementById('gameComplete');
+            const pokemonCollection = document.getElementById('pokemonCollection');
+
+            // Sound effects
+            function playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+                    gainNode.gain.value = 0.1;
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Audio not available
+                }
+            }
+
+            function startGame() {
+                startScreen.style.display = 'none';
+                gameBoard.style.display = 'block';
+                isGameRunning = true;
+                playerPosition = 0;
+                turnCount = 1;
+                moveCount = 0;
+                caughtPokemon = {};
+                
+                createBoard();
+                updateUI();
+                playSound(440, 0.3);
+            }
+
+            function createBoard() {
+                boardPath.innerHTML = '';
+                
+                boardSpaces.forEach((space, index) => {
+                    const spaceElement = document.createElement('div');
+                    spaceElement.className = 'board-space';
+                    spaceElement.innerHTML = `
+                        <div class="space-number">${index + 1}</div>
+                        ${space}
+                        ${index === playerPosition ? '<div class="player-token">🧒</div>' : ''}
+                    `;
+                    
+                    if (index === playerPosition) {
+                        spaceElement.classList.add('active');
+                    }
+                    
+                    boardPath.appendChild(spaceElement);
+                });
+            }
+
+            function rollDice() {
+                if (isRolling || !isGameRunning) return;
+                
+                isRolling = true;
+                rollBtn.disabled = true;
+                
+                // Add rolling animation
+                dice1.classList.add('rolling');
+                
+                // Play roll sound
+                playSound(200, 0.5, 'square');
+                
+                setTimeout(() => {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    
+                    dice1.textContent = roll;
+                    dice1.classList.remove('rolling');
+                    
+                    movePlayer(roll);
+                    
+                    // Always re-enable the button after the move
+                    setTimeout(() => {
+                        isRolling = false;
+                        rollBtn.disabled = false;
+                    }, 100);
+                    
+                    playSound(330, 0.3);
+                }, 800);
+            }
+
+            function movePlayer(spaces) {
+                const oldPosition = playerPosition;
+                playerPosition += spaces;
+                moveCount++;
+                turnCount++;
+                
+                // Check if reached the end (position 50)
+                if (playerPosition >= 50) {
+                    playerPosition = 49; // Final position is card 50 (index 49)
+                    createBoard();
+                    updateUI();
+                    endGame(true);
+                    return;
+                }
+                
+                // Update board
+                createBoard();
+                updateUI();
+                
+                // ALWAYS check for Pokemon encounter - no matter what
+                setTimeout(() => {
+                    checkForPokemon();
+                }, 100);
+            }
+
+            function checkForPokemon() {
+                console.log('Checking for Pokemon at position:', playerPosition);
+                
+                const spaceType = getSpaceType(playerPosition);
+                console.log('Space type:', spaceType);
+                
+                if (spaceType === 'pokemon') {
+                    console.log('Pokemon space - guaranteed encounter!');
+                    const uncaught = Object.entries(pokemonData).filter(([id]) => !caughtPokemon[id]);
+                    
+                    if (uncaught.length > 0) {
+                        const [id, pokemon] = uncaught[Math.floor(Math.random() * uncaught.length)];
+                        console.log('Pokemon encounter:', pokemon.name);
+                        showPokemonEncounter(id, pokemon);
+                    } else {
+                        // If all caught, show random one
+                        const [id, pokemon] = Object.entries(pokemonData)[Math.floor(Math.random() * Object.keys(pokemonData).length)];
+                        console.log('All caught, showing random:', pokemon.name);
+                        showPokemonEncounter(id, pokemon);
+                    }
+                } else {
+                    // 70% chance on other spaces (was 30%)
+                    const randomChance = Math.random();
+                    console.log('Random encounter chance:', randomChance);
+                    if (randomChance < 0.7) {
+                        console.log('Random Pokemon encounter triggered!');
+                        const uncaught = Object.entries(pokemonData).filter(([id]) => !caughtPokemon[id]);
+                        
+                        if (uncaught.length > 0) {
+                            const [id, pokemon] = uncaught[Math.floor(Math.random() * uncaught.length)];
+                            console.log('Random Pokemon encounter:', pokemon.name);
+                            showPokemonEncounter(id, pokemon);
+                        } else {
+                            // If all caught, show random one
+                            const [id, pokemon] = Object.entries(pokemonData)[Math.floor(Math.random() * Object.keys(pokemonData).length)];
+                            console.log('All caught, showing random:', pokemon.name);
+                            showPokemonEncounter(id, pokemon);
+                        }
+                    } else {
+                        console.log('No Pokemon encounter this turn');
+                        rollButton.disabled = false;
+                    }
+                }
+            }
+
+            function showPokemonEncounter(id, pokemon) {
+                console.log('showPokemonEncounter called with:', pokemon.name, 'ID:', id);
+                console.log('pokemonEncounter element:', pokemonEncounter);
+                
+                try {
+                    document.getElementById('pokemonSprite').textContent = pokemon.sprite;
+                    document.getElementById('pokemonName').textContent = `Wild ${pokemon.name} appeared!`;
+                    document.getElementById('challengeText').textContent = `Roll ${pokemon.requirement} to catch!`;
+                    
+                    console.log('Setting pokemonEncounter display to block');
+                    pokemonEncounter.style.display = 'block';
+                    
+                    // Set up challenge button
+                    document.getElementById('rollChallengeBtn').onclick = () => attemptCatch(id, pokemon);
+                    document.getElementById('skipBtn').onclick = () => pokemonEncounter.style.display = 'none';
+                    
+                    playSound(660, 0.5);
+                    console.log('Pokemon encounter setup complete');
+                } catch (error) {
+                    console.error('Error in showPokemonEncounter:', error);
+                }
+            }
+
+            function attemptCatch(id, pokemon) {
+                // Roll the encounter dice
+                const encounterDice = document.getElementById('encounterDice');
+                const rollChallengeBtn = document.getElementById('rollChallengeBtn');
+                
+                rollChallengeBtn.disabled = true;
+                encounterDice.classList.add('rolling');
+                
+                // Play roll sound
+                playSound(200, 0.5, 'square');
+                
+                setTimeout(() => {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    encounterDice.textContent = roll;
+                    encounterDice.classList.remove('rolling');
+                    
+                    const isOdd = roll % 2 === 1;
+                    const success = (pokemon.requirement === 'odd' && isOdd) || (pokemon.requirement === 'even' && !isOdd);
+                    
+                    if (success) {
+                        caughtPokemon[id] = pokemon;
+                        playSound(880, 0.7);
+                        
+                        // Success animation
+                        document.getElementById('pokemonName').textContent = `${pokemon.name} was caught! 🎉`;
+                        document.getElementById('challengeText').textContent = `Perfect! You rolled ${roll} (${isOdd ? 'odd' : 'even'})!`;
+                        
+                        setTimeout(() => {
+                            pokemonEncounter.style.display = 'none';
+                            updatePokemonCollection();
+                            updateUI();
+                        }, 2000);
+                    } else {
+                        playSound(220, 0.5);
+                        document.getElementById('pokemonName').textContent = `${pokemon.name} escaped! 💨`;
+                        document.getElementById('challengeText').textContent = `You rolled ${roll} (${isOdd ? 'odd' : 'even'}), needed ${pokemon.requirement}!`;
+                        
+                        setTimeout(() => {
+                            pokemonEncounter.style.display = 'none';
+                        }, 2000);
+                    }
+                    
+                    rollChallengeBtn.disabled = false;
+                }, 800);
+            }
+
+            function updatePokemonCollection() {
+                const collection = document.getElementById('pokemonCollection');
+                const caught = Object.entries(caughtPokemon);
+                
+                if (caught.length === 0) {
+                    collection.innerHTML = '<div style="width: 100%; text-align: center; color: #9C27B0; font-weight: bold;">Your Pokemon Collection</div>';
+                    return;
+                }
+                
+                collection.innerHTML = `
+                    <div style="width: 100%; text-align: center; color: #9C27B0; font-weight: bold; margin-bottom: 5px;">Your Pokemon Collection</div>
+                    ${caught.map(([id, pokemon]) => `
+                        <div class="caught-pokemon">
+                            ${pokemon.sprite}
+                            <span style="font-size: 0.8rem;">${pokemon.name}</span>
+                        </div>
+                    `).join('')}
+                `;
+            }
+
+            function updateUI() {
+                document.getElementById('turnCount').textContent = turnCount;
+                document.getElementById('moveCount').textContent = moveCount;
+                document.getElementById('pokemonCount').textContent = Object.keys(caughtPokemon).length;
+            }
+
+            function endGame(victory) {
+                isGameRunning = false;
+                
+                if (victory) {
+                    // Show the same Pokemon collection popup as clicking the counter
+                    showPokemonCollection();
+                    playSound(1100, 1);
+                } else {
+                    document.getElementById('finalStats').textContent = 
+                        `😊 Great job! You caught ${Object.keys(caughtPokemon).length} Pokemon! Try again to catch them all!`;
+                    gameComplete.style.display = 'block';
+                    playSound(440, 0.8);
+                }
+            }
+            function restartGame() {
+                gameComplete.style.display = 'none';
+                startGame();
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', startGame);
+            rollBtn.addEventListener('click', rollDice);
+            document.getElementById('playAgainBtn').addEventListener('click', restartGame);
+
+            // Keyboard support
+            document.addEventListener('keydown', (e) => {
+                if (!isGameRunning && e.code === 'Space') {
+                    e.preventDefault();
+                    startGame();
+                } else if (isGameRunning && !isRolling && e.code === 'Space') {
+                    e.preventDefault();
+                    rollDice();
+                }
+            });
+
+            // Show Pokemon Collection Popup
+            function showPokemonCollection() {
+                const popup = document.getElementById('pokemon-popup');
+                const pokemonGrid = document.getElementById('pokemon-grid');
+                pokemonGrid.innerHTML = '';
+
+                // Create grid of all Pokemon (caught and not caught)
+                // Ensure we always have at least 12 slots (3 rows x 4 columns)
+                for (let i = 1; i <= 12; i++) {
+                    const pokemonCard = document.createElement('div');
+                    
+                    if (pokemonData[i] && caughtPokemon[i]) {
+                        // Caught Pokemon - show full details
+                        pokemonCard.className = 'popup-pokemon';
+                        pokemonCard.innerHTML = `
+                            <div class="popup-pokemon-sprite">${pokemonData[i].sprite}</div>
+                            <div class="popup-pokemon-name">${pokemonData[i].name}</div>
+                        `;
+                    } else {
+                        // Not caught - show empty slot
+                        pokemonCard.className = 'popup-pokemon empty-slot';
+                        if (pokemonData[i]) {
+                            pokemonCard.innerHTML = `
+                                <div class="popup-pokemon-sprite">❓</div>
+                                <div class="popup-pokemon-name">???</div>
+                            `;
+                        } else {
+                            pokemonCard.innerHTML = `
+                                <div class="popup-pokemon-sprite">❓</div>
+                                <div class="popup-pokemon-name">Empty</div>
+                            `;
+                        }
+                    }
+                    
+                    pokemonGrid.appendChild(pokemonCard);
+                }
+
+                popup.style.display = 'block';
+            }
+
+            // Close Pokemon Collection Popup
+            function closePokemonCollection() {
+                const popup = document.getElementById('pokemon-popup');
+                popup.style.display = 'none';
+            }
+
+            // Pokemon Counter Click Event
+            const pokemonCounter = document.getElementById('pokemonCounter');
+            pokemonCounter.addEventListener('click', showPokemonCollection);
+
+            // Close popup when clicking close button
+            const closeBtn = document.querySelector('.close-popup');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closePokemonCollection);
+            }
+
+            // Close popup when clicking outside of it
+            const popup = document.getElementById('pokemon-popup');
+            if (popup) {
+                popup.addEventListener('click', function(e) {
+                    if (e.target === popup) {
+                        closePokemonCollection();
+                    }
+                });
+            }
+
+            // Initialize
+            updatePokemonCollection();
+        })();
+    </script>
+</body>
+</html>

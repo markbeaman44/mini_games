@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Castle Defense - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 50%, #8B4513 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 900px;
+            height: 600px;
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+            border: 3px solid #8B4513;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .game-container.playing {
+            cursor: none;
+        }
+
+        .game-header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 100;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            color: #8B0000;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #8B0000;
+        }
+
+        /* Castle on the right side */
+        .castle {
+            position: absolute;
+            right: 50px;
+            bottom: 100px;
+            width: 200px;
+            height: 200px;
+            z-index: 10;
+        }
+
+        .castle-base {
+            position: absolute;
+            bottom: 0;
+            width: 200px;
+            height: 120px;
+            background: linear-gradient(135deg, #708090 0%, #2F4F4F 100%);
+            border: 4px solid #1C1C1C;
+            border-radius: 10px;
+        }
+
+        .castle-tower {
+            position: absolute;
+            width: 60px;
+            height: 100px;
+            background: linear-gradient(135deg, #696969 0%, #2F4F4F 100%);
+            border: 3px solid #1C1C1C;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tower-left {
+            left: 10px;
+            bottom: 120px;
+        }
+
+        .tower-center {
+            left: 70px;
+            bottom: 140px;
+            height: 120px;
+        }
+
+        .tower-right {
+            right: 10px;
+            bottom: 120px;
+        }
+
+        .castle-flag {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(45deg, #FF0000 0%, #DC143C 100%);
+            border-radius: 0 5px 5px 0;
+        }
+
+        .castle-flag::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 35px;
+            background: #8B4513;
+        }
+
+        .castle-window {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #000;
+            border-radius: 50%;
+        }
+
+        .window1 { top: 30px; left: 20px; }
+        .window2 { top: 30px; right: 20px; }
+        .window3 { top: 60px; left: 40px; }
+
+        .castle-door {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(180deg, #8B4513 0%, #654321 100%);
+            border: 2px solid #1C1C1C;
+            border-radius: 20px 20px 0 0;
+        }
+
+        /* Catapults on the left side */
+        .catapult {
+            position: absolute;
+            left: 50px;
+            width: 80px;
+            height: 100px;
+            z-index: 5;
+        }
+
+        .catapult-base {
+            position: absolute;
+            bottom: 0;
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
+            border: 2px solid #4A4A4A;
+            border-radius: 5px;
+        }
+
+        .catapult-arm {
+            position: absolute;
+            bottom: 35px;
+            left: 25px;
+            width: 4px;
+            height: 50px;
+            background: #8B4513;
+            border-radius: 2px;
+            transform-origin: bottom center;
+            transition: transform 0.3s ease;
+        }
+
+        .catapult-bucket {
+            position: absolute;
+            top: -8px;
+            left: -6px;
+            width: 16px;
+            height: 12px;
+            background: #654321;
+            border: 1px solid #4A4A4A;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .catapult1 { bottom: 120px; }
+        .catapult2 { bottom: 220px; }
+        .catapult3 { bottom: 320px; }
+        .catapult4 { bottom: 120px; left: 150px; display: none; }
+        .catapult5 { bottom: 220px; left: 150px; display: none; }
+        .catapult6 { bottom: 320px; left: 150px; display: none; }
+        .catapult7 { bottom: 120px; left: 250px; display: none; }
+        .catapult8 { bottom: 220px; left: 250px; display: none; }
+        .catapult9 { bottom: 320px; left: 250px; display: none; }
+        .catapult10 { bottom: 120px; left: 350px; display: none; }
+        .catapult11 { bottom: 220px; left: 350px; display: none; }
+        .catapult12 { bottom: 320px; left: 350px; display: none; }
+        .catapult13 { bottom: 120px; left: 450px; display: none; }
+        .catapult14 { bottom: 220px; left: 450px; display: none; }
+        .catapult15 { bottom: 320px; left: 450px; display: none; }
+
+        /* Player shield */
+        .shield {
+            position: absolute;
+            width: 50px;
+            height: 60px;
+            background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+            border: 3px solid #4A4A4A;
+            border-radius: 25px 25px 10px 10px;
+            z-index: 50;
+            pointer-events: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .shield::before {
+            content: '⚔️';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+
+        /* Projectiles */
+        .boulder {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #696969 0%, #2F4F4F 100%);
+            border: 2px solid #1C1C1C;
+            border-radius: 50%;
+            z-index: 15;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Impact effects */
+        .impact-effect {
+            position: absolute;
+            font-size: 2rem;
+            z-index: 100;
+            pointer-events: none;
+            animation: impact-animation 0.8s ease-out forwards;
+        }
+
+        @keyframes impact-animation {
+            0% { transform: scale(0.5); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        /* Damage effects */
+        .castle-damage {
+            position: absolute;
+            background: #8B0000;
+            border-radius: 50%;
+            opacity: 0.8;
+            z-index: 12;
+        }
+
+        .start-screen {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(139, 69, 19, 0.95), rgba(160, 82, 45, 0.95));
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #FFD700;
+            color: white;
+        }
+
+        .start-screen h2 {
+            margin: 0 0 15px 0;
+            color: #FFD700;
+            font-size: 28px;
+            text-shadow: 0 0 15px #FFD700;
+        }
+
+        .start-screen p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.4;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .start-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 15px;
+            font-weight: 800;
+            border: 2px solid #FFD700;
+            background: linear-gradient(45deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .instructions-content {
+            background: linear-gradient(145deg, #8B4513, #A0522D);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #FFD700;
+            max-width: 500px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .close-instructions {
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            color: white;
+            border: 2px solid #FFD700;
+            padding: 12px 24px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            border: 3px solid #FF0000;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #FF6347;
+        }
+
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 100;
+        }
+
+        .instructions p {
+            margin: 2px 0;
+            font-size: 0.9rem;
+            color: #8B0000;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.2);
+            color: #8B0000;
+            border: 2px solid #8B0000;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: white;
+            color: #FF4500;
+            transform: scale(1.05);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes catapult-fire {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-45deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @media (max-width: 950px) {
+            .game-container {
+                width: 95vw;
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-btn">← Back to Hub</a>
+    
+    <div class="game-container" id="gameContainer">
+        <div class="game-header">
+            <div class="game-title">🏰 Castle Defense</div>
+            <div class="score">Health: <span id="health">100</span>% | Score: <span id="score">0</span></div>
+        </div>
+
+        <div class="shield" id="shield"></div>
+
+        <!-- Castle -->
+        <div class="castle" id="castle">
+            <div class="castle-base">
+                <div class="castle-window window1"></div>
+                <div class="castle-window window2"></div>
+                <div class="castle-window window3"></div>
+                <div class="castle-door"></div>
+            </div>
+            <div class="castle-tower tower-left"></div>
+            <div class="castle-tower tower-center">
+                <div class="castle-flag"></div>
+            </div>
+            <div class="castle-tower tower-right"></div>
+        </div>
+
+        <!-- Catapults -->
+        <div class="catapult catapult1" id="catapult1">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult2" id="catapult2">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult3" id="catapult3">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult4" id="catapult4">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult5" id="catapult5">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult6" id="catapult6">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult7" id="catapult7">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult8" id="catapult8">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult9" id="catapult9">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult10" id="catapult10">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult11" id="catapult11">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult12" id="catapult12">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult13" id="catapult13">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult14" id="catapult14">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+        <div class="catapult catapult15" id="catapult15">
+            <div class="catapult-base"></div>
+            <div class="catapult-arm">
+                <div class="catapult-bucket"></div>
+            </div>
+        </div>
+
+        <div class="start-screen" id="startScreen">
+            <h2>🏰 Defend the Castle! 🏰</h2>
+            <p>🛡️ Use your mouse to control the shield!</p>
+            <p>🏰 Protect the castle from incoming boulders!</p>
+            <p>⚔️ Block the projectiles before they hit the castle!</p>
+            <p>💥 Each hit damages the castle and reduces health!</p>
+            <p>🎯 Survive as long as possible to get a high score!</p>
+            <button class="start-btn" id="startBtn">Defend the Realm!</button>
+            <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
+                Move your <strong>MOUSE</strong> to control the shield!
+            </p>
+        </div>
+
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🏰 Castle Defense Instructions</h2>
+                <p><strong>🎯 Goal:</strong> Protect the castle from incoming boulder attacks!</p>
+                <p><strong>🛡️ Controls:</strong> Move your mouse to control the shield</p>
+                <p><strong>💥 Strategy:</strong> Block boulders before they hit the castle</p>
+                <p><strong>❤️ Health:</strong> Each hit damages the castle - don't let it reach 0!</p>
+                <p><strong>📈 Difficulty:</strong> Speed increases as time goes on!</p>
+                <p><strong>🏆 Scoring:</strong> Earn points for each boulder blocked!</p>
+                <button class="close-instructions" id="closeInstructions">Begin Defense!</button>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>Castle Destroyed!</h2>
+            <p>The realm has fallen to the siege!</p>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Boulders Blocked: <span id="finalBlocks">0</span></p>
+            <button class="btn" onclick="restartGame()">Defend Again!</button>
+            <button class="btn" onclick="window.location.href='home.html'">Back to Hub</button>
+            <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
+                Press <strong>SPACEBAR</strong> to try again!
+            </p>
+        </div>
+
+        <div class="instructions">
+            <p><strong>Move your mouse to control the shield!</strong></p>
+            <p>Block the boulders and protect the castle!</p>
+        </div>
+    </div>
+
+    <script>
+        class CastleDefense {
+            constructor() {
+                this.gameContainer = document.getElementById('gameContainer');
+                this.shield = document.getElementById('shield');
+                this.castle = document.getElementById('castle');
+                this.healthElement = document.getElementById('health');
+                this.scoreElement = document.getElementById('score');
+                this.gameOverElement = document.getElementById('gameOver');
+                this.finalScoreElement = document.getElementById('finalScore');
+                this.finalBlocksElement = document.getElementById('finalBlocks');
+                this.startScreen = document.getElementById('startScreen');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.startBtn = document.getElementById('startBtn');
+                this.closeInstructions = document.getElementById('closeInstructions');
+                
+                this.gameWidth = 900;
+                this.gameHeight = 600;
+                this.isGameRunning = false;
+                this.gameStarted = false;
+                this.score = 0;
+                this.health = 100;
+                this.blockedBoulders = 0;
+                this.boulders = [];
+                this.damageMarks = [];
+                this.lastBoulder = 0;
+                this.gameStartTime = 0;
+                this.activeCatapults = 3;
+                this.catapultInterval = null;
+                this.speedInterval = null;
+                
+                // Shield properties
+                this.shieldX = 400;
+                this.shieldY = 300;
+                this.shieldWidth = 50;
+                this.shieldHeight = 60;
+                
+                // Game mechanics
+                this.boulderSpeed = 2.5;
+                this.boulderSpawnRate = 1500; // milliseconds
+                this.catapults = ['catapult1', 'catapult2', 'catapult3'];
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.updateShieldPosition();
+                this.showInstructions();
+                this.gameLoop();
+            }
+            
+            setupEventListeners() {
+                // Mouse movement
+                this.gameContainer.addEventListener('mousemove', (e) => {
+                    if (!this.isGameRunning) return;
+                    
+                    const rect = this.gameContainer.getBoundingClientRect();
+                    this.shieldX = e.clientX - rect.left - this.shieldWidth / 2;
+                    this.shieldY = e.clientY - rect.top - this.shieldHeight / 2;
+                    
+                    // Keep shield within bounds
+                    this.shieldX = Math.max(0, Math.min(this.gameWidth - this.shieldWidth, this.shieldX));
+                    this.shieldY = Math.max(0, Math.min(this.gameHeight - this.shieldHeight, this.shieldY));
+                });
+                
+                // Start button - now goes to instructions
+                this.startBtn.addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Close instructions button
+                this.closeInstructions.addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for start screen
+                    if (e.key === ' ' && this.startScreen.style.display === 'block') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for game over (restart)
+                    if (e.key === ' ' && !this.isGameRunning && this.gameStarted) {
+                        e.preventDefault();
+                        this.quickRestart();
+                        return;
+                    }
+                });
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameContainer.classList.add('playing');
+                this.startGame();
+            }
+            
+            showStartScreen() {
+                this.startScreen.style.display = 'block';
+                this.gameStarted = false;
+                this.isGameRunning = false;
+            }
+
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameStarted = true;
+                this.isGameRunning = true;
+                this.gameStartTime = Date.now();
+                this.startBoulderSpawning();
+                this.startProgressiveFeatures();
+                console.log('Castle Defense started!');
+            }
+
+            quickRestart() {
+                // Reset game state
+                this.score = 0;
+                this.health = 100;
+                this.blockedBoulders = 0;
+                this.updateUI();
+                this.shieldX = 400;
+                this.shieldY = 300;
+                this.boulderSpeed = 2.5;
+                this.boulderSpawnRate = 1500;
+                this.gameStartTime = Date.now();
+                this.activeCatapults = 3;
+                
+                // Clear any existing intervals
+                if (this.catapultInterval) clearInterval(this.catapultInterval);
+                if (this.speedInterval) clearInterval(this.speedInterval);
+                
+                // Hide all extra catapults and reset catapults array
+                for (let i = 4; i <= 15; i++) {
+                    document.getElementById(`catapult${i}`).style.display = 'none';
+                }
+                this.catapults = ['catapult1', 'catapult2', 'catapult3'];
+                
+                // Clear existing boulders and damage
+                this.boulders.forEach(boulder => boulder.element.remove());
+                this.boulders = [];
+                this.damageMarks.forEach(mark => mark.remove());
+                this.damageMarks = [];
+                
+                // Clear any impact effects
+                document.querySelectorAll('.impact-effect').forEach(effect => effect.remove());
+                
+                this.updateShieldPosition();
+                
+                // Hide game over screen and start game immediately
+                this.gameOverElement.style.display = 'none';
+                this.isGameRunning = true;
+                this.startBoulderSpawning();
+                this.startProgressiveFeatures();
+                console.log('Castle Defense restarted!');
+            }
+
+            updateUI() {
+                this.healthElement.textContent = Math.max(0, this.health);
+                this.scoreElement.textContent = this.score;
+            }
+            
+            startProgressiveFeatures() {
+                // Add new catapult every 30 seconds until we have 15 total
+                this.catapultInterval = setInterval(() => {
+                    if (this.isGameRunning && this.activeCatapults < 15) {
+                        this.addNextCatapult();
+                    } else if (this.activeCatapults >= 15) {
+                        clearInterval(this.catapultInterval);
+                    }
+                }, 30000);
+                
+                // Reduce spawn delay every 60 seconds
+                this.speedInterval = setInterval(() => {
+                    if (this.isGameRunning) {
+                        this.reduceSpawnDelay();
+                    }
+                }, 60000);
+            }
+            
+            addNextCatapult() {
+                this.activeCatapults++;
+                const catapultId = `catapult${this.activeCatapults}`;
+                const catapult = document.getElementById(catapultId);
+                
+                if (catapult) {
+                    catapult.style.display = 'block';
+                    this.catapults.push(catapultId);
+                    
+                    // Create visual effect for new catapult
+                    const positions = {
+                        4: { x: 150, y: 480 }, 5: { x: 150, y: 380 }, 6: { x: 150, y: 280 },
+                        7: { x: 250, y: 480 }, 8: { x: 250, y: 380 }, 9: { x: 250, y: 280 },
+                        10: { x: 350, y: 480 }, 11: { x: 350, y: 380 }, 12: { x: 350, y: 280 },
+                        13: { x: 450, y: 480 }, 14: { x: 450, y: 380 }, 15: { x: 450, y: 280 }
+                    };
+                    const pos = positions[this.activeCatapults];
+                    this.createImpactEffect(pos.x, pos.y, '⚔️', '#FFD700');
+                    this.playSound(880, 0.5);
+                    
+                    console.log(`Catapult ${this.activeCatapults} deployed!`);
+                }
+            }
+            
+            reduceSpawnDelay() {
+                if (this.boulderSpawnRate > 500) {
+                    this.boulderSpawnRate -= 200;
+                    
+                    // Create visual effect to indicate faster spawning
+                    this.createImpactEffect(450, 50, '⚡', '#FF4500');
+                    this.playSound(1100, 0.3);
+                    
+                    console.log('Boulder spawn rate increased! New delay:', this.boulderSpawnRate);
+                }
+            }
+
+            updateShieldPosition() {
+                this.shield.style.left = this.shieldX + 'px';
+                this.shield.style.top = this.shieldY + 'px';
+            }
+            
+            startBoulderSpawning() {
+                if (!this.isGameRunning) return;
+                
+                this.spawnBoulder();
+                
+                // Schedule next boulder with some randomness
+                const nextSpawn = this.boulderSpawnRate + (Math.random() - 0.5) * 500;
+                setTimeout(() => this.startBoulderSpawning(), nextSpawn);
+                
+                // Gradually increase difficulty by reducing spawn rate only
+                if (this.boulderSpawnRate > 800) {
+                    this.boulderSpawnRate -= 5;
+                }
+            }
+            
+            spawnBoulder() {
+                const catapultId = this.catapults[Math.floor(Math.random() * this.catapults.length)];
+                const catapult = document.getElementById(catapultId);
+                
+                // Animate catapult firing
+                const arm = catapult.querySelector('.catapult-arm');
+                arm.style.animation = 'catapult-fire 0.5s ease-out';
+                setTimeout(() => {
+                    arm.style.animation = '';
+                }, 500);
+                
+                // Get catapult position
+                const catapultRect = catapult.getBoundingClientRect();
+                const containerRect = this.gameContainer.getBoundingClientRect();
+                
+                const startX = catapultRect.left - containerRect.left + 40;
+                const startY = catapultRect.top - containerRect.top + 20;
+                
+                this.createBoulder(startX, startY);
+            }
+            
+            createBoulder(startX, startY) {
+                // Calculate trajectory to castle (80% chance) or random (20% chance)
+                const targetCastle = Math.random() < 0.8;
+                
+                let targetX, targetY;
+                if (targetCastle) {
+                    // Aim at castle area with some variance
+                    targetX = 750 + (Math.random() - 0.5) * 100; // Castle center +/- 50px
+                    targetY = 400 + (Math.random() - 0.5) * 100; // Castle center +/- 50px
+                } else {
+                    // Random aim
+                    targetX = 500 + Math.random() * 400;
+                    targetY = 300 + Math.random() * 200;
+                }
+                
+                // Calculate velocity to reach target
+                const deltaX = targetX - startX;
+                const deltaY = targetY - startY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Normalize and apply speed
+                const speed = this.boulderSpeed + Math.random() * 1.5;
+                const velocityX = (deltaX / distance) * speed;
+                const velocityY = (deltaY / distance) * speed;
+                
+                const boulder = {
+                    id: this.lastBoulder++,
+                    x: startX,
+                    y: startY,
+                    velocityX: velocityX,
+                    velocityY: velocityY,
+                    element: document.createElement('div')
+                };
+                
+                boulder.element.className = 'boulder';
+                boulder.element.style.left = startX + 'px';
+                boulder.element.style.top = startY + 'px';
+                
+                this.gameContainer.appendChild(boulder.element);
+                this.boulders.push(boulder);
+                
+                return boulder;
+            }
+            
+            updateBoulders() {
+                for (let i = this.boulders.length - 1; i >= 0; i--) {
+                    const boulder = this.boulders[i];
+                    boulder.x += boulder.velocityX;
+                    boulder.y += boulder.velocityY;
+                    boulder.element.style.left = boulder.x + 'px';
+                    boulder.element.style.top = boulder.y + 'px';
+                    
+                    // Check collision with shield
+                    if (this.checkShieldCollision(boulder)) {
+                        this.blockBoulder(boulder);
+                        boulder.element.remove();
+                        this.boulders.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Check collision with castle
+                    if (this.checkCastleCollision(boulder)) {
+                        this.damageCastle(boulder);
+                        boulder.element.remove();
+                        this.boulders.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Remove boulders that are off screen
+                    if (boulder.x > this.gameWidth || boulder.y > this.gameHeight) {
+                        boulder.element.remove();
+                        this.boulders.splice(i, 1);
+                    }
+                }
+            }
+            
+            checkShieldCollision(boulder) {
+                const boulderLeft = boulder.x;
+                const boulderRight = boulder.x + 20;
+                const boulderTop = boulder.y;
+                const boulderBottom = boulder.y + 20;
+                
+                const shieldLeft = this.shieldX;
+                const shieldRight = this.shieldX + this.shieldWidth;
+                const shieldTop = this.shieldY;
+                const shieldBottom = this.shieldY + this.shieldHeight;
+                
+                return (boulderRight > shieldLeft && 
+                        boulderLeft < shieldRight && 
+                        boulderBottom > shieldTop && 
+                        boulderTop < shieldBottom);
+            }
+            
+            checkCastleCollision(boulder) {
+                const boulderLeft = boulder.x;
+                const boulderRight = boulder.x + 20;
+                const boulderTop = boulder.y;
+                const boulderBottom = boulder.y + 20;
+                
+                // Castle area (approximate)
+                const castleLeft = 700;
+                const castleRight = 900;
+                const castleTop = 300;
+                const castleBottom = 500;
+                
+                return (boulderRight > castleLeft && 
+                        boulderLeft < castleRight && 
+                        boulderBottom > castleTop && 
+                        boulderTop < castleBottom);
+            }
+            
+            blockBoulder(boulder) {
+                // Create block effect
+                this.createImpactEffect(boulder.x, boulder.y, '🛡️', '#32CD32');
+                
+                // Add points and update stats
+                this.score += 10;
+                this.blockedBoulders++;
+                this.updateUI();
+                
+                // Play success sound
+                this.playSound(660, 0.2);
+            }
+            
+            damageCastle(boulder) {
+                // Create damage effect
+                this.createImpactEffect(boulder.x, boulder.y, '💥', '#FF4500');
+                
+                // Reduce health
+                this.health -= 15;
+                this.updateUI();
+                
+                // Add visual damage to castle
+                this.addDamageMark(boulder.x - 700 + 50, boulder.y - 300 + 100);
+                
+                // Play damage sound
+                this.playSound(220, 0.3);
+                
+                // Check game over
+                if (this.health <= 0) {
+                    this.gameOver();
+                }
+            }
+            
+            addDamageMark(x, y) {
+                const damage = document.createElement('div');
+                damage.className = 'castle-damage';
+                damage.style.left = x + 'px';
+                damage.style.top = y + 'px';
+                damage.style.width = (10 + Math.random() * 15) + 'px';
+                damage.style.height = (10 + Math.random() * 15) + 'px';
+                
+                this.castle.appendChild(damage);
+                this.damageMarks.push(damage);
+            }
+            
+            createImpactEffect(x, y, emoji, color) {
+                const effect = document.createElement('div');
+                effect.className = 'impact-effect';
+                effect.style.left = x + 'px';
+                effect.style.top = y + 'px';
+                effect.style.color = color;
+                effect.textContent = emoji;
+                
+                this.gameContainer.appendChild(effect);
+                
+                // Remove effect after animation
+                setTimeout(() => {
+                    effect.remove();
+                }, 800);
+            }
+            
+            playSound(frequency, duration) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+            
+            updateGame() {
+                if (!this.isGameRunning) return;
+                
+                this.updateBoulders();
+            }
+            
+            gameLoop() {
+                this.updateGame();
+                this.updateShieldPosition();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            gameOver() {
+                this.isGameRunning = false;
+                
+                // Clear intervals when game ends
+                if (this.catapultInterval) clearInterval(this.catapultInterval);
+                if (this.speedInterval) clearInterval(this.speedInterval);
+                
+                this.finalScoreElement.textContent = this.score;
+                this.finalBlocksElement.textContent = this.blockedBoulders;
+                this.gameOverElement.style.display = 'block';
+            }
+            
+            restart() {
+                this.quickRestart();
+            }
+        }
+        
+        // Initialize game
+        let game;
+        
+        window.addEventListener('load', () => {
+            game = new CastleDefense();
+        });
+        
+        function restartGame() {
+            game.restart();
+        }
+        
+        // Prevent context menu on right click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>

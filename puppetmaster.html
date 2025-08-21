@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puppet Master - Mini Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(700px, 90vh);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .score-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .level-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .crowd-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        /* Game Canvas */
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(180deg, #87CEEB 0%, #4FC3F7 50%, #29B6F6 100%);
+            overflow: hidden;
+        }
+
+        /* Runway/Bridge Structure */
+        .runway {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 100%;
+            background: linear-gradient(180deg, #E0E0E0 0%, #BDBDBD 50%, #9E9E9E 100%);
+            border-left: 4px solid #757575;
+            border-right: 4px solid #757575;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.1),
+                -10px 0 20px rgba(0, 0, 0, 0.2),
+                10px 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .runway::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                #FFD54F 0px,
+                #FFD54F 20px,
+                transparent 20px,
+                transparent 40px
+            );
+        }
+
+        /* Perspective Lines */
+        .perspective-line {
+            position: absolute;
+            background: rgba(117, 117, 117, 0.3);
+            height: 2px;
+        }
+
+        .perspective-line.left {
+            left: 0;
+            width: 200px;
+            transform-origin: right center;
+        }
+
+        .perspective-line.right {
+            right: 0;
+            width: 200px;
+            transform-origin: left center;
+        }
+
+        /* Puppet Characters */
+        .puppet {
+            position: absolute;
+            width: 16px;
+            height: 20px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            border-radius: 8px 8px 4px 4px;
+            transition: all 0.1s ease;
+            border: 2px solid #1565C0;
+            z-index: 5;
+        }
+
+        .puppet::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+            background: #FFAB91;
+            border-radius: 50%;
+            border: 1px solid #FF8A65;
+        }
+
+        .puppet::after {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 2px;
+            width: 4px;
+            height: 8px;
+            background: #1976D2;
+            border-radius: 0 0 2px 2px;
+            box-shadow: 8px 0 0 #1976D2;
+        }
+
+        /* Gates */
+        .gate {
+            position: absolute;
+            width: 160px;
+            height: 80px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            border: 4px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.2);
+            z-index: 3;
+        }
+
+        .gate.multiply {
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            border-color: #2E7D32;
+        }
+
+        .gate.add {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            border-color: #1565C0;
+        }
+
+        .gate.divide {
+            background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+            border-color: #C62828;
+        }
+
+        .gate.subtract {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            border-color: #E65100;
+        }
+
+        /* Gate Row Container */
+        .gate-row {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .gate-row .gate {
+            position: relative;
+            left: auto;
+            top: auto;
+            transform: none;
+        }
+
+        /* Player Block */
+        .player-block {
+            position: absolute;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            border-radius: 15px;
+            border: 3px solid #1565C0;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 6;
+            transition: all 0.3s ease;
+            width: 120px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Enemy Groups */
+        .enemy-group {
+            position: absolute;
+            background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+            border-radius: 15px;
+            border: 3px solid #AD1457;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 4;
+            transition: all 0.3s ease;
+        }
+
+        .enemy-group:hover {
+            transform: scale(1.05);
+        }
+
+        /* Effects */
+        .effect {
+            position: absolute;
+            pointer-events: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f1c40f;
+            text-shadow: 
+                2px 2px 4px rgba(0, 0, 0, 0.9),
+                -1px -1px 2px rgba(0, 0, 0, 0.8),
+                1px -1px 2px rgba(0, 0, 0, 0.8),
+                -1px 1px 2px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 2px solid #f1c40f;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.2);
+            }
+        }
+
+        /* Game Over */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-over-content {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mobile-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .mobile-controls {
+                display: block;
+            }
+
+            .puppet {
+                width: 12px;
+                height: 12px;
+            }
+
+            .gate {
+                width: 100px;
+                height: 50px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Animations */
+        .pulse {
+            animation: pulse 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .crowd-formation {
+            animation: crowdForm 0.5s ease;
+        }
+
+        @keyframes crowdForm {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🎭 Puppet Master</h2>
+                <p><strong>Control your puppet army!</strong></p>
+                <p>🎯 Use mouse/touch to guide your crowd left and right</p>
+                <p>➕ Pass through gates to multiply your puppets</p>
+                <p>⚠️ Avoid obstacles that reduce your crowd</p>
+                <p>🏆 Reach the end with as many puppets as possible</p>
+                <p>📈 Higher levels = more challenges and rewards!</p>
+                <button class="close-instructions" id="closeInstructions">Start Controlling!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <div class="game-ui">
+                <div class="score-display">Score: <span id="score">0</span></div>
+                <div class="level-display">Level: <span id="level">1</span></div>
+                <div class="crowd-display">Puppets: <span id="crowdCount">10</span></div>
+            </div>
+
+            <div class="game-canvas" id="gameCanvas">
+                <!-- Dynamic content will be added here -->
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2>🎭 Show's Over!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Level Reached: <span id="finalLevel">1</span></p>
+                <p>Max Puppets: <span id="maxPuppets">10</span></p>
+                <p id="performanceText">Keep practicing your puppet mastery!</p>
+                <button class="restart-btn" id="restartBtn">New Show</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div class="mobile-controls" id="mobileControls">
+        <button class="mobile-btn" id="mobileLeft">← Left</button>
+        <button class="mobile-btn" id="mobileRight">Right →</button>
+    </div>
+
+    <script>
+        class PuppetMaster {
+            constructor() {
+                this.score = 0;
+                this.level = 1;
+                this.crowdCount = 10;
+                this.maxPuppets = 10;
+                this.isPlaying = false;
+                this.gameSpeed = 2.25; // Reduced from 3 by 25%
+                this.crowdX = 450; // Center of screen
+                this.crowdY = 600;
+                this.puppets = [];
+                this.gates = [];
+                this.enemies = [];
+                this.effects = [];
+                this.levelProgress = 0;
+                this.levelSegments = 3; // 3 gate-enemy pairs per level
+                this.currentSegment = 0;
+                this.segmentsCreated = 0; // Track how many segments we've created
+                this.completedSegments = 0; // Track completed gate-enemy pairs
+                this.mouseX = 450;
+                this.gameCanvas = null;
+                this.isInBattle = false;
+                this.battleComplete = false;
+                this.playerBlock = null;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.generateLevel();
+            }
+
+            initializeElements() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.gameCanvas = document.getElementById('gameCanvas');
+                this.scoreElement = document.getElementById('score');
+                this.levelElement = document.getElementById('level');
+                this.crowdCountElement = document.getElementById('crowdCount');
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Game over
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restart();
+                });
+
+                // Mouse controls
+                this.gameCanvas.addEventListener('mousemove', (e) => {
+                    if (!this.isPlaying) return;
+                    const rect = this.gameCanvas.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                });
+
+                // Touch controls
+                this.gameCanvas.addEventListener('touchmove', (e) => {
+                    if (!this.isPlaying) return;
+                    e.preventDefault();
+                    const rect = this.gameCanvas.getBoundingClientRect();
+                    this.mouseX = e.touches[0].clientX - rect.left;
+                });
+
+                // Mobile buttons
+                document.getElementById('mobileLeft').addEventListener('click', () => {
+                    this.mouseX = Math.max(300, this.mouseX - 80);
+                });
+
+                document.getElementById('mobileRight').addEventListener('click', () => {
+                    this.mouseX = Math.min(600, this.mouseX + 80);
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    const popupVisible = this.instructionsPopup.style.display !== 'none' && 
+                                       window.getComputedStyle(this.instructionsPopup).display !== 'none';
+                    
+                    if (e.key === ' ' && popupVisible) {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Game controls
+                    if (this.isPlaying) {
+                        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                            this.mouseX = Math.max(300, this.mouseX - 50);
+                        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                            this.mouseX = Math.min(600, this.mouseX + 50);
+                        }
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restart();
+                    }
+                });
+
+                // Mobile detection
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'block';
+                }
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            startGame() {
+                this.isPlaying = true;
+                this.createRunway();
+                this.createPlayerBlock();
+                this.createFirstSegment(); // Only create first segment initially
+                this.gameLoop();
+            }
+
+            createRunway() {
+                // Create the main runway structure
+                const runway = document.createElement('div');
+                runway.className = 'runway';
+                this.gameCanvas.appendChild(runway);
+
+                // Create perspective lines for visual depth
+                for (let i = 0; i < 20; i++) {
+                    const leftLine = document.createElement('div');
+                    leftLine.className = 'perspective-line left';
+                    leftLine.style.top = (i * 35) + 'px';
+                    leftLine.style.transform = `scaleX(${0.3 + (i * 0.035)})`;
+                    this.gameCanvas.appendChild(leftLine);
+
+                    const rightLine = document.createElement('div');
+                    rightLine.className = 'perspective-line right';
+                    rightLine.style.top = (i * 35) + 'px';
+                    rightLine.style.transform = `scaleX(${0.3 + (i * 0.035)})`;
+                    this.gameCanvas.appendChild(rightLine);
+                }
+            }
+
+            createPlayerBlock() {
+                this.playerBlock = document.createElement('div');
+                this.playerBlock.className = 'player-block';
+                this.playerBlock.style.left = (this.crowdX - 60) + 'px';
+                this.playerBlock.style.top = this.crowdY + 'px';
+                this.playerBlock.textContent = `👥 ${this.crowdCount}`;
+                this.gameCanvas.appendChild(this.playerBlock);
+            }
+
+            updatePlayerBlock() {
+                if (this.playerBlock) {
+                    this.playerBlock.style.left = (this.crowdX - 60) + 'px';
+                    this.playerBlock.textContent = `👥 ${this.crowdCount}`;
+                }
+            }
+
+            generateLevel() {
+                this.currentSegment = 0;
+                this.segmentsCreated = 0;
+                this.completedSegments = 0;
+                this.gates = [];
+                this.enemies = [];
+                this.gameCanvas.querySelectorAll('.gate, .gate-row, .enemy-group').forEach(el => el.remove());
+            }
+
+            createFirstSegment() {
+                // Only create the first gate pair at the top
+                this.createSegment(0);
+                this.segmentsCreated = 1;
+            }
+
+            createNextSegmentIfNeeded() {
+                // Check if we need to create the next segment
+                if (this.segmentsCreated < this.levelSegments) {
+                    // Check if the last created elements have moved down enough
+                    const lastY = -100 + (this.segmentsCreated - 1) * 200;
+                    if (lastY > 200) { // Create next segment when previous one has moved down
+                        this.createSegment(this.segmentsCreated);
+                        this.segmentsCreated++;
+                    }
+                }
+            }
+
+            createSegment(segmentIndex) {
+                const baseY = -100 + segmentIndex * 200; // Start from top of screen
+                
+                // Only create gate pair - enemies will be created when gate is activated
+                this.createGatePair(baseY, segmentIndex);
+            }
+
+            createGatePair(y, segmentIndex) {
+                const gateRow = document.createElement('div');
+                gateRow.className = 'gate-row';
+                gateRow.style.top = y + 'px';
+                this.gameCanvas.appendChild(gateRow);
+
+                // Generate strategic gate options
+                const leftOperation = this.generateGateOperation();
+                const rightOperation = this.generateGateOperation();
+
+                // Create left gate
+                const leftGate = document.createElement('div');
+                leftGate.className = `gate ${leftOperation.type}`;
+                leftGate.textContent = leftOperation.text;
+                leftGate.style.position = 'relative';
+                gateRow.appendChild(leftGate);
+
+                // Create right gate
+                const rightGate = document.createElement('div');
+                rightGate.className = `gate ${rightOperation.type}`;
+                rightGate.textContent = rightOperation.text;
+                rightGate.style.position = 'relative';
+                gateRow.appendChild(rightGate);
+
+                // Store gate data with segment index for enemy creation
+                this.gates.push({
+                    element: leftGate,
+                    x: 290,
+                    y: y,
+                    width: 160,
+                    height: 80,
+                    operation: leftOperation,
+                    used: false,
+                    side: 'left',
+                    segmentIndex: segmentIndex
+                });
+
+                this.gates.push({
+                    element: rightGate,
+                    x: 450,
+                    y: y,
+                    width: 160,
+                    height: 80,
+                    operation: rightOperation,
+                    used: false,
+                    side: 'right',
+                    segmentIndex: segmentIndex
+                });
+            }
+
+            generateGateOperation() {
+                const operations = [
+                    { type: 'multiply', symbol: '×', values: [2, 3, 4, 5] },
+                    { type: 'add', symbol: '+', values: [5, 10, 15, 20, 25] }
+                ];
+
+                const operation = operations[Math.floor(Math.random() * operations.length)];
+                const value = operation.values[Math.floor(Math.random() * operation.values.length)];
+                
+                return {
+                    type: operation.type,
+                    symbol: operation.symbol,
+                    value: value,
+                    text: operation.symbol + value
+                };
+            }
+
+            calculateGateResult(operation) {
+                // Calculate what the result would be if player chooses this gate
+                let result = this.crowdCount;
+                
+                switch (operation.type) {
+                    case 'multiply':
+                        result = this.crowdCount * operation.value;
+                        break;
+                    case 'add':
+                        result = this.crowdCount + operation.value;
+                        break;
+                }
+                
+                return Math.max(1, result);
+            }
+
+            calculateStrategicEnemyCount(segmentIndex) {
+                // Find the gates for this segment to calculate strategic enemy count
+                const segmentGates = this.gates.filter(gate => 
+                    gate.segmentIndex === segmentIndex && !gate.used
+                );
+
+                if (segmentGates.length >= 2) {
+                    // Calculate what player would get with each gate choice
+                    const leftGateResult = this.calculateGateResult(segmentGates[0].operation);
+                    const rightGateResult = this.calculateGateResult(segmentGates[1].operation);
+                    
+                    // Set enemy count between the two results to create strategic choice
+                    const minResult = Math.min(leftGateResult, rightGateResult);
+                    const maxResult = Math.max(leftGateResult, rightGateResult);
+                    
+                    // Enemy count should be between min and max results
+                    // This ensures one choice wins and one choice loses
+                    const enemyCount = Math.floor(minResult + (maxResult - minResult) * 0.7);
+                    
+                    console.log(`Strategic enemy calculation:
+                        Current puppets: ${this.crowdCount}
+                        Left gate result: ${leftGateResult}
+                        Right gate result: ${rightGateResult}
+                        Enemy count: ${enemyCount}
+                        ${leftGateResult > enemyCount ? 'LEFT WINS' : 'LEFT LOSES'}
+                        ${rightGateResult > enemyCount ? 'RIGHT WINS' : 'RIGHT LOSES'}`);
+                    
+                    return Math.max(5, enemyCount);
+                } else {
+                    // Fallback to original calculation if gates not found
+                    const baseEnemyCount = 8 + (this.level * 3) + (segmentIndex * 2);
+                    const variableCount = Math.floor(Math.random() * 6) - 3;
+                    return Math.max(5, baseEnemyCount + variableCount);
+                }
+            }
+
+            createEnemyGroup(y, segmentIndex) {
+                const enemyCount = this.calculateStrategicEnemyCount(segmentIndex);
+                console.log(`Creating enemy group with ${enemyCount} enemies at Y: ${y}`);
+
+                const enemyGroup = document.createElement('div');
+                enemyGroup.className = 'enemy-group';
+                enemyGroup.style.position = 'absolute';
+                enemyGroup.style.left = '300px'; // Properly centered (450 - 150 = 300)
+                enemyGroup.style.top = y + 'px';
+                enemyGroup.style.width = '300px';
+                enemyGroup.style.height = '100px';
+                enemyGroup.style.background = 'linear-gradient(135deg, #E91E63 0%, #C2185B 100%)';
+                enemyGroup.style.border = '3px solid #AD1457';
+                enemyGroup.style.borderRadius = '15px';
+                enemyGroup.style.display = 'flex';
+                enemyGroup.style.alignItems = 'center';
+                enemyGroup.style.justifyContent = 'center';
+                enemyGroup.style.fontSize = '2rem';
+                enemyGroup.style.fontWeight = 'bold';
+                enemyGroup.style.color = 'white';
+                enemyGroup.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.7)';
+                enemyGroup.style.zIndex = '4';
+                enemyGroup.textContent = `⚔️ ${enemyCount}`;
+
+                // Add a creation animation to make it more visible
+                enemyGroup.style.animation = 'crowdForm 0.5s ease';
+
+                this.gameCanvas.appendChild(enemyGroup);
+
+                const enemyData = {
+                    element: enemyGroup,
+                    x: 450, // Center of runway
+                    y: y,
+                    count: enemyCount,
+                    defeated: false,
+                    segmentIndex: segmentIndex
+                };
+
+                this.enemies.push(enemyData);
+                console.log(`Enemy added to array. Total enemies: ${this.enemies.length}`);
+                
+                return enemyData;
+            }
+
+            removePuppet(index) {
+                if (index >= 0 && index < this.puppets.length && this.puppets[index]) {
+                    // Remove the DOM element
+                    if (this.puppets[index].element && this.puppets[index].element.parentNode) {
+                        this.puppets[index].element.remove();
+                    }
+                    
+                    // Remove from array
+                    this.puppets.splice(index, 1);
+                    
+                    // Update count (but don't go below 0)
+                    this.crowdCount = Math.max(0, this.crowdCount - 1);
+                    this.updateDisplay();
+                }
+            }
+
+            gameLoop() {
+                if (!this.isPlaying) return;
+
+                this.updateCrowd();
+                this.checkCollisions();
+                this.updateLevel();
+                this.cleanupEffects();
+
+                if (this.crowdCount <= 0 && !this.isInBattle) {
+                    this.endGame();
+                    return;
+                }
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            updateCrowd() {
+                // Constrain movement to runway area (with more safety margin)
+                const runwayLeft = 300;
+                const runwayRight = 600;
+                const targetX = Math.max(runwayLeft, Math.min(runwayRight, this.mouseX));
+                this.crowdX += (targetX - this.crowdX) * 0.1;
+
+                // Update player block position and display
+                this.updatePlayerBlock();
+            }
+
+            updateCrowdCount(newCount) {
+                this.crowdCount = Math.max(0, newCount);
+                this.maxPuppets = Math.max(this.maxPuppets, this.crowdCount);
+                this.updateDisplay();
+                this.updatePlayerBlock();
+            }
+
+            checkCollisions() {
+                if (this.isInBattle) return;
+
+                // Check gate collisions first (gates should be encountered before enemies)
+                this.gates.forEach(gate => {
+                    if (gate.used) return;
+
+                    // More reliable collision detection - check if player block overlaps with gate
+                    const playerLeft = this.crowdX - 60;
+                    const playerRight = this.crowdX + 60;
+                    const playerTop = this.crowdY;
+                    const playerBottom = this.crowdY + 80;
+
+                    const gateLeft = gate.x - 80;
+                    const gateRight = gate.x + 80;
+                    const gateTop = gate.y;
+                    const gateBottom = gate.y + 80;
+
+                    // Check for overlap
+                    if (playerLeft < gateRight && playerRight > gateLeft &&
+                        playerTop < gateBottom && playerBottom > gateTop) {
+                        console.log('Gate collision detected!', gate.operation.text);
+                        this.activateGate(gate);
+                        
+                        // Mark the other gate in the same row as used to prevent double activation
+                        this.gates.forEach(otherGate => {
+                            if (otherGate !== gate && Math.abs(otherGate.y - gate.y) < 50) {
+                                otherGate.used = true;
+                                otherGate.element.style.opacity = '0.3';
+                            }
+                        });
+                    }
+                });
+
+                // Check enemy collisions (only after gates)
+                this.enemies.forEach(enemy => {
+                    if (enemy.defeated) return;
+
+                    // More reliable enemy collision detection
+                    const playerLeft = this.crowdX - 60;
+                    const playerRight = this.crowdX + 60;
+                    const playerTop = this.crowdY;
+                    const playerBottom = this.crowdY + 80;
+
+                    const enemyLeft = enemy.x - 150;
+                    const enemyRight = enemy.x + 150;
+                    const enemyTop = enemy.y;
+                    const enemyBottom = enemy.y + 100;
+
+                    // Check for overlap
+                    if (playerLeft < enemyRight && playerRight > enemyLeft &&
+                        playerTop < enemyBottom && playerBottom > enemyTop) {
+                        console.log('Enemy collision detected!', enemy.count);
+                        this.startBattle(enemy);
+                    }
+                });
+            }
+
+            activateGate(gate) {
+                gate.used = true;
+                gate.element.style.opacity = '0.5';
+
+                const operation = gate.operation;
+                let newCount = this.crowdCount;
+
+                switch (operation.type) {
+                    case 'multiply':
+                        newCount = this.crowdCount * operation.value;
+                        break;
+                    case 'add':
+                        newCount = this.crowdCount + operation.value;
+                        break;
+                }
+
+                newCount = Math.max(1, newCount); // Don't go below 1
+                
+                console.log(`Gate activated: ${this.crowdCount} ${operation.symbol} ${operation.value} = ${newCount}`);
+                this.showEffect(gate.x, gate.y, `${this.crowdCount} ${operation.symbol} ${operation.value} = ${newCount}`);
+                this.updateCrowdCount(newCount);
+                this.updateScore(50);
+
+                // NOW create the enemy for this segment after gate choice
+                // Make enemy appear from the very top of the screen
+                const enemyY = -100; // Start from top of screen like gates
+                console.log(`Creating enemy at Y: ${enemyY} for segment: ${gate.segmentIndex}`);
+                
+                // Small delay to ensure gate effect is processed first
+                setTimeout(() => {
+                    this.createEnemyGroup(enemyY, gate.segmentIndex);
+                }, 100);
+            }
+
+            startBattle(enemy) {
+                if (this.isInBattle) return;
+                
+                this.isInBattle = true;
+                enemy.defeated = true;
+                enemy.element.style.opacity = '0.5';
+
+                // Show battle calculation
+                const battleResult = this.crowdCount - enemy.count;
+                const battleText = `${this.crowdCount} - ${enemy.count} = ${Math.max(0, battleResult)}`;
+                
+                this.showEffect(enemy.x, enemy.y - 50, battleText);
+
+                if (battleResult > 0) {
+                    // Victory
+                    this.updateCrowdCount(battleResult);
+                    this.updateScore(enemy.count * 10);
+                    this.showEffect(enemy.x, enemy.y + 50, '⚔️ Victory!');
+                    
+                    // Increment completed segments counter
+                    this.completedSegments++;
+                    console.log(`Completed segments: ${this.completedSegments}/${this.levelSegments}`);
+                    
+                    // Check if we've completed all 3 gate-enemy pairs for this level
+                    if (this.completedSegments >= this.levelSegments) {
+                        setTimeout(() => {
+                            this.nextLevel();
+                        }, 1500);
+                    } else {
+                        // Create next gate segment if there are more segments to complete
+                        setTimeout(() => {
+                            if (this.segmentsCreated < this.levelSegments) {
+                                // Create gate at top of screen for next round
+                                this.createGatePair(-100, this.segmentsCreated);
+                                this.segmentsCreated++;
+                            }
+                        }, 1000);
+                    }
+                } else {
+                    // Defeat
+                    this.showEffect(enemy.x, enemy.y + 50, '💀 Defeated!');
+                    setTimeout(() => {
+                        this.endGame();
+                    }, 1500);
+                }
+
+                // Resume gameplay after 2 seconds
+                setTimeout(() => {
+                    this.isInBattle = false;
+                }, 2000);
+            }
+
+            showEffect(x, y, text) {
+                const effect = document.createElement('div');
+                effect.className = 'effect';
+                effect.style.left = x + 'px';
+                effect.style.top = y + 'px';
+                effect.textContent = text;
+                this.gameCanvas.appendChild(effect);
+                this.effects.push(effect);
+
+                setTimeout(() => {
+                    if (effect.parentNode) {
+                        effect.remove();
+                    }
+                }, 1000);
+            }
+
+            updateLevel() {
+                if (this.isInBattle) return;
+
+                // Create next segment if needed (progressive level generation)
+                this.createNextSegmentIfNeeded();
+
+                // Move level elements (gate rows and enemies)
+                this.gameCanvas.querySelectorAll('.gate-row').forEach(gateRow => {
+                    const currentTop = parseInt(gateRow.style.top) || 0;
+                    gateRow.style.top = (currentTop + this.gameSpeed) + 'px';
+                });
+
+                this.gameCanvas.querySelectorAll('.enemy-group').forEach(enemyGroup => {
+                    const currentTop = parseInt(enemyGroup.style.top) || 0;
+                    enemyGroup.style.top = (currentTop + this.gameSpeed) + 'px';
+                });
+
+                // Update gate and enemy positions for collision detection
+                this.gates.forEach(gate => {
+                    gate.y += this.gameSpeed;
+                });
+
+                this.enemies.forEach(enemy => {
+                    enemy.y += this.gameSpeed;
+                });
+
+                this.levelProgress += this.gameSpeed;
+
+                // Remove off-screen elements
+                this.gates = this.gates.filter(gate => gate.y < 700);
+                this.enemies = this.enemies.filter(enemy => enemy.y < 700);
+
+                this.gameCanvas.querySelectorAll('.gate-row').forEach(gateRow => {
+                    const top = parseInt(gateRow.style.top) || 0;
+                    if (top > 700) {
+                        gateRow.remove();
+                    }
+                });
+
+                this.gameCanvas.querySelectorAll('.enemy-group').forEach(enemyGroup => {
+                    const top = parseInt(enemyGroup.style.top) || 0;
+                    if (top > 700) {
+                        enemyGroup.remove();
+                    }
+                });
+            }
+
+            cleanupEffects() {
+                this.effects = this.effects.filter(effect => {
+                    if (!effect.parentNode) {
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            nextLevel() {
+                this.level++;
+                this.currentSegment = 0;
+                this.segmentsCreated = 0;
+                this.completedSegments = 0;
+                this.gameSpeed += 0.225; // Reduced from 0.3 by 25%
+                this.updateScore(this.crowdCount * 100);
+                
+                // Reset player count to 10 for each new level
+                this.crowdCount = 10;
+                
+                this.showEffect(450, 300, `Level ${this.level} Complete!`);
+                
+                setTimeout(() => {
+                    this.generateLevel();
+                    this.createFirstSegment();
+                    this.showEffect(450, 350, `Level ${this.level} Start!`);
+                }, 2000);
+                
+                this.updateDisplay();
+            }
+
+            updateScore(points) {
+                this.score += points;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.scoreElement.textContent = this.score;
+                this.levelElement.textContent = this.level;
+                this.crowdCountElement.textContent = this.crowdCount;
+            }
+
+            endGame() {
+                this.isPlaying = false;
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalLevel').textContent = this.level;
+                document.getElementById('maxPuppets').textContent = this.maxPuppets;
+                
+                let performanceText = "Keep practicing your puppet mastery!";
+                if (this.level >= 5) performanceText = "🎭 Master Puppeteer! Incredible control!";
+                else if (this.level >= 3) performanceText = "🎪 Great show! You're getting the hang of it!";
+                else if (this.score > 500) performanceText = "🎨 Nice puppet work! Keep improving!";
+                
+                document.getElementById('performanceText').textContent = performanceText;
+                this.gameOver.style.display = 'flex';
+            }
+
+            restart() {
+                this.score = 0;
+                this.level = 1;
+                this.crowdCount = 10;
+                this.maxPuppets = 10;
+                this.gameSpeed = 2.25; // Reduced from 3 by 25%
+                this.crowdX = 450;
+                this.levelProgress = 0;
+                this.currentSegment = 0;
+                this.segmentsCreated = 0;
+                this.completedSegments = 0;
+                this.mouseX = 450;
+                this.isInBattle = false;
+
+                // Clear all game elements
+                this.gameCanvas.querySelectorAll('.puppet, .gate, .enemy-group, .effect, .gate-row, .runway, .perspective-line, .player-block').forEach(el => el.remove());
+                this.puppets = [];
+                this.gates = [];
+                this.enemies = [];
+                this.effects = [];
+                this.playerBlock = null;
+
+                this.generateLevel();
+                this.updateDisplay();
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new PuppetMaster();
+        });
+    </script>
+</body>
+</html>

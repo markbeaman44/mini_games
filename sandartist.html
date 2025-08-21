@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sand Artist - Mystic Platform Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f4e4bc 0%, #ddbf94 50%, #d4a574 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #8b4513;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #d2691e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(210, 105, 30, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: #b8860b;
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #87ceeb 0%, #f4e4bc 40%, #daa520 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #cd853f;
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(139, 69, 19, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #f4e4bc, #daa520);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #cd853f;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .instructions-content h2 {
+            color: #8b4513;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            color: #654321;
+            font-size: 1rem;
+        }
+
+        .close-instructions {
+            background: #d2691e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+
+        .close-instructions:hover {
+            background: #b8860b;
+        }
+
+        /* Game Area */
+        .game-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .hud-item {
+            background: rgba(139, 69, 19, 0.8);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid #cd853f;
+            color: white;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+        }
+
+        .mobile-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(139, 69, 19, 0.8);
+            border: 2px solid #cd853f;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-btn:active {
+            background: rgba(139, 69, 19, 1);
+        }
+
+        /* Game Over Screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(139, 69, 19, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            text-align: center;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #f4e4bc, #daa520);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #cd853f;
+        }
+
+        .game-over h2 {
+            color: #8b4513;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .restart-btn {
+            background: #d2691e;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: #b8860b;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                height: min(500px, 85vh);
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+
+            .instructions-content {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .instructions-content h2 {
+                font-size: 1.4rem;
+            }
+
+            .instructions-content p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🏺 Sand Artist</h2>
+                <p><strong>🎯 Objective:</strong> Get from the blue start point to the green goal!</p>
+                <p><strong>🖱️ Controls:</strong> Click anywhere to move sand and create platforms</p>
+                <p><strong>⚡ Sand Magic:</strong> Sand particles will flow to where you click and form a platform</p>
+                <p><strong>🦘 Movement:</strong> Use WASD or Arrow keys to move and jump</p>
+                <p><strong>🏖️ Strategy:</strong> Use sand wisely - platforms are temporary!</p>
+                <button class="close-instructions" id="closeInstructions">Begin Sand Magic!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <canvas class="game-canvas" id="gameCanvas" width="900" height="600"></canvas>
+            
+            <!-- HUD -->
+            <div class="hud">
+                <div class="hud-item">Level: <span id="currentLevel">1</span></div>
+                <div class="hud-item">Sand: <span id="sandCount">100%</span></div>
+                <div class="hud-item">Time: <span id="gameTime">0:00</span></div>
+            </div>
+
+            <!-- Mobile Controls -->
+            <div class="mobile-controls" id="mobileControls">
+                <div class="mobile-btn" id="jumpBtn">↑</div>
+                <div class="mobile-btn" id="leftBtn">←</div>
+                <div class="mobile-btn" id="rightBtn">→</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2 id="gameOverTitle">Level Complete!</h2>
+                <p id="gameOverText">You've mastered the sand!</p>
+                <p id="completionTime">Time: 0:00</p>
+                <button class="restart-btn" id="restartBtn">Next Level</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SandArtist {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                // Game state
+                this.gameRunning = false;
+                this.level = 1;
+                this.maxLevels = 5;
+                this.startTime = 0;
+                
+                // Player object
+                this.player = {
+                    x: 100,
+                    y: 400,
+                    width: 20,
+                    height: 20,
+                    vx: 0,
+                    vy: 0,
+                    speed: 3,
+                    jumpPower: 12,
+                    onGround: false,
+                    color: '#4169e1'
+                };
+                
+                // Goal object
+                this.goal = {
+                    x: 800,
+                    y: 100,
+                    width: 30,
+                    height: 30,
+                    color: '#32cd32'
+                };
+                
+                // Sand system
+                this.sandParticles = [];
+                this.sandPlatforms = [];
+                this.totalSand = 500; // Reduced to support 5 platforms max
+                this.availableSand = 500;
+                this.platformCost = 100; // Cost per platform
+                this.platformDecayTime = 10000; // 10 seconds
+                
+                // Input state
+                this.keys = {};
+                this.mouseX = 0;
+                this.mouseY = 0;
+                
+                // Level obstacles
+                this.obstacles = [];
+                
+                this.setupEventListeners();
+                this.generateSandParticles();
+                this.setupLevel();
+                this.showInstructions();
+            }
+
+            setupEventListeners() {
+                // UI buttons
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.nextLevel();
+                });
+
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Canvas mouse events
+                this.canvas.addEventListener('click', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleClick(e);
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.gameRunning) return;
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                    this.mouseY = e.clientY - rect.top;
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.nextLevel();
+                        return;
+                    }
+
+                    this.keys[e.key.toLowerCase()] = true;
+                    
+                    // Prevent arrow key scrolling
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+
+                // Mobile controls
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'flex';
+                    
+                    document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.keys['w'] = true;
+                    });
+
+                    document.getElementById('jumpBtn').addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.keys['w'] = false;
+                    });
+
+                    document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.keys['a'] = true;
+                    });
+
+                    document.getElementById('leftBtn').addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.keys['a'] = false;
+                    });
+
+                    document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.keys['d'] = true;
+                    });
+
+                    document.getElementById('rightBtn').addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.keys['d'] = false;
+                    });
+                }
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.startGame();
+            }
+
+            startGame() {
+                this.gameArea.style.display = 'block';
+                this.gameRunning = true;
+                this.startTime = Date.now();
+                this.gameLoop();
+            }
+
+            setupLevel() {
+                // Reset player position
+                this.player.x = 100;
+                this.player.y = 400;
+                this.player.vx = 0;
+                this.player.vy = 0;
+                
+                // Clear existing platforms
+                this.sandPlatforms = [];
+                this.availableSand = this.totalSand;
+                
+                // Setup obstacles based on level
+                this.obstacles = [];
+                
+                switch(this.level) {
+                    case 1:
+                        // Simple gap
+                        this.obstacles.push({x: 300, y: 500, width: 200, height: 100});
+                        break;
+                    case 2:
+                        // Multiple gaps
+                        this.obstacles.push({x: 250, y: 450, width: 150, height: 150});
+                        this.obstacles.push({x: 500, y: 400, width: 100, height: 200});
+                        break;
+                    case 3:
+                        // Maze-like
+                        this.obstacles.push({x: 200, y: 400, width: 50, height: 200});
+                        this.obstacles.push({x: 400, y: 300, width: 50, height: 300});
+                        this.obstacles.push({x: 600, y: 200, width: 50, height: 400});
+                        break;
+                    case 4:
+                        // Tower climbing
+                        this.obstacles.push({x: 300, y: 350, width: 100, height: 250});
+                        this.obstacles.push({x: 500, y: 250, width: 100, height: 350});
+                        this.obstacles.push({x: 700, y: 150, width: 100, height: 450});
+                        break;
+                    case 5:
+                        // Complex puzzle
+                        this.obstacles.push({x: 200, y: 500, width: 100, height: 100});
+                        this.obstacles.push({x: 400, y: 400, width: 100, height: 200});
+                        this.obstacles.push({x: 600, y: 300, width: 100, height: 300});
+                        this.obstacles.push({x: 350, y: 200, width: 200, height: 50});
+                        break;
+                }
+                
+                // Randomize goal position after obstacles are set
+                this.randomizeGoalPosition();
+            }
+
+            generateSandParticles() {
+                this.sandParticles = [];
+                for (let i = 0; i < 150; i++) {
+                    this.sandParticles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 3 + 1,
+                        color: this.getRandomSandColor(),
+                        targetX: null,
+                        targetY: null,
+                        forming: false
+                    });
+                }
+            }
+
+            getRandomSandColor() {
+                const colors = ['#daa520', '#cd853f', '#d2691e', '#f4e4bc', '#ddbf94'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            handleClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                
+                // Check if we have enough sand
+                if (this.availableSand < this.platformCost) return;
+                
+                // Check if click is on valid area (not on obstacles or existing platforms)
+                if (this.isValidPlatformLocation(clickX, clickY)) {
+                    // Immediately deduct sand to prevent spam clicking
+                    this.availableSand -= this.platformCost;
+                    this.createSandPlatform(clickX, clickY);
+                }
+            }
+
+            isValidPlatformLocation(x, y) {
+                const platformSize = 80;
+                
+                // Check obstacles
+                for (let obstacle of this.obstacles) {
+                    if (x + platformSize/2 > obstacle.x && 
+                        x - platformSize/2 < obstacle.x + obstacle.width &&
+                        y + 10 > obstacle.y && 
+                        y - 10 < obstacle.y + obstacle.height) {
+                        return false;
+                    }
+                }
+                
+                // Check existing platforms
+                for (let platform of this.sandPlatforms) {
+                    const distance = Math.sqrt((x - platform.x) ** 2 + (y - platform.y) ** 2);
+                    if (distance < 60) return false;
+                }
+                
+                return true;
+            }
+
+            randomizeGoalPosition() {
+                // Avoid HUD area (top-right corner: width 200px, height 150px)
+                const hudWidth = 200;
+                const hudHeight = 150;
+                const margin = 50; // Extra margin for safety
+                
+                let validPosition = false;
+                let attempts = 0;
+                
+                while (!validPosition && attempts < 20) {
+                    // Random position within canvas bounds
+                    this.goal.x = Math.random() * (this.canvas.width - this.goal.width - margin * 2) + margin;
+                    this.goal.y = Math.random() * (this.canvas.height - this.goal.height - margin * 2) + margin;
+                    
+                    // Check if position overlaps with HUD area
+                    const overlapsHUD = this.goal.x + this.goal.width > this.canvas.width - hudWidth &&
+                                       this.goal.y < hudHeight;
+                    
+                    // Check if position overlaps with obstacles
+                    let overlapsObstacle = false;
+                    for (let obstacle of this.obstacles) {
+                        if (this.goal.x < obstacle.x + obstacle.width + margin &&
+                            this.goal.x + this.goal.width > obstacle.x - margin &&
+                            this.goal.y < obstacle.y + obstacle.height + margin &&
+                            this.goal.y + this.goal.height > obstacle.y - margin) {
+                            overlapsObstacle = true;
+                            break;
+                        }
+                    }
+                    
+                    // Check if too close to player start position
+                    const distanceFromPlayer = Math.sqrt(
+                        (this.goal.x - this.player.x) ** 2 + (this.goal.y - this.player.y) ** 2
+                    );
+                    const tooCloseToPlayer = distanceFromPlayer < 150;
+                    
+                    if (!overlapsHUD && !overlapsObstacle && !tooCloseToPlayer) {
+                        validPosition = true;
+                    }
+                    
+                    attempts++;
+                }
+                
+                // Fallback position if no valid position found
+                if (!validPosition) {
+                    this.goal.x = this.canvas.width - 100;
+                    this.goal.y = this.canvas.height - 100;
+                }
+            }
+
+            createSandPlatform(x, y) {
+                // Set sand particles to move to target location
+                let particleCount = 0;
+                for (let particle of this.sandParticles) {
+                    if (!particle.forming && particleCount < 30) {
+                        particle.targetX = x + (Math.random() - 0.5) * 80;
+                        particle.targetY = y + (Math.random() - 0.5) * 20;
+                        particle.forming = true;
+                        particleCount++;
+                    }
+                }
+                
+                // Create platform after particles arrive
+                setTimeout(() => {
+                    this.sandPlatforms.push({
+                        x: x,
+                        y: y,
+                        width: 80,
+                        height: 15,
+                        createdAt: Date.now(),
+                        alpha: 1.0,
+                        particleIds: [], // Track which particles belong to this platform
+                        active: true // Track if platform should have collision
+                    });
+                }, 1000);
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                // Update sand particles
+                for (let particle of this.sandParticles) {
+                    if (particle.forming && particle.targetX !== null) {
+                        // Move towards target
+                        const dx = particle.targetX - particle.x;
+                        const dy = particle.targetY - particle.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > 5) {
+                            particle.vx = (dx / distance) * 3;
+                            particle.vy = (dy / distance) * 3;
+                        } else {
+                            particle.vx = 0;
+                            particle.vy = 0;
+                            particle.targetX = null;
+                            particle.targetY = null;
+                        }
+                    } else if (!particle.forming) {
+                        // Normal floating movement
+                        particle.vx += (Math.random() - 0.5) * 0.1;
+                        particle.vy += (Math.random() - 0.5) * 0.1;
+                        particle.vx *= 0.98;
+                        particle.vy *= 0.98;
+                    }
+                    
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    
+                    // Keep particles in bounds
+                    if (particle.x < 0 || particle.x > this.canvas.width) particle.vx *= -1;
+                    if (particle.y < 0 || particle.y > this.canvas.height) particle.vy *= -1;
+                    particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
+                    particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
+                }
+                
+                // Update sand platforms (decay)
+                for (let i = this.sandPlatforms.length - 1; i >= 0; i--) {
+                    const platform = this.sandPlatforms[i];
+                    const age = Date.now() - platform.createdAt;
+                    
+                    if (age > this.platformDecayTime) {
+                        // Platform completely expires - remove it and release its particles
+                        let releasedCount = 0;
+                        for (let particle of this.sandParticles) {
+                            if (particle.forming && releasedCount < 30) {
+                                // Only release particles that were part of this specific platform
+                                const distanceToPlat = Math.sqrt(
+                                    (particle.x - platform.x) ** 2 + (particle.y - platform.y) ** 2
+                                );
+                                if (distanceToPlat < 50) { // Within platform area
+                                    particle.forming = false;
+                                    particle.targetX = null;
+                                    particle.targetY = null;
+                                    releasedCount++;
+                                }
+                            }
+                        }
+                        
+                        this.sandPlatforms.splice(i, 1);
+                        this.availableSand = Math.min(this.totalSand, this.availableSand + this.platformCost); // Return sand, cap at 100%
+                    } else if (age > this.platformDecayTime - 3000) {
+                        // Start fading in last 3 seconds
+                        platform.alpha = (this.platformDecayTime - age) / 3000;
+                        if (age > this.platformDecayTime - 1000) {
+                            // Remove collision in last 1 second when heavily faded
+                            platform.active = false;
+                        }
+                    }
+                }
+                
+                // Player physics
+                this.player.vy += 0.5; // gravity
+                
+                // Player controls
+                if (this.keys['a'] || this.keys['arrowleft']) {
+                    this.player.vx = -this.player.speed;
+                } else if (this.keys['d'] || this.keys['arrowright']) {
+                    this.player.vx = this.player.speed;
+                } else {
+                    this.player.vx *= 0.8; // friction
+                }
+                
+                if ((this.keys['w'] || this.keys['arrowup'] || this.keys[' ']) && this.player.onGround) {
+                    this.player.vy = -this.player.jumpPower;
+                    this.player.onGround = false;
+                }
+                
+                // Update player position
+                this.player.x += this.player.vx;
+                this.player.y += this.player.vy;
+                
+                // Collision detection
+                this.player.onGround = false;
+                
+                // Ground collision
+                if (this.player.y + this.player.height > this.canvas.height) {
+                    this.player.y = this.canvas.height - this.player.height;
+                    this.player.vy = 0;
+                    this.player.onGround = true;
+                }
+                
+                // Platform collisions
+                for (let platform of this.sandPlatforms) {
+                    // Only check collision if platform is active
+                    if (platform.active) {
+                        // Create collision box with proper centered coordinates
+                        const platformCollisionBox = {
+                            x: platform.x - platform.width/2,
+                            y: platform.y - platform.height/2,
+                            width: platform.width,
+                            height: platform.height
+                        };
+                        
+                        if (this.checkCollision(this.player, platformCollisionBox)) {
+                            if (this.player.vy > 0) { // falling
+                                this.player.y = platformCollisionBox.y - this.player.height;
+                                this.player.vy = 0;
+                                this.player.onGround = true;
+                            }
+                        }
+                    }
+                }
+                
+                // Obstacle collisions
+                for (let obstacle of this.obstacles) {
+                    if (this.checkCollision(this.player, obstacle)) {
+                        // Simple push-out collision
+                        const overlapX = Math.min(this.player.x + this.player.width - obstacle.x, 
+                                                obstacle.x + obstacle.width - this.player.x);
+                        const overlapY = Math.min(this.player.y + this.player.height - obstacle.y, 
+                                                obstacle.y + obstacle.height - this.player.y);
+                        
+                        if (overlapX < overlapY) {
+                            // Horizontal collision
+                            if (this.player.x < obstacle.x) {
+                                this.player.x = obstacle.x - this.player.width;
+                            } else {
+                                this.player.x = obstacle.x + obstacle.width;
+                            }
+                            this.player.vx = 0;
+                        } else {
+                            // Vertical collision
+                            if (this.player.y < obstacle.y) {
+                                this.player.y = obstacle.y - this.player.height;
+                                this.player.vy = 0;
+                                this.player.onGround = true;
+                            } else {
+                                this.player.y = obstacle.y + obstacle.height;
+                                this.player.vy = 0;
+                            }
+                        }
+                    }
+                }
+                
+                // Keep player in bounds
+                this.player.x = Math.max(0, Math.min(this.canvas.width - this.player.width, this.player.x));
+                
+                // Goal collision
+                if (this.checkCollision(this.player, this.goal)) {
+                    this.completeLevel();
+                }
+                
+                // Sand regeneration - much slower rate, only when no platforms are forming
+                if (this.availableSand < this.totalSand) {
+                    // Only regenerate if no platforms are currently active
+                    if (this.sandPlatforms.length === 0) {
+                        this.availableSand = Math.min(this.totalSand, this.availableSand + 0.1);
+                    }
+                }
+                
+                this.updateUI();
+            }
+
+            checkCollision(obj1, obj2) {
+                return obj1.x < obj2.x + obj2.width &&
+                       obj1.x + obj1.width > obj2.x &&
+                       obj1.y < obj2.y + obj2.height &&
+                       obj1.y + obj1.height > obj2.y;
+            }
+
+            completeLevel() {
+                this.gameRunning = false;
+                const completionTime = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(completionTime / 60);
+                const seconds = completionTime % 60;
+                
+                document.getElementById('completionTime').textContent = 
+                    `Time: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (this.level >= this.maxLevels) {
+                    document.getElementById('gameOverTitle').textContent = 'All Levels Complete!';
+                    document.getElementById('gameOverText').textContent = 'You are a true Sand Artist Master!';
+                    document.getElementById('restartBtn').textContent = 'Play Again';
+                } else {
+                    document.getElementById('gameOverTitle').textContent = 'Level Complete!';
+                    document.getElementById('gameOverText').textContent = `Level ${this.level} mastered!`;
+                    document.getElementById('restartBtn').textContent = 'Next Level';
+                }
+                
+                this.gameOver.style.display = 'flex';
+            }
+
+            nextLevel() {
+                this.gameOver.style.display = 'none';
+                
+                if (this.level >= this.maxLevels) {
+                    this.level = 1;
+                } else {
+                    this.level++;
+                }
+                
+                this.setupLevel();
+                this.generateSandParticles();
+                this.startGame();
+            }
+
+            render() {
+                // Clear canvas with gradient background
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#87ceeb');
+                gradient.addColorStop(0.4, '#f4e4bc');
+                gradient.addColorStop(1, '#daa520');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw sand particles
+                for (let particle of this.sandParticles) {
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                // Draw obstacles
+                this.ctx.fillStyle = '#8b4513';
+                for (let obstacle of this.obstacles) {
+                    this.ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    // Add texture
+                    this.ctx.strokeStyle = '#654321';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                }
+                
+                // Draw sand platforms
+                for (let platform of this.sandPlatforms) {
+                    this.ctx.globalAlpha = platform.alpha;
+                    
+                    // Visual indicator when platform is becoming inactive
+                    let platformColor = '#daa520';
+                    let strokeColor = '#cd853f';
+                    if (!platform.active) {
+                        platformColor = '#ff6b6b'; // Red tint when collision is disabled
+                        strokeColor = '#ff4444';
+                    }
+                    
+                    this.ctx.fillStyle = platformColor;
+                    this.ctx.fillRect(platform.x - platform.width/2, platform.y - platform.height/2, 
+                                    platform.width, platform.height);
+                    this.ctx.strokeStyle = strokeColor;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(platform.x - platform.width/2, platform.y - platform.height/2, 
+                                      platform.width, platform.height);
+                    this.ctx.globalAlpha = 1;
+                }
+                
+                // Draw player
+                this.ctx.fillStyle = this.player.color;
+                this.ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
+                this.ctx.strokeStyle = '#000080';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(this.player.x, this.player.y, this.player.width, this.player.height);
+                
+                // Draw goal
+                this.ctx.fillStyle = this.goal.color;
+                this.ctx.fillRect(this.goal.x, this.goal.y, this.goal.width, this.goal.height);
+                this.ctx.strokeStyle = '#228b22';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(this.goal.x, this.goal.y, this.goal.width, this.goal.height);
+                
+                // Goal glow effect
+                this.ctx.shadowColor = this.goal.color;
+                this.ctx.shadowBlur = 20;
+                this.ctx.fillStyle = this.goal.color;
+                this.ctx.fillRect(this.goal.x, this.goal.y, this.goal.width, this.goal.height);
+                this.ctx.shadowBlur = 0;
+                
+                // Draw click indicator
+                if (this.mouseX && this.mouseY) {
+                    this.ctx.strokeStyle = this.availableSand >= this.platformCost ? '#daa520' : '#ff0000';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.strokeRect(this.mouseX - 40, this.mouseY - 7.5, 80, 15);
+                    this.ctx.setLineDash([]);
+                }
+            }
+
+            updateUI() {
+                document.getElementById('currentLevel').textContent = this.level;
+                
+                // Calculate sand percentage based on actual remaining capacity
+                // Max platforms = 10, current active platforms = sandPlatforms.length
+                const activePlatforms = this.sandPlatforms.length;
+                const maxPlatforms = Math.floor(this.totalSand / this.platformCost); // 10 max platforms
+                const remainingPlatformSlots = maxPlatforms - activePlatforms;
+                const sandPercentage = Math.round((remainingPlatformSlots / maxPlatforms) * 100);
+                document.getElementById('sandCount').textContent = sandPercentage + '%';
+                
+                const currentTime = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = currentTime % 60;
+                document.getElementById('gameTime').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new SandArtist();
+        });
+    </script>
+</body>
+</html>

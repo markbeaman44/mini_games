@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Breather - Mini Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF4500 0%, #DC143C 50%, #8B0000 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #1a1a1a 0%, #2d1b1b 50%, #3d0000 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #FF4500 0%, #FF6347 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Game Area */
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            z-index: 10;
+        }
+
+        .stat-display {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 69, 0, 0.5);
+        }
+
+        .timer-display {
+            color: #FF4500;
+        }
+
+        .score-display {
+            color: #FFD700;
+        }
+
+        .level-display {
+            color: #00FA9A;
+        }
+
+        /* Character Display */
+        .character-display {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            letter-spacing: 8px;
+            border: 3px solid #FF4500;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(255, 69, 0, 0.3);
+        }
+
+        .char {
+            display: inline-block;
+            transition: all 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .char.typed {
+            color: #00FF00;
+            transform: scale(1.2);
+            text-shadow: 0 0 10px #00FF00;
+        }
+
+        .char.current {
+            color: #FFD700;
+            animation: pulse 1s infinite;
+            transform: scale(1.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Game Stage */
+        .game-stage {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(180deg, transparent 0%, rgba(139, 0, 0, 0.3) 100%);
+        }
+
+        /* Fire Breather Character */
+        .fire-breather {
+            position: absolute;
+            left: 50px;
+            bottom: 160px;
+            width: 80px;
+            height: 120px;
+            transition: all 0.5s ease;
+        }
+
+        .breather-body {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            border-radius: 30px 30px 15px 15px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .breather-head {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .breather-head::before {
+            content: '👨';
+            font-size: 50px;
+        }
+
+        .fire-flame {
+            position: absolute;
+            right: -35px;
+            top: -10px;
+            font-size: 30px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            animation: none;
+            transform-origin: left center;
+            width: 0px;
+            overflow: visible;
+            white-space: nowrap;
+            z-index: 10;
+            line-height: 0;
+            display: flex;
+            align-items: center;
+            height: 0;
+        }
+
+        .fire-flame.active {
+            opacity: 1;
+            animation: fireFlicker 0.3s ease-in-out infinite alternate;
+        }
+
+        .fire-stream {
+            display: inline-block;
+            transition: all 0.3s ease;
+            transform: rotate(85deg);
+            margin-right: -15px;
+            animation: fireRotate 0.5s ease-in-out infinite alternate;
+            transform-origin: left center;
+            vertical-align: top;
+        }
+
+        @keyframes fireRotate {
+            0% { 
+                transform: rotate(82deg) scale(1);
+                filter: brightness(1.1) hue-rotate(0deg);
+            }
+            100% { 
+                transform: rotate(88deg) scale(1.1);
+                filter: brightness(1.3) hue-rotate(10deg);
+            }
+        }
+
+        @keyframes fireFlicker {
+            0% { transform: scale(1) rotate(-2deg); }
+            100% { transform: scale(1.1) rotate(2deg); }
+        }
+
+        /* Target Item */
+        .target-item {
+            position: absolute;
+            right: 100px;
+            bottom: 160px;
+            font-size: 100px;
+            transition: all 0.5s ease;
+        }
+
+        .target-item.burning {
+            animation: burn 1s ease-out;
+        }
+
+        @keyframes burn {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.2) rotate(5deg);
+                filter: brightness(2) hue-rotate(30deg);
+            }
+            100% { 
+                transform: scale(0.8) rotate(-5deg);
+                filter: brightness(0.5) hue-rotate(60deg);
+            }
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            border: 2px solid #FF4500;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FF4500 0%, #FFD700 100%);
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+            animation: shimmer 2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Game Over */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #FF4500 0%, #DC143C 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-over-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over-content p {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95vw;
+                height: 90vh;
+            }
+
+            .character-display {
+                font-size: 1.5rem;
+                letter-spacing: 4px;
+                padding: 15px 25px;
+            }
+
+            .fire-breather {
+                width: 60px;
+                height: 90px;
+                left: 30px;
+            }
+
+            .breather-body {
+                width: 45px;
+                height: 60px;
+            }
+
+            .breather-head {
+                width: 45px;
+                height: 45px;
+                top: -22px;
+            }
+
+            .breather-head::before {
+                font-size: 35px;
+            }
+
+            .target-item {
+                font-size: 80px;
+                right: 60px;
+                bottom: 140px;
+            }
+
+            .game-ui {
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+
+            .stat-display {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container" id="gameContainer">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🔥 Fire Breather</h2>
+                <p><strong>Type the characters to breathe fire and burn objects!</strong></p>
+                <p>🔤 Look at the character sequence at the top</p>
+                <p>⌨️ Type each character correctly on your keyboard</p>
+                <p>🔥 Each correct character extends the fire breath longer</p>
+                <p>🎯 Complete all characters before time runs out to burn the object!</p>
+                <p>⏰ You have 30 seconds per level</p>
+                <p>🏆 Complete levels to increase difficulty and score</p>
+                <p>⌨️ Press SPACEBAR or click button to start!</p>
+                <button class="close-instructions" id="closeInstructions">Start Breathing Fire!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <div class="game-ui">
+                <div class="stat-display score-display">Score: <span id="score">0</span></div>
+                <div class="stat-display level-display">Level: <span id="level">1</span></div>
+                <div class="stat-display timer-display">Time: <span id="timer">30</span>s</div>
+            </div>
+
+            <div class="character-display" id="characterDisplay">
+                <!-- Characters will be inserted here -->
+            </div>
+
+            <div class="game-stage">
+                <div class="fire-breather" id="fireBreather">
+                    <div class="breather-body">
+                        <div class="breather-head"></div>
+                    </div>
+                    <div class="fire-flame" id="fireFlame"></div>
+                </div>
+
+                <div class="target-item" id="targetItem">🌳</div>
+
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2 id="gameOverTitle">🔥 Fire Breathing Complete!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Level Reached: <span id="finalLevel">1</span></p>
+                <p>Objects Burned: <span id="objectsBurned">0</span></p>
+                <p id="performanceText">Amazing fire breathing performance!</p>
+                <button class="restart-btn" id="restartBtn">Breathe Fire Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FireBreatherGame {
+            constructor() {
+                this.score = 0;
+                this.level = 1;
+                this.timer = 30;
+                this.maxTimer = 30;
+                this.isPlaying = false;
+                this.currentCharacterIndex = 0;
+                this.currentSequence = '';
+                this.objectsBurned = 0;
+                this.bestScore = parseInt(localStorage.getItem('fireBreatherBest') || '0');
+                
+                this.targetItems = ['🌳', '🏠', '🎯', '📦', '🎪', '🚗', '⛺', '🎡', '🎢', '🎠', '🏰', '🗽'];
+                this.characterSets = {
+                    1: 'ABCDEFGHIJK',
+                    2: 'LMNOPQRSTUV',
+                    3: 'WXYZ0123456',
+                    4: '789!@#$%^&*',
+                    5: '()[]{};<>?'
+                };
+
+                this.initializeElements();
+                this.initializeEventListeners();
+                this.showInstructions();
+            }
+
+            initializeElements() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.scoreDisplay = document.getElementById('score');
+                this.levelDisplay = document.getElementById('level');
+                this.timerDisplay = document.getElementById('timer');
+                this.characterDisplay = document.getElementById('characterDisplay');
+                this.fireBreather = document.getElementById('fireBreather');
+                this.fireFlame = document.getElementById('fireFlame');
+                this.targetItem = document.getElementById('targetItem');
+                this.progressBar = document.getElementById('progressBar');
+            }
+
+            initializeEventListeners() {
+                document.getElementById('closeInstructions').addEventListener('click', () => this.hideInstructions());
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                        return;
+                    }
+
+                    // Handle typing during gameplay
+                    if (this.isPlaying) {
+                        this.handleKeyPress(e.key.toUpperCase());
+                    }
+                });
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+                this.gameArea.style.display = 'none';
+                this.gameOver.style.display = 'none';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            startGame() {
+                this.isPlaying = true;
+                this.generateSequence();
+                this.resetTimer();
+                this.updateDisplay();
+                this.resetPosition(); // Initialize fire state
+                this.startTimer();
+            }
+
+            generateSequence() {
+                const characterSet = this.characterSets[Math.min(this.level, 5)] || this.characterSets[5];
+                const sequenceLength = Math.min(3 + this.level, 8);
+                
+                this.currentSequence = '';
+                for (let i = 0; i < sequenceLength; i++) {
+                    this.currentSequence += characterSet[Math.floor(Math.random() * characterSet.length)];
+                }
+                
+                this.currentCharacterIndex = 0;
+                this.displayCharacters();
+                this.selectRandomTarget();
+                this.updateProgress();
+            }
+
+            displayCharacters() {
+                this.characterDisplay.innerHTML = '';
+                for (let i = 0; i < this.currentSequence.length; i++) {
+                    const charSpan = document.createElement('span');
+                    charSpan.className = 'char';
+                    charSpan.textContent = this.currentSequence[i];
+                    
+                    if (i < this.currentCharacterIndex) {
+                        charSpan.classList.add('typed');
+                    } else if (i === this.currentCharacterIndex) {
+                        charSpan.classList.add('current');
+                    }
+                    
+                    this.characterDisplay.appendChild(charSpan);
+                }
+            }
+
+            selectRandomTarget() {
+                this.targetItem.textContent = this.targetItems[Math.floor(Math.random() * this.targetItems.length)];
+                this.targetItem.classList.remove('burning');
+            }
+
+            handleKeyPress(key) {
+                if (!this.isPlaying) return;
+
+                const expectedChar = this.currentSequence[this.currentCharacterIndex];
+                
+                if (key === expectedChar) {
+                    this.currentCharacterIndex++;
+                    this.playCorrectSound();
+                    this.showFireEffect();
+                    this.displayCharacters();
+                    
+                    if (this.currentCharacterIndex >= this.currentSequence.length) {
+                        this.completeLevel();
+                    }
+                } else {
+                    this.playErrorSound();
+                    this.shakeEffect();
+                }
+            }
+
+            updateProgress() {
+                const progress = (this.currentCharacterIndex / this.currentSequence.length) * 100;
+                this.progressBar.style.width = progress + '%';
+                
+                // Update fire length instead of moving character
+                this.updateFireLength(progress);
+            }
+
+            updateFireLength(progress) {
+                const maxLength = 15; // Reduced from 30 to prevent early target overlap
+                const fireLength = Math.floor((progress / 100) * maxLength);
+                
+                // Base size for the first fire emoji (closest to mouth)
+                const baseSize = 25;
+                
+                let fireContent = '';
+                for (let i = 0; i < fireLength; i++) {
+                    // Calculate progressive size increase for triangle effect
+                    // Each flame gets 15% bigger than the previous one
+                    const flameScale = 1 + (i * 0.15);
+                    const flameSize = Math.round(baseSize * flameScale);
+                    
+                    fireContent += `<span class="fire-stream" style="font-size: ${flameSize}px; z-index: ${100 - i};">🔥</span>`;
+                }
+                
+                this.fireFlame.innerHTML = fireContent;
+                
+                // Show fire flame container when there's content
+                if (fireLength > 0) {
+                    this.fireFlame.style.opacity = '1';
+                } else {
+                    this.fireFlame.style.opacity = '0';
+                }
+            }
+
+            showFireEffect() {
+                // Hide fire temporarily, then show new fire
+                this.fireFlame.style.opacity = '0';
+                this.fireFlame.innerHTML = '';
+                
+                setTimeout(() => {
+                    this.updateProgress();
+                    this.fireFlame.classList.add('active');
+                    setTimeout(() => {
+                        this.fireFlame.classList.remove('active');
+                    }, 300);
+                }, 100);
+            }
+
+            shakeEffect() {
+                this.characterDisplay.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    this.characterDisplay.style.animation = '';
+                }, 500);
+            }
+
+            completeLevel() {
+                this.isPlaying = false;
+                this.objectsBurned++;
+                this.updateScore(100 * this.level);
+                
+                // Show burning effect
+                this.targetItem.classList.add('burning');
+                this.playSuccessSound();
+                
+                setTimeout(() => {
+                    this.level++;
+                    this.resetTimer();
+                    this.resetPosition();
+                    this.startGame();
+                }, 1500);
+            }
+
+            resetPosition() {
+                // Reset fire length instead of character position
+                this.fireFlame.innerHTML = '';
+                this.fireFlame.style.opacity = '0';
+                this.progressBar.style.width = '0%';
+            }
+
+            updateScore(points) {
+                this.score += points;
+                this.scoreDisplay.textContent = this.score;
+                
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('fireBreatherBest', this.bestScore.toString());
+                }
+            }
+
+            resetTimer() {
+                this.stopTimer(); // Stop any existing timer first
+                this.timer = 30; // Always 30 seconds, no speed increase with levels
+                this.timerDisplay.textContent = this.timer; // Update display immediately
+            }
+
+            startTimer() {
+                this.stopTimer(); // Ensure no duplicate timers
+                this.timerInterval = setInterval(() => {
+                    this.timer--;
+                    this.timerDisplay.textContent = this.timer;
+                    
+                    if (this.timer <= 0) {
+                        this.gameOverTimeUp();
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null; // Clear the reference
+                }
+            }
+
+            gameOverTimeUp() {
+                this.isPlaying = false;
+                this.stopTimer();
+                
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalLevel').textContent = this.level;
+                document.getElementById('objectsBurned').textContent = this.objectsBurned;
+                
+                document.getElementById('gameOverTitle').textContent = '⏰ Time\'s Up!';
+                document.getElementById('performanceText').textContent = 
+                    this.score > this.bestScore / 2 ? 
+                    'Great fire breathing skills!' : 
+                    'Keep practicing your typing to become a master fire breather!';
+                
+                this.gameOver.style.display = 'flex';
+            }
+
+            updateDisplay() {
+                this.scoreDisplay.textContent = this.score;
+                this.levelDisplay.textContent = this.level;
+                this.timerDisplay.textContent = this.timer;
+            }
+
+            restartGame() {
+                this.score = 0;
+                this.level = 1;
+                this.objectsBurned = 0;
+                this.currentCharacterIndex = 0;
+                this.stopTimer();
+                this.resetPosition();
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+
+            playCorrectSound() {
+                this.playSound(800, 100, 'sine');
+            }
+
+            playErrorSound() {
+                this.playSound(300, 200, 'sawtooth');
+            }
+
+            playSuccessSound() {
+                // Play ascending notes
+                this.playSound(523, 150); // C
+                setTimeout(() => this.playSound(659, 150), 100); // E
+                setTimeout(() => this.playSound(784, 300), 200); // G
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Silently fail if audio context is not available
+                }
+            }
+        }
+
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(-50%) translateY(0); }
+                25% { transform: translateX(-55%) translateY(0); }
+                75% { transform: translateX(-45%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new FireBreatherGame();
+        });
+    </script>
+</body>
+</html>
