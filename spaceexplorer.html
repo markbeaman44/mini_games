@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Space Explorer — Fun Kids Game</title>
+  <style>
+    :root{
+      --bg-space:#0D001A;
+      --bg-nebula:#1A0033;
+      --neon-cyan:#00FFFF;
+      --neon-pink:#FF10F0;
+      --neon-green:#39FF14;
+      --neon-purple:#8A2BE2;
+      --neon-orange:#FF6600;
+      --panel:#ffffff22;
+      --rocket-body:#4169E1;
+      --rocket-flame:#FF4500;
+    }
+    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg-space),var(--bg-nebula));overflow:hidden}
+    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .game{width:min(900px,95vw);height:min(600px,85vh);background:radial-gradient(ellipse at center, #1A0033 0%, #0D001A 100%);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.15), inset 0 0 50px rgba(0,255,255,0.1);position:relative;overflow:hidden;border:2px solid var(--neon-cyan)}
+    
+    #backButton{position:fixed;top:20px;left:20px;background:var(--neon-pink);color:white;border:none;border-radius:12px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 15px rgba(255,16,240,0.3);transition:all 0.3s ease;z-index:1000}
+    #backButton:hover{background:#E009D9;transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,16,240,0.5)}
+    #backButton:active{transform:translateY(0)}
+    
+    header{position:absolute;left:20px;top:15px;z-index:10;display:flex;gap:15px;align-items:center}
+    .panel{background:var(--panel);backdrop-filter:blur(10px);padding:10px 16px;border-radius:15px;font-weight:700;display:flex;gap:8px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);border:1px solid var(--neon-cyan)}
+    .score-text{font-size:18px;color:var(--neon-cyan);text-shadow:0 0 10px var(--neon-cyan)}
+    
+    canvas{display:block;width:100%;height:100%;cursor:crosshair}
+    
+    .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,rgba(26,0,51,0.95),rgba(13,0,26,0.95));backdrop-filter:blur(20px);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);border:2px solid var(--neon-pink)}
+    .start-screen h2{margin:0 0 15px 0;color:var(--neon-cyan);font-size:28px;text-shadow:0 0 15px var(--neon-cyan)}
+    .start-screen p{margin:10px 0;color:white;font-size:16px;line-height:1.4;text-shadow:0 0 5px rgba(255,255,255,0.8)}
+    .start-btn{margin-top:20px;padding:12px 24px;border-radius:15px;font-weight:800;border:2px solid var(--neon-green);background:transparent;color:var(--neon-green);font-size:18px;cursor:pointer;transition:all 0.3s ease;text-shadow:0 0 10px var(--neon-green);box-shadow:0 0 20px rgba(57,255,20,0.3)}
+    .start-btn:hover{background:var(--neon-green);color:#000;transform:scale(1.05);box-shadow:0 0 30px rgba(57,255,20,0.6)}
+    
+    .game-over{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,rgba(26,0,51,0.95),rgba(13,0,26,0.95));backdrop-filter:blur(20px);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);display:none;border:2px solid var(--neon-orange)}
+    .game-over h2{margin:0 0 15px 0;color:var(--neon-orange);font-size:28px;text-shadow:0 0 15px var(--neon-orange)}
+    .game-over p{margin:10px 0;color:white;font-size:16px;text-shadow:0 0 5px rgba(255,255,255,0.8)}
+    
+    .controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:20px}
+    .control-btn{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:2px solid var(--neon-purple);border-radius:15px;padding:15px 20px;font-size:20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all 0.3s ease;color:var(--neon-purple);text-shadow:0 0 10px var(--neon-purple)}
+    .control-btn:hover{background:rgba(138,43,226,0.2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(138,43,226,0.4)}
+    .control-btn:active{transform:translateY(0)}
+    
+    .stars{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+    .star{position:absolute;background:white;border-radius:50%;animation:twinkle 2s infinite alternate}
+    
+    @keyframes twinkle{
+      0%{opacity:0.3;transform:scale(0.8)}
+      100%{opacity:1;transform:scale(1.2)}
+    }
+    
+    @keyframes neonGlow{
+      0%,100%{text-shadow:0 0 5px currentColor}
+      50%{text-shadow:0 0 20px currentColor, 0 0 30px currentColor}
+    }
+    
+    .neon-text{animation:neonGlow 2s infinite}
+    
+    @media (max-width:600px){
+      .game{height:min(500px,85vh)}
+      .panel{padding:8px 12px}
+      .controls{bottom:10px;gap:15px}
+      .control-btn{padding:12px 16px;font-size:18px}
+      .start-screen,.game-over{padding:20px;margin:0 10px}
+    }
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="game" id="gameRoot">
+        <div class="stars" id="starField"></div>
+        
+        <header>
+          <div class="panel">
+            <span class="score-text neon-text">Score: <span id="score">0</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text neon-text">Best: <span id="bestScore">0</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text neon-text">Lives: <span id="lives">3</span></span>
+          </div>
+        </header>
+
+        <div class="start-screen" id="startScreen">
+          <h2>🚀 Space Explorer Adventure! 🚀</h2>
+          <p>Navigate your rocket through the dangerous galaxy!</p>
+          <p>🌟 Move the mouse to control the rocket</p>
+          <p>⚠️ Avoid the attacking planets - they're dangerous!</p>
+          <p>🎯 Survive as long as possible to set a high score!</p>
+          <p>📱 On mobile, touch and drag to control your rocket!</p>
+          <button class="start-btn" id="startBtn">Launch into Space!</button>
+        </div>
+
+        <div class="game-over" id="gameOverScreen">
+          <h2>💥 Mission Failed! 💥</h2>
+          <p id="finalScore">Final Score: 0</p>
+          <p id="newRecord" style="color:var(--neon-green);font-weight:bold;display:none;text-shadow:0 0 10px var(--neon-green)">🎉 New Galaxy Record! 🎉</p>
+          <button class="start-btn" id="restartBtn">Try Another Mission!</button>
+        </div>
+
+        <div class="controls" id="mobileControls">
+          <div class="control-btn">📱 Touch & Drag to Move Rocket</div>
+        </div>
+
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Canvas setup
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = 900;
+  let H = canvas.height = 600;
+
+  const scoreEl = document.getElementById('score');
+  const bestScoreEl = document.getElementById('bestScore');
+  const livesEl = document.getElementById('lives');
+  const startScreen = document.getElementById('startScreen');
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  const finalScoreEl = document.getElementById('finalScore');
+  const newRecordEl = document.getElementById('newRecord');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const backBtn = document.getElementById('backButton');
+  const mobileControls = document.getElementById('mobileControls');
+  const starField = document.getElementById('starField');
+
+  // Game state
+  let gameRunning = false;
+  let gameSpeed = 2;
+  let score = 0;
+  let lives = 3;
+  let bestScore = parseInt(localStorage.getItem('spaceExplorerBest') || '0');
+  let frame = 0;
+  let invulnerable = false;
+  let invulnerableTime = 0;
+
+  // Player rocket
+  const rocket = {
+    x: W / 2,
+    y: H - 100,
+    w: 30,
+    h: 50,
+    speed: 5,
+    trail: []
+  };
+
+  // Game objects
+  let planets = [];
+  let particles = [];
+  let stars = [];
+  let nebulaClouds = [];
+
+  // Input handling
+  const keys = {};
+  let mouseX = rocket.x;
+  let mouseY = rocket.y;
+  let isTouching = false;
+
+  // Initialize
+  bestScoreEl.textContent = bestScore;
+  createStarField();
+
+  // Resize handling
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width = rect.width;
+    H = canvas.height = rect.height;
+    ctx.imageSmoothingEnabled = true;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Create animated star field background
+  function createStarField() {
+    starField.innerHTML = '';
+    for (let i = 0; i < 50; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+      star.style.animationDelay = Math.random() * 2 + 's';
+      starField.appendChild(star);
+    }
+  }
+
+  // Input handling
+  window.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!gameRunning) {
+        startGame();
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  // Mouse/Touch controls
+  canvas.addEventListener('mousemove', (e) => {
+    if (gameRunning) {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = (e.clientX - rect.left) * (W / rect.width);
+      mouseY = (e.clientY - rect.top) * (H / rect.height);
+    }
+  });
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    isTouching = true;
+    if (!gameRunning) {
+      startGame();
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    mouseX = (touch.clientX - rect.left) * (W / rect.width);
+    mouseY = (touch.clientY - rect.top) * (H / rect.height);
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (gameRunning && isTouching) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      mouseX = (touch.clientX - rect.left) * (W / rect.width);
+      mouseY = (touch.clientY - rect.top) * (H / rect.height);
+    }
+  });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    isTouching = false;
+  });
+
+  function startGame() {
+    gameRunning = true;
+    gameSpeed = 2;
+    score = 0;
+    lives = 3;
+    frame = 0;
+    invulnerable = false;
+    invulnerableTime = 0;
+    
+    // Reset rocket
+    rocket.x = W / 2;
+    rocket.y = H - 100;
+    rocket.trail = [];
+    
+    // Clear arrays
+    planets = [];
+    particles = [];
+    stars = [];
+    nebulaClouds = [];
+    
+    // Initialize space objects
+    for (let i = 0; i < 100; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: Math.random() * 2 + 0.5,
+        speed: Math.random() * 2 + 0.5,
+        brightness: Math.random()
+      });
+    }
+    
+    for (let i = 0; i < 3; i++) {
+      nebulaClouds.push({
+        x: Math.random() * W * 2,
+        y: Math.random() * H,
+        size: 100 + Math.random() * 200,
+        speed: 0.2 + Math.random() * 0.5,
+        hue: Math.random() * 60 + 180 // Blue to purple range
+      });
+    }
+    
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    mobileControls.style.display = 'block';
+    
+    updateUI();
+  }
+
+  function gameOver() {
+    gameRunning = false;
+    mobileControls.style.display = 'none';
+    
+    // Check for new best score
+    let newRecord = false;
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('spaceExplorerBest', bestScore.toString());
+      bestScoreEl.textContent = bestScore;
+      newRecord = true;
+    }
+    
+    finalScoreEl.textContent = `Final Score: ${score}`;
+    newRecordEl.style.display = newRecord ? 'block' : 'none';
+    
+    setTimeout(() => {
+      gameOverScreen.style.display = 'block';
+    }, 1000);
+    
+    // Create explosion particles
+    createExplosion(rocket.x, rocket.y);
+    playSound(150, 0.5);
+  }
+
+  function updateUI() {
+    scoreEl.textContent = score;
+    livesEl.textContent = lives;
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', startGame);
+  backBtn.addEventListener('click', () => {
+    window.location.href = 'home.html';
+  });
+
+  function spawnPlanet() {
+    const types = ['fire', 'ice', 'toxic', 'electric', 'dark'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    // Spawn from edges of screen
+    const side = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
+    let x, y, vx, vy;
+    
+    switch (side) {
+      case 0: // top
+        x = Math.random() * W;
+        y = -50;
+        vx = (Math.random() - 0.5) * 4;
+        vy = 2 + Math.random() * 3;
+        break;
+      case 1: // right
+        x = W + 50;
+        y = Math.random() * H;
+        vx = -2 - Math.random() * 3;
+        vy = (Math.random() - 0.5) * 4;
+        break;
+      case 2: // bottom
+        x = Math.random() * W;
+        y = H + 50;
+        vx = (Math.random() - 0.5) * 4;
+        vy = -2 - Math.random() * 3;
+        break;
+      case 3: // left
+        x = -50;
+        y = Math.random() * H;
+        vx = 2 + Math.random() * 3;
+        vy = (Math.random() - 0.5) * 4;
+        break;
+    }
+    
+    planets.push({
+      x: x,
+      y: y,
+      vx: vx,
+      vy: vy,
+      size: 30 + Math.random() * 20,
+      type: type,
+      rotation: 0,
+      attackTimer: 0,
+      attacking: false,
+      targetX: rocket.x,
+      targetY: rocket.y
+    });
+  }
+
+  function createExplosion(x, y) {
+    for (let i = 0; i < 30; i++) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 15,
+        vy: (Math.random() - 0.5) * 15,
+        life: 60,
+        maxLife: 60,
+        color: ['#FF6B6B', '#FFD700', '#4ECDC4', '#FF6B35', '#00FFFF', '#FF10F0'][Math.floor(Math.random() * 6)],
+        size: Math.random() * 4 + 2
+      });
+    }
+  }
+
+  function createTrailParticle(x, y) {
+    particles.push({
+      x: x + (Math.random() - 0.5) * 10,
+      y: y + 20,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 2 + Math.random() * 3,
+      life: 20,
+      maxLife: 20,
+      color: '#FF4500',
+      size: Math.random() * 3 + 1
+    });
+  }
+
+  function playSound(freq, duration) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) {
+      // Ignore audio errors
+    }
+  }
+
+  function update() {
+    if (!gameRunning) return;
+    
+    frame++;
+    
+    // Increase difficulty gradually
+    if (frame % 600 === 0) { // Every 10 seconds
+      gameSpeed += 0.2;
+    }
+    
+    // Update score
+    score += 1;
+    updateUI();
+    
+    // Handle invulnerability
+    if (invulnerable) {
+      invulnerableTime--;
+      if (invulnerableTime <= 0) {
+        invulnerable = false;
+      }
+    }
+    
+    // Rocket movement
+    let targetX = rocket.x;
+    let targetY = rocket.y;
+    
+    // Keyboard controls
+    if (keys['arrowleft'] || keys['a']) targetX -= rocket.speed;
+    if (keys['arrowright'] || keys['d']) targetX += rocket.speed;
+    if (keys['arrowup'] || keys['w']) targetY -= rocket.speed;
+    if (keys['arrowdown'] || keys['s']) targetY += rocket.speed;
+    
+    // Mouse/touch controls (smooth following)
+    if (isTouching || (Math.abs(mouseX - rocket.x) > 5 || Math.abs(mouseY - rocket.y) > 5)) {
+      const dx = mouseX - rocket.x;
+      const dy = mouseY - rocket.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance > 2) {
+        targetX = rocket.x + (dx / distance) * Math.min(rocket.speed, distance * 0.1);
+        targetY = rocket.y + (dy / distance) * Math.min(rocket.speed, distance * 0.1);
+      }
+    }
+    
+    // Keep rocket in bounds
+    rocket.x = Math.max(15, Math.min(W - 15, targetX));
+    rocket.y = Math.max(25, Math.min(H - 25, targetY));
+    
+    // Add rocket trail
+    rocket.trail.unshift({x: rocket.x, y: rocket.y});
+    if (rocket.trail.length > 8) rocket.trail.pop();
+    
+    // Create engine particles
+    if (frame % 3 === 0) {
+      createTrailParticle(rocket.x, rocket.y);
+    }
+    
+    // Spawn planets
+    if (frame % Math.floor(120 / Math.max(gameSpeed, 1)) === 0) {
+      if (Math.random() < 0.7) {
+        spawnPlanet();
+      }
+    }
+    
+    // Update planets
+    for (let i = planets.length - 1; i >= 0; i--) {
+      const planet = planets[i];
+      
+      // Planet AI - track rocket after some time
+      planet.attackTimer++;
+      if (planet.attackTimer > 60 && !planet.attacking) {
+        planet.attacking = true;
+        planet.targetX = rocket.x;
+        planet.targetY = rocket.y;
+        
+        // Adjust velocity to target rocket
+        const dx = planet.targetX - planet.x;
+        const dy = planet.targetY - planet.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const speed = 3;
+        planet.vx = (dx / distance) * speed;
+        planet.vy = (dy / distance) * speed;
+      }
+      
+      planet.x += planet.vx;
+      planet.y += planet.vy;
+      planet.rotation += 0.05;
+      
+      // Check collision with rocket
+      if (!invulnerable) {
+        const dx = rocket.x - planet.x;
+        const dy = rocket.y - planet.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < planet.size / 2 + 15) {
+          lives--;
+          invulnerable = true;
+          invulnerableTime = 120; // 2 seconds of invulnerability
+          
+          createExplosion(rocket.x, rocket.y);
+          playSound(200, 0.2);
+          
+          if (lives <= 0) {
+            gameOver();
+            return;
+          }
+          
+          // Remove the planet that hit us
+          planets.splice(i, 1);
+          continue;
+        }
+      }
+      
+      // Remove planets that are off screen
+      if (planet.x < -100 || planet.x > W + 100 || 
+          planet.y < -100 || planet.y > H + 100) {
+        planets.splice(i, 1);
+      }
+    }
+    
+    // Update background stars
+    stars.forEach(star => {
+      star.y += star.speed;
+      if (star.y > H) {
+        star.y = -5;
+        star.x = Math.random() * W;
+      }
+      star.brightness = 0.3 + Math.sin(frame * 0.02 + star.x) * 0.7;
+    });
+    
+    // Update nebula clouds
+    nebulaClouds.forEach(cloud => {
+      cloud.x -= cloud.speed;
+      if (cloud.x + cloud.size < 0) {
+        cloud.x = W + cloud.size;
+        cloud.y = Math.random() * H;
+      }
+    });
+    
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1; // gravity
+      p.life--;
+      
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+  }
+
+  function draw() {
+    // Clear canvas with space background
+    const gradient = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H)/2);
+    gradient.addColorStop(0, '#1A0033');
+    gradient.addColorStop(1, '#0D001A');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+    
+    // Draw nebula clouds
+    nebulaClouds.forEach(cloud => {
+      const gradient = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.size);
+      gradient.addColorStop(0, `hsla(${cloud.hue}, 60%, 30%, 0.3)`);
+      gradient.addColorStop(0.5, `hsla(${cloud.hue}, 60%, 20%, 0.1)`);
+      gradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(cloud.x - cloud.size, cloud.y - cloud.size, cloud.size * 2, cloud.size * 2);
+    });
+    
+    // Draw moving stars
+    stars.forEach(star => {
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+      ctx.fillRect(star.x, star.y, star.size, star.size);
+    });
+    
+    // Draw rocket trail
+    rocket.trail.forEach((point, index) => {
+      const alpha = (rocket.trail.length - index) / rocket.trail.length;
+      ctx.fillStyle = `rgba(0, 255, 255, ${alpha * 0.6})`;
+      ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+    });
+    
+    // Draw rocket
+    drawRocket();
+    
+    // Draw planets
+    planets.forEach(planet => {
+      drawPlanet(planet);
+    });
+    
+    // Draw particles
+    particles.forEach(p => {
+      const alpha = p.life / p.maxLife;
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+      ctx.globalAlpha = 1;
+    });
+    
+    // Draw invulnerability effect
+    if (invulnerable && Math.floor(frame / 5) % 2) {
+      ctx.strokeStyle = '#00FFFF';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(rocket.x - 20, rocket.y - 25, 40, 50);
+      ctx.setLineDash([]);
+    }
+  }
+
+  function drawRocket() {
+    ctx.save();
+    ctx.translate(rocket.x, rocket.y);
+    
+    // Rocket body
+    ctx.fillStyle = '#4169E1';
+    ctx.fillRect(-8, -20, 16, 35);
+    
+    // Rocket nose
+    ctx.fillStyle = '#00FFFF';
+    ctx.beginPath();
+    ctx.moveTo(0, -25);
+    ctx.lineTo(-8, -20);
+    ctx.lineTo(8, -20);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Rocket fins
+    ctx.fillStyle = '#FF10F0';
+    ctx.fillRect(-12, 10, 8, 10);
+    ctx.fillRect(4, 10, 8, 10);
+    
+    // Engine flame
+    if (frame % 4 < 2) {
+      ctx.fillStyle = '#FF4500';
+      ctx.beginPath();
+      ctx.moveTo(-6, 15);
+      ctx.lineTo(0, 25 + Math.random() * 10);
+      ctx.lineTo(6, 15);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.moveTo(-3, 15);
+      ctx.lineTo(0, 20 + Math.random() * 5);
+      ctx.lineTo(3, 15);
+      ctx.closePath();
+      ctx.fill();
+    }
+    
+    // Rocket windows
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(-4, -15, 8, 6);
+    
+    // Neon glow effect
+    ctx.shadowColor = '#00FFFF';
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = '#00FFFF';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-8, -20, 16, 35);
+    ctx.shadowBlur = 0;
+    
+    ctx.restore();
+  }
+
+  function drawPlanet(planet) {
+    ctx.save();
+    ctx.translate(planet.x, planet.y);
+    ctx.rotate(planet.rotation);
+    
+    const colors = {
+      fire: ['#FF4500', '#FF6B35', '#FFD700'],
+      ice: ['#87CEEB', '#4682B4', '#E0F6FF'],
+      toxic: ['#32CD32', '#228B22', '#ADFF2F'],
+      electric: ['#8A2BE2', '#9932CC', '#DA70D6'],
+      dark: ['#2F2F2F', '#555555', '#808080']
+    };
+    
+    const planetColors = colors[planet.type];
+    
+    // Planet body
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, planet.size/2);
+    gradient.addColorStop(0, planetColors[2]);
+    gradient.addColorStop(0.7, planetColors[1]);
+    gradient.addColorStop(1, planetColors[0]);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, planet.size/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Planet features
+    ctx.fillStyle = planetColors[0];
+    for (let i = 0; i < 3; i++) {
+      const angle = (i * Math.PI * 2 / 3) + planet.rotation;
+      const x = Math.cos(angle) * (planet.size/4);
+      const y = Math.sin(angle) * (planet.size/4);
+      ctx.beginPath();
+      ctx.arc(x, y, planet.size/8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Attacking effect
+    if (planet.attacking) {
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(0, 0, planet.size/2 + 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Danger spikes
+      ctx.fillStyle = '#FF0000';
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI * 2 / 8) + planet.rotation * 2;
+        const x = Math.cos(angle) * (planet.size/2 + 8);
+        const y = Math.sin(angle) * (planet.size/2 + 8);
+        ctx.fillRect(x - 1, y - 1, 2, 2);
+      }
+    }
+    
+    // Neon glow
+    ctx.shadowColor = planetColors[1];
+    ctx.shadowBlur = 15;
+    ctx.strokeStyle = planetColors[1];
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, planet.size/2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    ctx.restore();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Start the game loop
+  gameLoop();
+
+  // Show mobile controls on touch devices
+  if ('ontouchstart' in window) {
+    mobileControls.style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>

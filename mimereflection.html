@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mimic Artist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(45deg, #1e3c72, #2a5298, #3498db);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #4facfe;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .start-screen h1 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 10px #4facfe; }
+            to { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px #4facfe, 0 0 30px #4facfe; }
+        }
+
+        .start-screen p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .instructions-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #4facfe;
+        }
+
+        .instructions-content p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+        }
+
+        .mirror-world {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 80px;
+            display: grid;
+            grid-template-columns: 1fr 2px 1fr 2px 1fr;
+            grid-template-rows: 1fr 2px 1fr 2px 1fr;
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .mirror-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+        }
+
+        .mirror-section.center {
+            grid-column: 3;
+            grid-row: 3;
+            background: rgba(79,172,254,0.1);
+            border-color: #4facfe;
+        }
+
+        .mirror-section.top {
+            grid-column: 3;
+            grid-row: 1;
+        }
+
+        .mirror-section.bottom {
+            grid-column: 3;
+            grid-row: 5;
+        }
+
+        .mirror-section.left {
+            grid-column: 1;
+            grid-row: 3;
+        }
+
+        .mirror-section.right {
+            grid-column: 5;
+            grid-row: 3;
+        }
+
+        .mirror-section.top-left {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .mirror-section.top-right {
+            grid-column: 5;
+            grid-row: 1;
+        }
+
+        .mirror-section.bottom-left {
+            grid-column: 1;
+            grid-row: 5;
+        }
+
+        .mirror-section.bottom-right {
+            grid-column: 5;
+            grid-row: 5;
+        }
+
+        .mirror-grid {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 1px;
+        }
+
+        .mirror-cell {
+            background: rgba(255,255,255,0.02);
+            position: relative;
+            border-radius: 2px;
+        }
+
+        .hero {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255,107,107,0.6);
+            z-index: 5;
+            transition: all 0.2s ease;
+            border: 3px solid rgba(255,255,255,0.8);
+            animation: heroWiggle 2s ease-in-out infinite;
+        }
+
+        @keyframes heroWiggle {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                box-shadow: 0 0 20px rgba(255,107,107,0.6);
+            }
+            25% { 
+                transform: scale(1.05) rotate(-2deg);
+                box-shadow: 0 0 25px rgba(255,107,107,0.8);
+            }
+            50% { 
+                transform: scale(1.1) rotate(0deg);
+                box-shadow: 0 0 30px rgba(255,107,107,1);
+            }
+            75% { 
+                transform: scale(1.05) rotate(2deg);
+                box-shadow: 0 0 25px rgba(255,107,107,0.8);
+            }
+        }
+
+        .reflection {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            background: linear-gradient(135deg, rgba(230,230,250,0.8), rgba(176,196,222,0.8));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: rgba(75,0,130,0.9);
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(230,230,250,0.4);
+            z-index: 4;
+            border: 2px solid rgba(255,255,255,0.5);
+            transition: all 0.2s ease;
+        }
+
+        .reflection.broken {
+            opacity: 0.3;
+            background: linear-gradient(135deg, rgba(128,128,128,0.5), rgba(64,64,64,0.5));
+            box-shadow: none;
+            color: rgba(128,128,128,0.7);
+        }
+
+        .civilian {
+            position: absolute;
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: white;
+            font-weight: bold;
+            z-index: 3;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            top: 5%;
+            left: 5%;
+            background: linear-gradient(135deg, #ff4757, #c44569);
+            border-radius: 15%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: white;
+            font-weight: bold;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(255,71,87,0.5);
+        }
+
+        .mirror-crack {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 0%, transparent 45%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 55%, transparent 100%),
+                linear-gradient(-45deg, transparent 0%, transparent 30%, rgba(255,255,255,0.7) 48%, rgba(255,255,255,0.7) 52%, transparent 70%, transparent 100%),
+                linear-gradient(135deg, transparent 0%, transparent 60%, rgba(255,255,255,0.5) 62%, rgba(255,255,255,0.5) 64%, transparent 66%, transparent 100%);
+            z-index: 10;
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        .game-ui {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+        }
+
+        .ui-info {
+            display: flex;
+            gap: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .mirror-status {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .mirror-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4CAF50;
+            transition: all 0.3s ease;
+        }
+
+        .mirror-indicator.broken {
+            background: #ff4757;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .game-over h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #4facfe;
+        }
+
+        .game-over p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mobile-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .section-label {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: grid;
+            }
+            
+            .mirror-world {
+                bottom: 160px;
+            }
+            
+            .game-ui {
+                height: 60px;
+                padding: 0 15px;
+            }
+            
+            .ui-info {
+                font-size: 0.9rem;
+                gap: 15px;
+            }
+            
+            .controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <div class="start-screen" id="startScreen">
+            <h1>🎭 Mimic Artist</h1>
+            <p>Control mirror reflections to save all civilians!</p>
+            <button class="start-btn" id="startBtn">Start Rescue Mission</button>
+        </div>
+
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🪞 How to Play</h2>
+                <p><strong>🦸 Your Mission:</strong> Save all civilians using your hero and mirror reflections!</p>
+                <p><strong>🪞 Mirror Reflections:</strong> Your hero in the center controls reflections in surrounding mirrors.</p>
+                <p><strong>⚡ Synchronized Movement:</strong> All reflections move together with your main hero!</p>
+                <p><strong>🎯 Strategy:</strong> Position reflections to reach civilians while avoiding obstacles.</p>
+                <p><strong>💥 Danger:</strong> Reflections break if they hit obstacles! Protect them carefully.</p>
+                <p><strong>🔄 Controls:</strong> Use WASD or arrow keys to move, or touch controls on mobile.</p>
+                <button class="close-instructions" id="closeInstructions">Start Reflecting!</button>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="mirror-world" id="mirrorWorld">
+                <!-- Top-Left Mirror -->
+                <div class="mirror-section top-left" data-mirror="top-left">
+                    <div class="section-label">↖️ TL</div>
+                    <div class="mirror-grid" id="grid-top-left"></div>
+                </div>
+
+                <!-- Top Mirror -->
+                <div class="mirror-section top" data-mirror="top">
+                    <div class="section-label">⬆️ TOP</div>
+                    <div class="mirror-grid" id="grid-top"></div>
+                </div>
+
+                <!-- Top-Right Mirror -->
+                <div class="mirror-section top-right" data-mirror="top-right">
+                    <div class="section-label">↗️ TR</div>
+                    <div class="mirror-grid" id="grid-top-right"></div>
+                </div>
+
+                <!-- Left Mirror -->
+                <div class="mirror-section left" data-mirror="left">
+                    <div class="section-label">⬅️ LEFT</div>
+                    <div class="mirror-grid" id="grid-left"></div>
+                </div>
+
+                <!-- Center (Main Hero) -->
+                <div class="mirror-section center" data-mirror="center">
+                    <div class="section-label">🎯 HERO</div>
+                    <div class="mirror-grid" id="grid-center"></div>
+                </div>
+
+                <!-- Right Mirror -->
+                <div class="mirror-section right" data-mirror="right">
+                    <div class="section-label">➡️ RIGHT</div>
+                    <div class="mirror-grid" id="grid-right"></div>
+                </div>
+
+                <!-- Bottom-Left Mirror -->
+                <div class="mirror-section bottom-left" data-mirror="bottom-left">
+                    <div class="section-label">↙️ BL</div>
+                    <div class="mirror-grid" id="grid-bottom-left"></div>
+                </div>
+
+                <!-- Bottom Mirror -->
+                <div class="mirror-section bottom" data-mirror="bottom">
+                    <div class="section-label">⬇️ BOTTOM</div>
+                    <div class="mirror-grid" id="grid-bottom"></div>
+                </div>
+
+                <!-- Bottom-Right Mirror -->
+                <div class="mirror-section bottom-right" data-mirror="bottom-right">
+                    <div class="section-label">↘️ BR</div>
+                    <div class="mirror-grid" id="grid-bottom-right"></div>
+                </div>
+            </div>
+            
+            <div class="game-ui">
+                <div class="ui-info">
+                    <div>Level: <span id="currentLevel">1</span></div>
+                    <div>Rescued: <span id="rescuedCount">0</span>/<span id="totalCivilians">0</span></div>
+                    <div class="mirror-status">
+                        Mirrors: 
+                        <div class="mirror-indicator" id="mirror-top-left"></div>
+                        <div class="mirror-indicator" id="mirror-top"></div>
+                        <div class="mirror-indicator" id="mirror-top-right"></div>
+                        <div class="mirror-indicator" id="mirror-left"></div>
+                        <div class="mirror-indicator" id="mirror-right"></div>
+                        <div class="mirror-indicator" id="mirror-bottom-left"></div>
+                        <div class="mirror-indicator" id="mirror-bottom"></div>
+                        <div class="mirror-indicator" id="mirror-bottom-right"></div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button class="control-btn" id="resetBtn">Reset Level</button>
+                </div>
+            </div>
+            
+            <div class="mobile-controls" id="mobileControls">
+                <button class="mobile-btn" id="resetMobile">Reset</button>
+                <button class="mobile-btn" id="helpBtn">Help</button>
+                <button class="mobile-btn" id="moveBtn">Move</button>
+            </div>
+        </div>
+
+        <div class="game-over" id="gameOver">
+            <h2>Mission Complete!</h2>
+            <p id="gameOverText">All civilians rescued through mirror reflections!</p>
+            <button class="restart-btn" id="restartBtn">New Mission</button>
+        </div>
+    </div>
+
+    <script>
+        class HeroReflectionGame {
+            constructor() {
+                this.currentLevel = 1;
+                this.maxLevel = 5;
+                this.heroPos = { x: 2, y: 1 }; // Center of 6x4 grid
+                this.reflections = {};
+                this.mirrors = ['top-left', 'top', 'top-right', 'left', 'right', 'bottom-left', 'bottom', 'bottom-right'];
+                this.brokenMirrors = new Set();
+                this.civilians = [];
+                this.obstacles = [];
+                this.rescuedCount = 0;
+                this.totalCivilians = 0;
+                this.isMoving = false;
+                
+                this.levels = [
+                    {
+                        civilians: [
+                            { mirror: 'top', x: 2, y: 1 },
+                            { mirror: 'bottom', x: 2, y: 2 }
+                        ],
+                        obstacles: [
+                            { mirror: 'left', x: 2, y: 1 },
+                            { mirror: 'right', x: 2, y: 2 }
+                        ]
+                    },
+                    {
+                        civilians: [
+                            { mirror: 'top-left', x: 1, y: 0 },
+                            { mirror: 'top-right', x: 4, y: 0 },
+                            { mirror: 'bottom-left', x: 1, y: 3 },
+                            { mirror: 'bottom-right', x: 4, y: 3 }
+                        ],
+                        obstacles: [
+                            { mirror: 'top', x: 2, y: 0 },
+                            { mirror: 'bottom', x: 2, y: 3 },
+                            { mirror: 'left', x: 0, y: 1 },
+                            { mirror: 'right', x: 5, y: 2 }
+                        ]
+                    },
+                    {
+                        civilians: [
+                            { mirror: 'top', x: 1, y: 0 },
+                            { mirror: 'top', x: 4, y: 0 },
+                            { mirror: 'left', x: 0, y: 2 },
+                            { mirror: 'right', x: 5, y: 1 },
+                            { mirror: 'bottom', x: 2, y: 3 }
+                        ],
+                        obstacles: [
+                            { mirror: 'top', x: 2, y: 0 },
+                            { mirror: 'top', x: 3, y: 0 },
+                            { mirror: 'left', x: 1, y: 1 },
+                            { mirror: 'left', x: 1, y: 2 },
+                            { mirror: 'right', x: 4, y: 1 },
+                            { mirror: 'right', x: 4, y: 2 },
+                            { mirror: 'bottom', x: 1, y: 3 },
+                            { mirror: 'bottom', x: 3, y: 3 }
+                        ]
+                    },
+                    {
+                        civilians: [
+                            { mirror: 'top-left', x: 0, y: 0 },
+                            { mirror: 'top-right', x: 5, y: 0 },
+                            { mirror: 'bottom-left', x: 0, y: 3 },
+                            { mirror: 'bottom-right', x: 5, y: 3 },
+                            { mirror: 'left', x: 0, y: 1 },
+                            { mirror: 'right', x: 5, y: 2 }
+                        ],
+                        obstacles: [
+                            { mirror: 'top', x: 1, y: 0 }, { mirror: 'top', x: 2, y: 0 }, { mirror: 'top', x: 3, y: 0 }, { mirror: 'top', x: 4, y: 0 },
+                            { mirror: 'bottom', x: 1, y: 3 }, { mirror: 'bottom', x: 2, y: 3 }, { mirror: 'bottom', x: 3, y: 3 }, { mirror: 'bottom', x: 4, y: 3 },
+                            { mirror: 'left', x: 0, y: 0 }, { mirror: 'left', x: 0, y: 2 }, { mirror: 'left', x: 0, y: 3 },
+                            { mirror: 'right', x: 5, y: 0 }, { mirror: 'right', x: 5, y: 1 }, { mirror: 'right', x: 5, y: 3 }
+                        ]
+                    },
+                    {
+                        civilians: [
+                            { mirror: 'top-left', x: 2, y: 1 },
+                            { mirror: 'top-right', x: 3, y: 1 },
+                            { mirror: 'bottom-left', x: 2, y: 2 },
+                            { mirror: 'bottom-right', x: 3, y: 2 },
+                            { mirror: 'top', x: 0, y: 1 },
+                            { mirror: 'bottom', x: 5, y: 2 },
+                            { mirror: 'left', x: 1, y: 0 },
+                            { mirror: 'right', x: 4, y: 3 }
+                        ],
+                        obstacles: [
+                            { mirror: 'top-left', x: 1, y: 1 }, { mirror: 'top-left', x: 3, y: 1 }, { mirror: 'top-left', x: 2, y: 0 }, { mirror: 'top-left', x: 2, y: 2 },
+                            { mirror: 'top-right', x: 2, y: 1 }, { mirror: 'top-right', x: 4, y: 1 }, { mirror: 'top-right', x: 3, y: 0 }, { mirror: 'top-right', x: 3, y: 2 },
+                            { mirror: 'bottom-left', x: 1, y: 2 }, { mirror: 'bottom-left', x: 3, y: 2 }, { mirror: 'bottom-left', x: 2, y: 1 }, { mirror: 'bottom-left', x: 2, y: 3 },
+                            { mirror: 'bottom-right', x: 2, y: 2 }, { mirror: 'bottom-right', x: 4, y: 2 }, { mirror: 'bottom-right', x: 3, y: 1 }, { mirror: 'bottom-right', x: 3, y: 3 },
+                            { mirror: 'top', x: 1, y: 1 }, { mirror: 'top', x: 2, y: 1 }, { mirror: 'bottom', x: 3, y: 2 }, { mirror: 'bottom', x: 4, y: 2 },
+                            { mirror: 'left', x: 1, y: 1 }, { mirror: 'left', x: 1, y: 2 }, { mirror: 'right', x: 4, y: 1 }, { mirror: 'right', x: 4, y: 2 }
+                        ]
+                    }
+                ];
+
+                this.initializeElements();
+                this.bindEvents();
+                this.showInstructions();
+            }
+
+            initializeElements() {
+                this.startScreen = document.getElementById('startScreen');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                
+                // UI elements
+                this.currentLevelSpan = document.getElementById('currentLevel');
+                this.rescuedCountSpan = document.getElementById('rescuedCount');
+                this.totalCiviliansSpan = document.getElementById('totalCivilians');
+                this.gameOverText = document.getElementById('gameOverText');
+            }
+
+            bindEvents() {
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.resetLevel();
+                });
+
+                // Mobile controls
+                document.getElementById('resetMobile').addEventListener('click', () => {
+                    this.resetLevel();
+                });
+
+                document.getElementById('helpBtn').addEventListener('click', () => {
+                    this.showInstructions();
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for start screen
+                    if (e.key === ' ' && this.startScreen.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    if (this.gameArea.style.display === 'block' && !this.isMoving) {
+                        switch(e.key.toLowerCase()) {
+                            case 'w':
+                            case 'arrowup':
+                                e.preventDefault();
+                                this.moveHero(0, -1);
+                                break;
+                            case 's':
+                            case 'arrowdown':
+                                e.preventDefault();
+                                this.moveHero(0, 1);
+                                break;
+                            case 'a':
+                            case 'arrowleft':
+                                e.preventDefault();
+                                this.moveHero(-1, 0);
+                                break;
+                            case 'd':
+                            case 'arrowright':
+                                e.preventDefault();
+                                this.moveHero(1, 0);
+                                break;
+                            case ' ':
+                                e.preventDefault();
+                                this.resetLevel();
+                                break;
+                        }
+                    }
+
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                // Touch controls for mobile
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'grid';
+                }
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.startGame();
+            }
+
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.loadLevel(this.currentLevel);
+                this.playSound(440, 100);
+            }
+
+            loadLevel(levelNum) {
+                const level = this.levels[levelNum - 1];
+                
+                // Reset game state
+                this.heroPos = { x: 2, y: 1 };
+                this.brokenMirrors.clear();
+                
+                // Clear any existing visual cracks from previous level
+                document.querySelectorAll('.mirror-crack').forEach(crack => crack.remove());
+                
+                this.rescuedCount = 0;
+                this.civilians = level.civilians.map(c => ({ ...c, rescued: false }));
+                this.obstacles = level.obstacles.map(o => ({ ...o }));
+                this.totalCivilians = this.civilians.length;
+                
+                // Initialize reflection positions
+                this.initializeReflections();
+                
+                this.updateUI();
+                this.renderLevel();
+            }
+
+            initializeReflections() {
+                this.reflections = {};
+                this.mirrors.forEach(mirror => {
+                    this.reflections[mirror] = { x: this.heroPos.x, y: this.heroPos.y };
+                });
+            }
+
+            renderLevel() {
+                // Clear all grids
+                this.mirrors.forEach(mirror => {
+                    const grid = document.getElementById(`grid-${mirror}`);
+                    grid.innerHTML = '';
+                    
+                    // Create grid cells
+                    for (let y = 0; y < 4; y++) {
+                        for (let x = 0; x < 6; x++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'mirror-cell';
+                            cell.dataset.x = x;
+                            cell.dataset.y = y;
+                            grid.appendChild(cell);
+                        }
+                    }
+                });
+
+                // Render center hero
+                const centerGrid = document.getElementById('grid-center');
+                this.renderHeroAt(centerGrid, this.heroPos.x, this.heroPos.y, true);
+
+                this.updateVisuals();
+            }
+
+            updateVisuals() {
+                // Clear all previous entities
+                this.mirrors.forEach(mirror => {
+                    const grid = document.getElementById(`grid-${mirror}`);
+                    Array.from(grid.children).forEach(cell => {
+                        cell.innerHTML = '';
+                    });
+                });
+
+                // Re-render center hero
+                const centerGrid = document.getElementById('grid-center');
+                this.renderHeroAt(centerGrid, this.heroPos.x, this.heroPos.y, true);
+
+                // Render reflections
+                this.mirrors.forEach(mirror => {
+                    if (!this.brokenMirrors.has(mirror)) {
+                        const grid = document.getElementById(`grid-${mirror}`);
+                        const pos = this.reflections[mirror];
+                        this.renderHeroAt(grid, pos.x, pos.y, false);
+                    }
+                });
+
+                // Render civilians
+                this.civilians.forEach(civilian => {
+                    if (!civilian.rescued) {
+                        const grid = document.getElementById(`grid-${civilian.mirror}`);
+                        this.renderCivilianAt(grid, civilian.x, civilian.y);
+                    }
+                });
+
+                // Render obstacles
+                this.obstacles.forEach(obstacle => {
+                    const grid = document.getElementById(`grid-${obstacle.mirror}`);
+                    this.renderObstacleAt(grid, obstacle.x, obstacle.y);
+                });
+
+                // Update mirror indicators
+                this.updateMirrorIndicators();
+            }
+
+            renderHeroAt(grid, x, y, isMainHero) {
+                const cell = grid.children[y * 6 + x];
+                if (cell) {
+                    const heroDiv = document.createElement('div');
+                    heroDiv.className = isMainHero ? 'hero' : 'reflection';
+                    heroDiv.textContent = isMainHero ? "🦸" : "🤹";
+                    cell.appendChild(heroDiv);
+                }
+            }
+
+            renderCivilianAt(grid, x, y) {
+                const cell = grid.children[y * 6 + x];
+                if (cell) {
+                    const civilianDiv = document.createElement('div');
+                    civilianDiv.className = 'civilian';
+                    civilianDiv.textContent = '👤';
+                    cell.appendChild(civilianDiv);
+                }
+            }
+
+            renderObstacleAt(grid, x, y) {
+                const cell = grid.children[y * 6 + x];
+                if (cell) {
+                    const obstacleDiv = document.createElement('div');
+                    obstacleDiv.className = 'obstacle';
+                    obstacleDiv.textContent = '⚡';
+                    cell.appendChild(obstacleDiv);
+                }
+            }
+
+            moveHero(dx, dy) {
+                const newX = this.heroPos.x + dx;
+                const newY = this.heroPos.y + dy;
+
+                if (this.isValidMove(newX, newY)) {
+                    this.heroPos.x = newX;
+                    this.heroPos.y = newY;
+                    
+                    // Update all reflection positions
+                    this.updateReflections(dx, dy);
+                    
+                    this.checkInteractions();
+                    this.updateVisuals();
+                    this.playSound(220, 50);
+                }
+            }
+
+            isValidMove(x, y) {
+                return x >= 0 && x < 6 && y >= 0 && y < 4;
+            }
+
+            updateReflections(dx, dy) {
+                this.mirrors.forEach(mirror => {
+                    if (!this.brokenMirrors.has(mirror)) {
+                        const reflection = this.reflections[mirror];
+                        const newX = reflection.x + dx;
+                        const newY = reflection.y + dy;
+                        
+                        if (this.isValidMove(newX, newY)) {
+                            // Check if reflection hits obstacle
+                            const hitObstacle = this.obstacles.some(obstacle => 
+                                obstacle.mirror === mirror && obstacle.x === newX && obstacle.y === newY
+                            );
+                            
+                            if (hitObstacle) {
+                                this.breakMirror(mirror);
+                                this.playSound(440, 200);
+                            } else {
+                                reflection.x = newX;
+                                reflection.y = newY;
+                            }
+                        }
+                    }
+                });
+            }
+
+            breakMirror(mirror) {
+                this.brokenMirrors.add(mirror);
+                const mirrorSection = document.querySelector(`[data-mirror="${mirror}"]`);
+                if (mirrorSection) {
+                    const crack = document.createElement('div');
+                    crack.className = 'mirror-crack';
+                    mirrorSection.appendChild(crack);
+                }
+                
+                // Immediately check if this makes the level impossible
+                setTimeout(() => {
+                    if (this.isLevelImpossible()) {
+                        this.levelFailed();
+                    }
+                }, 100);
+            }
+
+            checkInteractions() {
+                // Check civilian rescues (main hero)
+                this.civilians.forEach(civilian => {
+                    if (!civilian.rescued && civilian.mirror === 'center' && 
+                        civilian.x === this.heroPos.x && civilian.y === this.heroPos.y) {
+                        civilian.rescued = true;
+                        this.rescuedCount++;
+                        this.playSound(330, 200);
+                    }
+                });
+
+                // Check civilian rescues (reflections)
+                this.mirrors.forEach(mirror => {
+                    if (!this.brokenMirrors.has(mirror)) {
+                        const reflection = this.reflections[mirror];
+                        this.civilians.forEach(civilian => {
+                            if (!civilian.rescued && civilian.mirror === mirror && 
+                                civilian.x === reflection.x && civilian.y === reflection.y) {
+                                civilian.rescued = true;
+                                this.rescuedCount++;
+                                this.playSound(330, 200);
+                            }
+                        });
+                    }
+                });
+
+                // Check if level is still possible to complete
+                if (this.isLevelImpossible()) {
+                    this.levelFailed();
+                    return;
+                }
+
+                // Check win condition
+                if (this.rescuedCount >= this.totalCivilians) {
+                    this.levelComplete();
+                }
+
+                this.updateUI();
+            }
+
+            isLevelImpossible() {
+                // Check if there are unrescued civilians in broken mirrors
+                const unrescuedCivilians = this.civilians.filter(c => !c.rescued);
+                
+                for (let civilian of unrescuedCivilians) {
+                    if (civilian.mirror === 'center') {
+                        // Main hero can always reach center civilians (assuming no obstacles block hero movement)
+                        continue;
+                    }
+                    
+                    if (this.brokenMirrors.has(civilian.mirror)) {
+                        // Civilian is in a broken mirror - impossible to rescue
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+
+            levelFailed() {
+                this.gameOverText.textContent = `Level Failed! A broken mirror made it impossible to rescue all civilians. Try again!`;
+                this.gameOver.style.display = 'flex';
+                this.playSound(150, 800); // Lower, longer sound for failure
+                
+                // Auto-restart the level after a short delay
+                setTimeout(() => {
+                    this.gameOver.style.display = 'none';
+                    this.resetLevel();
+                }, 2000);
+            }
+
+            updateMirrorIndicators() {
+                this.mirrors.forEach(mirror => {
+                    const indicator = document.getElementById(`mirror-${mirror}`);
+                    if (indicator) {
+                        indicator.className = `mirror-indicator ${this.brokenMirrors.has(mirror) ? 'broken' : ''}`;
+                    }
+                });
+            }
+
+            levelComplete() {
+                if (this.currentLevel >= this.maxLevel) {
+                    this.gameComplete();
+                } else {
+                    this.currentLevel++;
+                    setTimeout(() => {
+                        this.loadLevel(this.currentLevel);
+                        this.playSound(660, 300);
+                    }, 1000);
+                }
+            }
+
+            gameComplete() {
+                this.gameOverText.textContent = `Mission Complete! You rescued all civilians across ${this.maxLevel} mirror dimensions!`;
+                this.gameOver.style.display = 'flex';
+                this.playSound(880, 500);
+            }
+
+            resetLevel() {
+                // Clear any existing cracks
+                document.querySelectorAll('.mirror-crack').forEach(crack => crack.remove());
+                
+                this.loadLevel(this.currentLevel);
+                this.playSound(110, 100);
+            }
+
+            updateUI() {
+                this.currentLevelSpan.textContent = this.currentLevel;
+                this.rescuedCountSpan.textContent = this.rescuedCount;
+                this.totalCiviliansSpan.textContent = this.totalCivilians;
+            }
+
+            restartGame() {
+                this.currentLevel = 1;
+                this.gameOver.style.display = 'none';
+                this.loadLevel(this.currentLevel);
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new HeroReflectionGame();
+        });
+    </script>
+</body>
+</html>

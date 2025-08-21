@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pinky's Path Adventure — Fun Kids Puzzle Game</title>
+  <style>
+    :root{
+      --bg:#FFB6C1;
+      --ground:#98FB98;
+      --panel:#ffffffee;
+      --primary:#FF69B4;
+      --secondary:#87CEEB;
+      --success:#32CD32;
+    }
+    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg),#FFC0CB)}
+    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .game{width:min(800px,95vw);height:min(700px,90vh);background:linear-gradient(135deg,#FFE4E1,#F0F8FF);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.15);position:relative;overflow:hidden}
+    
+    #backButton{position:fixed;top:20px;left:20px;background:#FF69B4;color:white;border:none;border-radius:12px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:all 0.3s ease;z-index:1000}
+    #backButton:hover{background:#FF1493;transform:translateY(-2px)}
+    #backButton:active{transform:translateY(0)}
+    
+    header{position:absolute;left:20px;top:15px;z-index:10;display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+    .panel{background:var(--panel);padding:8px 14px;border-radius:12px;font-weight:700;display:flex;gap:6px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .score-text{font-size:16px;color:#2E7D32}
+    
+    .game-layout{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:30px}
+    
+    .grid-container{position:relative;background:rgba(255,255,255,0.9);padding:20px;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,0.1)}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:400px;height:400px}
+    .grid-tile{width:92px;height:92px;border-radius:12px;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;border:3px solid #DDD}
+    
+    .tile-inactive{background:linear-gradient(135deg,#F5F5F5,#E0E0E0)}
+    .tile-active{background:linear-gradient(135deg,#98FB98,#90EE90);border-color:#32CD32}
+    .tile-blocked{background:linear-gradient(135deg,#8B4513,#654321);border-color:#5D4037;cursor:not-allowed}
+    .tile-start{background:linear-gradient(135deg,#FFD700,#FFA500);border-color:#FF8C00}
+    .tile-finish{background:linear-gradient(135deg,#FF69B4,#FF1493);border-color:#DC143C}
+    
+    .grid-tile:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(0,0,0,0.2)}
+    .grid-tile.disabled{cursor:not-allowed;opacity:0.6}
+    .grid-tile.disabled:hover{transform:none;box-shadow:none}
+    
+    .character{position:absolute;width:60px;height:60px;transition:all 0.8s cubic-bezier(0.25,0.46,0.45,0.94);z-index:5;display:flex;align-items:center;justify-content:center;font-size:24px}
+    
+    .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,#FFE0F0,#F0F8FF);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);max-width:400px}
+    .start-screen h2{margin:0 0 15px 0;color:#FF69B4;font-size:26px}
+    .start-screen p{margin:8px 0;color:#555;font-size:15px;line-height:1.4}
+    .start-btn{margin-top:20px;padding:12px 24px;border-radius:15px;font-weight:800;border:0;background:#87CEEB;color:white;font-size:18px;cursor:pointer;transition:all 0.3s ease}
+    .start-btn:hover{background:#4682B4;transform:scale(1.05)}
+    
+    .level-complete{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,#E8F5E8,#F0F8FF);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:none;max-width:350px}
+    .level-complete h2{margin:0 0 15px 0;color:#32CD32;font-size:24px}
+    .level-complete p{margin:8px 0;color:#555;font-size:14px}
+    
+    .instructions{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.9);padding:10px 20px;border-radius:12px;text-align:center;font-size:14px;color:#666;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    
+    .stars{display:flex;gap:5px;justify-content:center;margin:10px 0}
+    .star{font-size:24px;color:#FFD700;text-shadow:1px 1px 2px rgba(0,0,0,0.2)}
+    .star.empty{color:#DDD}
+    
+    @media (max-width:600px){
+      .game{height:min(600px,90vh)}
+      .grid{width:320px;height:320px}
+      .grid-tile{width:72px;height:72px;font-size:18px}
+      .character{width:50px;height:50px;font-size:20px}
+      .panel{padding:6px 10px;font-size:14px}
+      .instructions{font-size:12px;padding:8px 15px}
+    }
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="game" id="gameRoot">
+        <header>
+          <div class="panel">
+            <span class="score-text">Level: <span id="level">1</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text">Moves: <span id="moves">0</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text">⭐ <span id="totalStars">0</span></span>
+          </div>
+        </header>
+
+        <div class="start-screen" id="startScreen">
+          <h2>🐕 Pinky's Path Adventure! 🐕</h2>
+          <p>Help Pinky find her way home!</p>
+          <p>Click on the gray tiles to create a path from START to FINISH</p>
+          <p>Avoid the brown blocker tiles (🧱) - Pinky can't walk through them!</p>
+          <p>Make sure all tiles connect so Pinky can walk through!</p>
+          <button class="start-btn" id="startBtn">Start Adventure!</button>
+        </div>
+
+        <div class="level-complete" id="levelCompleteScreen">
+          <h2>🎉 Brilliant! 🎉</h2>
+          <p id="completionMessage">Pinky made it home safely!</p>
+          <div class="stars" id="starRating">
+            <span class="star">⭐</span>
+            <span class="star">⭐</span>
+            <span class="star">⭐</span>
+          </div>
+          <button class="start-btn" id="nextLevelBtn">Next Adventure!</button>
+        </div>
+
+        <div class="game-layout">
+          <div class="grid-container">
+            <div class="grid" id="gameGrid"></div>
+            <div class="character" id="character">🐕</div>
+          </div>
+        </div>
+
+        <div class="instructions" id="instructions">
+          Click gray tiles to build a path! Avoid brown blocker tiles (🧱) and make sure Pinky can walk from yellow START to pink FINISH!
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Game elements
+  const levelEl = document.getElementById('level');
+  const movesEl = document.getElementById('moves');
+  const starsEl = document.getElementById('totalStars');
+  const startScreen = document.getElementById('startScreen');
+  const levelCompleteScreen = document.getElementById('levelCompleteScreen');
+  const completionMessageEl = document.getElementById('completionMessage');
+  const starRatingEl = document.getElementById('starRating');
+  const gameGrid = document.getElementById('gameGrid');
+  const character = document.getElementById('character');
+  const startBtn = document.getElementById('startBtn');
+  const nextLevelBtn = document.getElementById('nextLevelBtn');
+  const backBtn = document.getElementById('backButton');
+  const instructionsEl = document.getElementById('instructions');
+
+  // Game state
+  let currentLevel = 1;
+  let moves = 0;
+  let totalStars = parseInt(localStorage.getItem('pathfinderStars') || '0');
+  let gameActive = false;
+  
+  // Grid state
+  let gridState = []; // 0=inactive, 1=active, 2=start, 3=finish, 4=blocked
+  let startPos = 0;
+  let finishPos = 15;
+  let characterPos = 0;
+  
+  // Level configurations for 4x4 grid
+  const levels = [
+    { start: 0, finish: 15, blockers: [5, 10], maxMoves: 8 },
+    { start: 0, finish: 15, blockers: [4, 6, 9, 11], maxMoves: 10 },
+    { start: 1, finish: 14, blockers: [5, 6, 9, 10], maxMoves: 9 },
+    { start: 0, finish: 15, blockers: [2, 7, 8, 13], maxMoves: 11 },
+    { start: 3, finish: 12, blockers: [1, 6, 9, 10, 14], maxMoves: 12 },
+    { start: 0, finish: 15, blockers: [4, 7, 8, 11, 12], maxMoves: 13 },
+    { start: 2, finish: 13, blockers: [0, 5, 9, 10, 15], maxMoves: 14 },
+    { start: 1, finish: 14, blockers: [4, 5, 7, 8, 10, 11], maxMoves: 16 },
+  ];
+
+  // Initialize game
+  function init() {
+    updateUI();
+    showStartScreen();
+  }
+
+  function updateUI() {
+    levelEl.textContent = currentLevel;
+    movesEl.textContent = moves;
+    starsEl.textContent = totalStars;
+  }
+
+  function showStartScreen() {
+    startScreen.style.display = 'block';
+    levelCompleteScreen.style.display = 'none';
+    gameActive = false;
+  }
+
+  function startLevel() {
+    startScreen.style.display = 'none';
+    levelCompleteScreen.style.display = 'none';
+    gameActive = true;
+    moves = 0;
+    generateLevel(currentLevel);
+    updateUI();
+    positionCharacter();
+  }
+
+  function generateLevel(level) {
+    const levelConfig = levels[(level - 1) % levels.length];
+    startPos = levelConfig.start;
+    finishPos = levelConfig.finish;
+    characterPos = startPos;
+    
+    // Initialize grid - all inactive except start, finish, and blockers
+    gridState = new Array(16).fill(0); // 4x4 = 16 tiles
+    gridState[startPos] = 2; // start
+    gridState[finishPos] = 3; // finish
+    
+    // Add blocker tiles
+    levelConfig.blockers.forEach(blockerPos => {
+      if (blockerPos !== startPos && blockerPos !== finishPos) {
+        gridState[blockerPos] = 4; // blocked
+      }
+    });
+    
+    // Validate that a path exists from start to finish
+    if (!validateLevelPath()) {
+      console.warn(`Level ${level} has no valid path! Removing problematic blockers.`);
+      // Fallback: ensure at least one simple path exists
+      gridState = new Array(16).fill(0);
+      gridState[startPos] = 2; // start
+      gridState[finishPos] = 3; // finish
+      // Add fewer blockers to ensure solvability
+      const safeBlockers = levelConfig.blockers.slice(0, Math.floor(levelConfig.blockers.length / 2));
+      safeBlockers.forEach(blockerPos => {
+        if (blockerPos !== startPos && blockerPos !== finishPos) {
+          gridState[blockerPos] = 4; // blocked
+        }
+      });
+    }
+
+    // Create grid tiles
+    gameGrid.innerHTML = '';
+    for (let i = 0; i < 16; i++) {
+      const tile = document.createElement('div');
+      tile.className = 'grid-tile';
+      tile.dataset.index = i;
+      
+      updateTileAppearance(tile, i);
+      
+      tile.addEventListener('click', () => handleTileClick(i));
+      gameGrid.appendChild(tile);
+    }
+  }
+
+  function updateTileAppearance(tile, index) {
+    // Remove all tile classes
+    tile.className = 'grid-tile';
+    
+    switch (gridState[index]) {
+      case 0: // inactive
+        tile.classList.add('tile-inactive');
+        tile.textContent = '';
+        break;
+      case 1: // active path
+        tile.classList.add('tile-active');
+        tile.textContent = '🌿';
+        break;
+      case 2: // start
+        tile.classList.add('tile-start');
+        tile.textContent = '🏠';
+        break;
+      case 3: // finish
+        tile.classList.add('tile-finish');
+        tile.textContent = '🎾';
+        break;
+      case 4: // blocked
+        tile.classList.add('tile-blocked');
+        tile.textContent = '🧱';
+        break;
+    }
+    
+    // Disable start, finish, and blocked tiles
+    if (gridState[index] === 2 || gridState[index] === 3 || gridState[index] === 4) {
+      tile.classList.add('disabled');
+    }
+  }
+
+  function validateLevelPath() {
+    // Temporarily mark all non-blocked tiles as active to test if a path exists
+    const tempGridState = [...gridState];
+    for (let i = 0; i < 16; i++) {
+      if (tempGridState[i] !== 4) { // Not blocked
+        tempGridState[i] = 1; // Mark as active for path finding
+      }
+    }
+    
+    // Set start and finish appropriately
+    tempGridState[startPos] = 2;
+    tempGridState[finishPos] = 3;
+    
+    // Use the same pathfinding logic but with temp grid
+    const visited = new Set();
+    const queue = [startPos];
+    
+    while (queue.length > 0) {
+      const current = queue.shift();
+      
+      if (current === finishPos) return true;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      
+      // Get neighbors (up, down, left, right)
+      const neighbors = getNeighbors(current);
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor) && tempGridState[neighbor] !== 4) { // Not blocked
+          queue.push(neighbor);
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  function handleTileClick(index) {
+    if (!gameActive || gridState[index] === 2 || gridState[index] === 3 || gridState[index] === 4) return;
+    
+    // Toggle tile state
+    if (gridState[index] === 0) {
+      gridState[index] = 1; // activate
+      moves++;
+    } else if (gridState[index] === 1) {
+      gridState[index] = 0; // deactivate
+      moves++;
+    }
+    
+    updateUI();
+    
+    // Update tile appearance
+    const tile = gameGrid.children[index];
+    updateTileAppearance(tile, index);
+    
+    // Play sound
+    playSound(gridState[index] === 1 ? 440 : 330, 0.1);
+    
+    // Check if path is complete
+    if (isPathComplete()) {
+      setTimeout(() => {
+        moveCharacter();
+      }, 300);
+    }
+  }
+
+  function isPathComplete() {
+    // Check if there's a valid path from start to finish
+    return findPath(startPos, finishPos);
+  }
+
+  function findPath(start, target) {
+    const visited = new Set();
+    const queue = [start];
+    
+    while (queue.length > 0) {
+      const current = queue.shift();
+      
+      if (current === target) return true;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      
+      // Get neighbors (up, down, left, right)
+      const neighbors = getNeighbors(current);
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor) && (gridState[neighbor] === 1 || gridState[neighbor] === 3)) {
+          queue.push(neighbor);
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  function getNeighbors(index) {
+    const neighbors = [];
+    const row = Math.floor(index / 4); // Changed from 3 to 4
+    const col = index % 4; // Changed from 3 to 4
+    
+    // Up
+    if (row > 0) neighbors.push(index - 4); // Changed from 3 to 4
+    // Down
+    if (row < 3) neighbors.push(index + 4); // Changed from 2 to 3, and 3 to 4
+    // Left
+    if (col > 0) neighbors.push(index - 1);
+    // Right
+    if (col < 3) neighbors.push(index + 1); // Changed from 2 to 3
+    
+    return neighbors;
+  }
+
+  function moveCharacter() {
+    if (!gameActive) return;
+    
+    const path = getCompletePath();
+    if (path.length === 0) return;
+    
+    gameActive = false;
+    let stepIndex = 0;
+    
+    function moveToNextStep() {
+      if (stepIndex >= path.length) {
+        completeLevel();
+        return;
+      }
+      
+      characterPos = path[stepIndex];
+      positionCharacter();
+      
+      // Add bounce animation
+      character.style.transform += ' scale(1.2)';
+      setTimeout(() => {
+        character.style.transform = character.style.transform.replace(' scale(1.2)', '');
+      }, 200);
+      
+      playSound(660 + stepIndex * 110, 0.15);
+      stepIndex++;
+      setTimeout(moveToNextStep, 600);
+    }
+    
+    moveToNextStep();
+  }
+
+  function getCompletePath() {
+    const path = [];
+    const visited = new Set();
+    
+    function dfs(current, target) {
+      if (current === target) {
+        path.push(current);
+        return true;
+      }
+      
+      if (visited.has(current)) return false;
+      visited.add(current);
+      path.push(current);
+      
+      const neighbors = getNeighbors(current);
+      for (const neighbor of neighbors) {
+        if ((gridState[neighbor] === 1 || gridState[neighbor] === 3) && !visited.has(neighbor)) {
+          if (dfs(neighbor, target)) return true;
+        }
+      }
+      
+      path.pop();
+      return false;
+    }
+    
+    dfs(startPos, finishPos);
+    return path;
+  }
+
+  function positionCharacter() {
+    const tileSize = 92;
+    const gap = 8;
+    const containerPadding = 20;
+    
+    const row = Math.floor(characterPos / 4); // Changed from 3 to 4
+    const col = characterPos % 4; // Changed from 3 to 4
+    
+    const x = containerPadding + col * (tileSize + gap) + tileSize / 2 - 30;
+    const y = containerPadding + row * (tileSize + gap) + tileSize / 2 - 30;
+    
+    character.style.left = x + 'px';
+    character.style.top = y + 'px';
+  }
+
+  function completeLevel() {
+    const levelConfig = levels[(currentLevel - 1) % levels.length];
+    const maxMoves = levelConfig.maxMoves;
+    
+    // Calculate stars based on efficiency
+    let stars = 1;
+    if (moves <= maxMoves) stars = 2;
+    if (moves <= maxMoves - 2) stars = 3;
+    
+    totalStars += stars;
+    localStorage.setItem('pathfinderStars', totalStars.toString());
+    
+    // Update star display
+    const starElements = starRatingEl.querySelectorAll('.star');
+    starElements.forEach((star, index) => {
+      star.className = index < stars ? 'star' : 'star empty';
+    });
+    
+    completionMessageEl.textContent = stars === 3 ? 
+      "Perfect! Pinky found the best path!" : 
+      stars === 2 ? 
+      "Great job! Pinky made it home!" : 
+      "Well done! Pinky reached her ball!";
+    
+    setTimeout(() => {
+      levelCompleteScreen.style.display = 'block';
+      createCelebrationParticles();
+    }, 1000);
+    
+    updateUI();
+  }
+
+  function nextLevel() {
+    currentLevel++;
+    startLevel();
+  }
+
+  function createCelebrationParticles() {
+    const colors = ['#FFD700', '#FF69B4', '#87CEEB', '#98FB98', '#FFA500'];
+    for (let i = 0; i < 30; i++) {
+      setTimeout(() => {
+        const particle = document.createElement('div');
+        particle.style.position = 'fixed';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = '-10px';
+        particle.style.width = '8px';
+        particle.style.height = '8px';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.animation = 'fall 3s linear forwards';
+        particle.style.zIndex = '1000';
+        document.body.appendChild(particle);
+        setTimeout(() => particle.remove(), 3000);
+      }, i * 100);
+    }
+  }
+
+  function playSound(freq, duration) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) {
+      // Ignore audio errors
+    }
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', startLevel);
+  nextLevelBtn.addEventListener('click', nextLevel);
+  backBtn.addEventListener('click', () => {
+    window.location.href = 'home.html';
+  });
+
+  // Keyboard support for starting game
+  window.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!gameActive && startScreen.style.display !== 'none') {
+        startLevel();
+      } else if (!gameActive && levelCompleteScreen.style.display !== 'none') {
+        nextLevel();
+      }
+    }
+  });
+
+  // Add CSS for falling particles
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fall {
+      0% { top: -10px; opacity: 1; transform: rotate(0deg); }
+      100% { top: 100vh; opacity: 0; transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Initialize the game
+  init();
+})();
+</script>
+</body>
+</html>

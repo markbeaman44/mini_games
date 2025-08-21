@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hide and Seek Friends — Fun Kids Game</title>
+  <style>
+    :root{
+      --bg:#87CEEB;
+      --grass:#7CB342;
+      --panel:#ffffffee;
+      --primary:#FF6B9D;
+      --secondary:#4ECDC4;
+    }
+    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg),#B0E0E6)}
+    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .game{width:min(900px,95vw);height:min(600px,85vh);background:linear-gradient(#87CEEB, #98D8E8);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.15);position:relative;overflow:hidden}
+    
+    #backButton{position:fixed;top:20px;left:20px;background:#FF6B9D;color:white;border:none;border-radius:12px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:all 0.3s ease;z-index:1000}
+    #backButton:hover{background:#FF5588;transform:translateY(-2px)}
+    #backButton:active{transform:translateY(0)}
+    
+    header{position:absolute;left:20px;top:15px;z-index:10;display:flex;gap:15px;align-items:center}
+    .panel{background:var(--panel);padding:10px 16px;border-radius:15px;font-weight:700;display:flex;gap:8px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .score-text{font-size:18px;color:#2E7D32}
+    
+    canvas{display:block;width:100%;height:100%;cursor:pointer}
+    
+    .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,#FFE0F0,#F0F8FF);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+    .start-screen h2{margin:0 0 15px 0;color:#FF6B9D;font-size:28px}
+    .start-screen p{margin:10px 0;color:#555;font-size:16px;line-height:1.4}
+    .start-btn{margin-top:20px;padding:12px 24px;border-radius:15px;font-weight:800;border:0;background:#4ECDC4;color:white;font-size:18px;cursor:pointer;transition:all 0.3s ease}
+    .start-btn:hover{background:#45B7B8;transform:scale(1.05)}
+    
+    .win-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,#FFE0F0,#F0F8FF);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:none}
+    .win-screen h2{margin:0 0 15px 0;color:#4ECDC4;font-size:28px}
+    .confetti{position:absolute;width:10px;height:10px;background:#FFD700;animation:fall 3s linear infinite}
+    
+    @keyframes fall{0%{top:-10px;opacity:1}100%{top:100vh;opacity:0}}
+    @media (max-width:600px){.game{height:min(500px,85vh)}.panel{padding:8px 12px}}
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="game" id="gameRoot">
+        <header>
+          <div class="panel">
+            <span class="score-text">Found: <span id="score">0</span>/<span id="total">6</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text">Level: <span id="level">1</span></span>
+          </div>
+        </header>
+
+        <div class="start-screen" id="startScreen">
+          <h2>🎈 Hide and Seek Friends! 🎈</h2>
+          <p>Help find all the hidden cartoon friends!</p>
+          <p>🐶 Click on the hiding spots to find them</p>
+          <p>🌳 Look behind trees, bushes, and playground equipment</p>
+          <button class="start-btn" id="startBtn">Start Playing!</button>
+        </div>
+
+        <div class="win-screen" id="winScreen">
+          <h2>🎉 Amazing! All friends found! 🎉</h2>
+          <p id="winMessage">You're a hide and seek champion!</p>
+          <button class="start-btn" id="nextBtn">Next Level!</button>
+        </div>
+
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Canvas setup
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = 900;
+  let H = canvas.height = 600;
+
+  const scoreEl = document.getElementById('score');
+  const totalEl = document.getElementById('total');
+  const levelEl = document.getElementById('level');
+  const startScreen = document.getElementById('startScreen');
+  const winScreen = document.getElementById('winScreen');
+  const startBtn = document.getElementById('startBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backButton');
+
+  // Game state
+  let gameRunning = false;
+  let currentLevel = 1;
+  let score = 0;
+  let totalFriends = 6;
+  let friends = [];
+  let hidingSpots = [];
+  let particles = [];
+  let frame = 0;
+
+  // Resize handling
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width = rect.width;
+    H = canvas.height = rect.height;
+    ctx.imageSmoothingEnabled = true;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Characters data
+  const characters = [
+    {name: 'Buddy', color: '#4A90E2', ears: '#87CEEB', type: 'dog'},
+    {name: 'Rosie', color: '#FF6B9D', ears: '#FFB3D1', type: 'pig'},
+    {name: 'Ollie', color: '#FF8C42', ears: '#FFB366', type: 'cat'},
+    {name: 'Luna', color: '#9B59B6', ears: '#C39BD3', type: 'rabbit'},
+    {name: 'Max', color: '#2ECC71', ears: '#58D68D', type: 'frog'},
+    {name: 'Zoe', color: '#F39C12', ears: '#F7DC6F', type: 'bear'},
+    {name: 'Ruby', color: '#E74C3C', ears: '#F1948A', type: 'fox'},
+    {name: 'Sam', color: '#1ABC9C', ears: '#5DADE2', type: 'elephant'}
+  ];
+
+  function generateLevel(level) {
+    friends = [];
+    hidingSpots = [];
+    score = 0;
+    totalFriends = Math.min(6 + level - 1, 8); // Start with 6, max 8
+    
+    // Create hiding spots - better spacing for easier gameplay
+    const spots = [
+      {x: 80, y: H-180, w: 70, h: 110, type: 'tree', color: '#8B4513'},
+      {x: 220, y: H-140, w: 90, h: 70, type: 'bush', color: '#228B22'},
+      {x: 380, y: H-190, w: 80, h: 130, type: 'tree', color: '#654321'},
+      {x: 540, y: H-150, w: 85, h: 80, type: 'bush', color: '#32CD32'},
+      {x: 700, y: H-170, w: 75, h: 100, type: 'tree', color: '#8B4513'},
+      {x: 120, y: H-320, w: 110, h: 55, type: 'cloud', color: '#F0F8FF'},
+      {x: 350, y: H-350, w: 120, h: 60, type: 'cloud', color: '#E6F3FF'},
+      {x: 620, y: H-300, w: 100, h: 50, type: 'cloud', color: '#F5F5DC'},
+      {x: 160, y: H-100, w: 70, h: 70, type: 'flower', color: '#FF69B4'},
+      {x: 450, y: H-110, w: 60, h: 60, type: 'rock', color: '#808080'}
+    ];
+
+    // Select random spots for this level
+    const selectedSpots = spots.sort(() => Math.random() - 0.5).slice(0, totalFriends);
+    
+    selectedSpots.forEach((spot, i) => {
+      hidingSpots.push({...spot, id: i});
+      
+      // Place a character in this hiding spot
+      const char = characters[i % characters.length];
+      friends.push({
+        id: i,
+        x: spot.x + spot.w/2,
+        y: spot.y + spot.h/2,
+        char: char,
+        found: false,
+        spotId: i,
+        wiggle: Math.random() * Math.PI * 2,
+        hidden: true
+      });
+    });
+
+    // Update UI
+    scoreEl.textContent = score;
+    totalEl.textContent = totalFriends;
+    levelEl.textContent = currentLevel;
+  }
+
+  function startGame() {
+    currentLevel = 1;
+    generateLevel(currentLevel);
+    startScreen.style.display = 'none';
+    winScreen.style.display = 'none';
+    gameRunning = true;
+  }
+
+  function nextLevel() {
+    currentLevel++;
+    generateLevel(currentLevel);
+    winScreen.style.display = 'none';
+    gameRunning = true;
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', startGame);
+  nextBtn.addEventListener('click', nextLevel);
+  backBtn.addEventListener('click', () => {
+    window.location.href = 'home.html';
+  });
+
+  // Keyboard support for starting game
+  window.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!gameRunning && startScreen.style.display !== 'none') {
+        startGame();
+      } else if (!gameRunning && winScreen.style.display !== 'none') {
+        nextLevel();
+      }
+    }
+  });
+
+  // Canvas click handling
+  canvas.addEventListener('click', (e) => {
+    if (!gameRunning) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (W / rect.width);
+    const y = (e.clientY - rect.top) * (H / rect.height);
+    
+    // Check if clicked on a hiding spot
+    hidingSpots.forEach(spot => {
+      if (x >= spot.x && x <= spot.x + spot.w && 
+          y >= spot.y && y <= spot.y + spot.h) {
+        
+        // Find the friend in this spot
+        const friend = friends.find(f => f.spotId === spot.id && !f.found);
+        if (friend) {
+          friend.found = true;
+          friend.hidden = false;
+          score++;
+          scoreEl.textContent = score;
+          
+          // Create celebration particles
+          createParticles(friend.x, friend.y);
+          
+          // Play found sound (simple beep)
+          playSound(440 + score * 110, 0.1);
+          
+          // Check win condition
+          if (score >= totalFriends) {
+            setTimeout(() => {
+              winScreen.style.display = 'block';
+              gameRunning = false;
+              createConfetti();
+            }, 1000);
+          }
+        }
+      }
+    });
+  });
+
+  function createParticles(x, y) {
+    for (let i = 0; i < 15; i++) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 8,
+        vy: Math.random() * -8 - 2,
+        life: 60,
+        color: ['#FFD700', '#FF69B4', '#4ECDC4', '#FF6B9D'][Math.floor(Math.random() * 4)]
+      });
+    }
+  }
+
+  function createConfetti() {
+    const colors = ['#FFD700', '#FF69B4', '#4ECDC4', '#FF6B9D', '#9B59B6', '#2ECC71'];
+    for (let i = 0; i < 50; i++) {
+      setTimeout(() => {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 2 + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }, i * 100);
+    }
+  }
+
+  function playSound(freq, duration) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = freq;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+  }
+
+  // Game loop
+  function update() {
+    frame++;
+    
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.3; // gravity
+      p.life--;
+      
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+    
+    // Update friend wiggle animation
+    friends.forEach(friend => {
+      if (!friend.hidden) {
+        friend.wiggle += 0.1;
+      }
+    });
+  }
+
+  function draw() {
+    // Clear canvas
+    ctx.clearRect(0, 0, W, H);
+    
+    // Draw background
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, '#87CEEB');
+    gradient.addColorStop(1, '#98D8E8');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+    
+    // Draw clouds in background
+    drawCloud(100, 60, 80, '#FFFFFF');
+    drawCloud(300, 40, 100, '#F0F8FF');
+    drawCloud(600, 80, 90, '#FFFFFF');
+    drawCloud(800, 50, 70, '#F0F8FF');
+    
+    // Draw ground
+    ctx.fillStyle = '#7CB342';
+    ctx.fillRect(0, H - 60, W, 60);
+    
+    // Draw grass texture
+    ctx.fillStyle = '#8BC34A';
+    for (let i = 0; i < W; i += 10) {
+      ctx.fillRect(i, H - 65, 3, 8);
+      ctx.fillRect(i + 5, H - 70, 2, 6);
+    }
+    
+    // Draw hiding spots
+    hidingSpots.forEach(spot => {
+      drawHidingSpot(spot);
+    });
+    
+    // Draw found friends
+    friends.forEach(friend => {
+      if (!friend.hidden) {
+        drawCharacter(friend);
+      }
+    });
+    
+    // Draw particles
+    particles.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life / 60;
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+      ctx.globalAlpha = 1;
+    });
+    
+    // Draw instructions if game is running
+    if (gameRunning && score === 0) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillRect(W/2 - 150, H - 150, 300, 60);
+      ctx.fillStyle = '#333';
+      ctx.font = '16px Comic Sans MS';
+      ctx.textAlign = 'center';
+      ctx.fillText('Click on hiding spots to find friends!', W/2, H - 130);
+      ctx.fillText('Look for trees, bushes, clouds & more!', W/2, H - 110);
+      ctx.textAlign = 'left';
+    }
+  }
+
+  function drawCloud(x, y, size, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.4, y, size * 0.4, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.8, y, size * 0.3, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.2, y - size * 0.2, size * 0.3, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.6, y - size * 0.1, size * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawHidingSpot(spot) {
+    ctx.save();
+    
+    switch(spot.type) {
+      case 'tree':
+        // Tree trunk
+        ctx.fillStyle = spot.color;
+        ctx.fillRect(spot.x + spot.w/3, spot.y + spot.h/2, spot.w/3, spot.h/2);
+        
+        // Tree top
+        ctx.fillStyle = '#228B22';
+        ctx.beginPath();
+        ctx.arc(spot.x + spot.w/2, spot.y + spot.h/3, spot.w/2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Leaves detail
+        ctx.fillStyle = '#32CD32';
+        ctx.beginPath();
+        ctx.arc(spot.x + spot.w/3, spot.y + spot.h/4, spot.w/4, 0, Math.PI * 2);
+        ctx.arc(spot.x + 2*spot.w/3, spot.y + spot.h/5, spot.w/4, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'bush':
+        ctx.fillStyle = spot.color;
+        ctx.beginPath();
+        ctx.arc(spot.x + spot.w/4, spot.y + spot.h/2, spot.w/3, 0, Math.PI * 2);
+        ctx.arc(spot.x + 3*spot.w/4, spot.y + spot.h/2, spot.w/3, 0, Math.PI * 2);
+        ctx.arc(spot.x + spot.w/2, spot.y + spot.h/3, spot.w/2.5, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'cloud':
+        drawCloud(spot.x, spot.y + spot.h/2, spot.w * 0.8, spot.color);
+        break;
+        
+      case 'rock':
+        ctx.fillStyle = spot.color;
+        ctx.beginPath();
+        ctx.ellipse(spot.x + spot.w/2, spot.y + spot.h/2, spot.w/2, spot.h/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Rock highlight
+        ctx.fillStyle = '#A9A9A9';
+        ctx.beginPath();
+        ctx.ellipse(spot.x + spot.w/3, spot.y + spot.h/3, spot.w/4, spot.h/4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'flower':
+        // Stem
+        ctx.fillStyle = '#228B22';
+        ctx.fillRect(spot.x + spot.w/2 - 3, spot.y + spot.h/2, 6, spot.h/2);
+        
+        // Petals
+        ctx.fillStyle = spot.color;
+        for (let i = 0; i < 6; i++) {
+          ctx.save();
+          ctx.translate(spot.x + spot.w/2, spot.y + spot.h/2);
+          ctx.rotate((i * Math.PI) / 3);
+          ctx.beginPath();
+          ctx.ellipse(0, -15, 8, 15, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        
+        // Center
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(spot.x + spot.w/2, spot.y + spot.h/2, 8, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+    }
+    
+    ctx.restore();
+  }
+
+  function drawCharacter(friend) {
+    const char = friend.char;
+    const wiggleOffset = Math.sin(friend.wiggle) * 3;
+    const x = friend.x;
+    const y = friend.y + wiggleOffset;
+    
+    ctx.save();
+    ctx.translate(x, y);
+    
+    // Body
+    ctx.fillStyle = char.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 10, 25, 30, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Head
+    ctx.beginPath();
+    ctx.arc(0, -15, 20, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Ears (different shapes for different animals)
+    ctx.fillStyle = char.ears;
+    if (char.type === 'dog' || char.type === 'cat') {
+      // Triangular ears
+      ctx.beginPath();
+      ctx.moveTo(-15, -25);
+      ctx.lineTo(-25, -35);
+      ctx.lineTo(-10, -30);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.moveTo(15, -25);
+      ctx.lineTo(25, -35);
+      ctx.lineTo(10, -30);
+      ctx.closePath();
+      ctx.fill();
+    } else if (char.type === 'rabbit') {
+      // Long ears
+      ctx.beginPath();
+      ctx.ellipse(-8, -30, 4, 15, 0, 0, Math.PI * 2);
+      ctx.ellipse(8, -30, 4, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (char.type === 'pig') {
+      // Round ears
+      ctx.beginPath();
+      ctx.arc(-12, -28, 6, 0, Math.PI * 2);
+      ctx.arc(12, -28, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Default round ears
+      ctx.beginPath();
+      ctx.arc(-15, -25, 8, 0, Math.PI * 2);
+      ctx.arc(15, -25, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Eyes
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(-8, -18, 5, 0, Math.PI * 2);
+    ctx.arc(8, -18, 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(-8, -18, 2, 0, Math.PI * 2);
+    ctx.arc(8, -18, 2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Nose
+    ctx.fillStyle = '#FF69B4';
+    if (char.type === 'pig') {
+      // Snout
+      ctx.beginPath();
+      ctx.ellipse(0, -10, 6, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Regular nose
+      ctx.beginPath();
+      ctx.arc(0, -12, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Mouth
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, -8, 5, 0, Math.PI);
+    ctx.stroke();
+    
+    // Special features
+    if (char.type === 'elephant') {
+      // Trunk
+      ctx.strokeStyle = char.color;
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(0, -5);
+      ctx.quadraticCurveTo(-10, 5, -5, 20);
+      ctx.stroke();
+    }
+    
+    ctx.restore();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Start the game loop
+  gameLoop();
+
+  // Initialize
+  generateLevel(1);
+})();
+</script>
+</body>
+</html>

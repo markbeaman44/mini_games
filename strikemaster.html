@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strike Commander - Tower Defense Bowling</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #00f5ff;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0, 245, 255, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #00f5ff;
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95), rgba(26, 26, 46, 0.95));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .start-screen h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00f5ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .start-screen p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #b0b0b0;
+            max-width: 400px;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #00f5ff, #ff00ff);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 245, 255, 0.4);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #00f5ff;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .instructions-content h2 {
+            color: #00f5ff;
+            margin-bottom: 20px;
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+
+        .close-instructions {
+            background: #00f5ff;
+            color: #0a0a0a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* Game Area */
+        .game-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0a 100%);
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 20px;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .hud-item {
+            background: rgba(0, 245, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #00f5ff;
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Ball Selection */
+        .ball-selection {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+        }
+
+        .ball-type {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #00f5ff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            background: rgba(0, 245, 255, 0.1);
+        }
+
+        .ball-type:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #00f5ff;
+        }
+
+        .ball-type.selected {
+            background: rgba(0, 245, 255, 0.3);
+            box-shadow: 0 0 20px #00f5ff;
+        }
+
+        .ball-type.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Power Gauge */
+        .power-gauge {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00f5ff;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .power-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, #00ff00 0%, #ffff00 50%, #ff0000 100%);
+            transition: height 0.1s ease;
+        }
+
+        /* Game Over Screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            text-align: center;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #00f5ff;
+        }
+
+        .game-over h2 {
+            color: #00f5ff;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #00f5ff, #ff00ff);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            position: absolute;
+            bottom: 70px;
+            left: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+        }
+
+        .mobile-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 245, 255, 0.2);
+            border: 2px solid #00f5ff;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mobile-btn:active {
+            background: rgba(0, 245, 255, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                margin: 20px auto;
+                height: min(500px, 85vh);
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+
+            .start-screen h1 {
+                font-size: 2rem;
+            }
+
+            .start-screen p {
+                font-size: 1rem;
+            }
+
+            .ball-selection {
+                bottom: 80px;
+            }
+        }
+
+        /* Animations */
+        @keyframes enemyAdvance {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-20px); }
+        }
+
+        @keyframes explosion {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        @keyframes ballTrail {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div class="start-screen" id="startScreen">
+            <h1>⚡ Strike Commander ⚡</h1>
+            <p>🎳 Bowl energy balls to destroy advancing enemy towers!</p>
+            <p>🎯 Use different ball types for maximum destruction!</p>
+            <p>⚔️ Defend your base across multiple strategic lanes!</p>
+            <p>🚀 Press SPACEBAR to start or continue!</p>
+            <button class="start-btn" id="startBtn">Launch Mission</button>
+        </div>
+
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>⚡ Mission Briefing</h2>
+                <p><strong>🎯 Objective:</strong> Destroy all enemy towers before they reach your base!</p>
+                <p><strong>🎳 Controls:</strong> Click and drag to aim, release to bowl</p>
+                <p><strong>⚡ Ball Types:</strong> Normal (∞), Explosive (💥), Multi-ball (⚡), Guided (🎯), Ultimate (💀), Freeze (❄️)</p>
+                <p><strong>🏆 Strategy:</strong> Use ricochets and combos for maximum damage!</p>
+                <button class="close-instructions" id="closeInstructions">Roger! Begin Strike!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <canvas class="game-canvas" id="gameCanvas" width="900" height="600"></canvas>
+            
+            <!-- HUD -->
+            <div class="hud">
+                <div class="hud-item">Wave: <span id="currentWave">1</span></div>
+                <div class="hud-item">Score: <span id="currentScore">0</span></div>
+                <div class="hud-item">Base HP: <span id="baseHealth">100</span></div>
+            </div>
+
+            <!-- Ball Selection -->
+            <div class="ball-selection" id="ballSelection">
+                <div class="ball-type selected" data-type="normal" title="Normal Ball">⚡</div>
+                <div class="ball-type" data-type="explosive" title="Explosive Ball (3 left)">💥</div>
+                <div class="ball-type" data-type="multi" title="Multi-ball (2 left)">⚡⚡</div>
+                <div class="ball-type" data-type="guided" title="Guided Ball (1 left)">🎯</div>
+                <div class="ball-type" data-type="freeze" title="Freeze Row (2 left)">❄️</div>
+                <div class="ball-type" data-type="ultimate" title="Ultimate Weapon (1 left)">💀</div>
+            </div>
+
+            <!-- Power Gauge -->
+            <div class="power-gauge" id="powerGauge">
+                <div class="power-fill" id="powerFill"></div>
+            </div>
+
+            <!-- Mobile Controls -->
+            <div class="mobile-controls" id="mobileControls">
+                <div class="mobile-btn" id="aimUpBtn">↑</div>
+                <div class="mobile-btn" id="aimDownBtn">↓</div>
+                <div class="mobile-btn" id="fireBtn">🎳</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2 id="gameOverTitle">Mission Status</h2>
+                <p id="gameOverText">Results...</p>
+                <p id="finalScore">Final Score: 0</p>
+                <button class="restart-btn" id="restartBtn">New Mission</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class StrikeCommander {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.startScreen = document.getElementById('startScreen');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                // Game state
+                this.gameRunning = false;
+                this.wave = 1;
+                this.score = 0;
+                this.baseHealth = 100;
+                this.maxWaves = 10;
+                
+                // Ball system
+                this.selectedBallType = 'normal';
+                this.ballAmmo = {
+                    normal: Infinity,
+                    explosive: 3,
+                    multi: 2,
+                    guided: 1,
+                    ultimate: 1,    // Once per wave
+                    freeze: 2       // Freeze row weapon
+                };
+                
+                // Special weapon cooldowns
+                this.freezeCooldown = 0;
+                this.freezeCooldownMax = 300; // 5 seconds at 60fps
+                
+                // Game objects
+                this.balls = [];
+                this.enemies = [];
+                this.explosions = [];
+                this.particles = [];
+                this.bumpers = [];
+                this.frozenEnemies = new Set(); // Track frozen enemies
+                
+                // Input state
+                this.mouseDown = false;
+                this.mouseStart = { x: 0, y: 0 };
+                this.mouseEnd = { x: 0, y: 0 };
+                this.power = 0;
+                this.powerDirection = 1;
+                this.powerCharging = false;
+                this.keys = {};
+                
+                // Lane system
+                this.lanes = [
+                    { y: 120, active: true },
+                    { y: 200, active: true },
+                    { y: 280, active: true },
+                    { y: 360, active: true },
+                    { y: 440, active: true }
+                ];
+                
+                this.audioContext = null;
+                this.setupEventListeners();
+                this.showInstructions();
+            }
+
+            setupEventListeners() {
+                // UI buttons
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Ball selection
+                document.querySelectorAll('.ball-type').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const type = btn.dataset.type;
+                        if (this.ballAmmo[type] > 0 || type === 'normal') {
+                            this.selectedBallType = type;
+                            this.updateBallSelection();
+                        }
+                    });
+                });
+
+                // Canvas mouse events
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleMouseDown(e);
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleMouseMove(e);
+                });
+
+                this.canvas.addEventListener('mouseup', (e) => {
+                    if (!this.gameRunning) return;
+                    this.handleMouseUp(e);
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for start screen
+                    if (e.key === ' ' && this.startScreen.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                        return;
+                    }
+
+                    this.keys[e.key.toLowerCase()] = true;
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+
+                // Mobile controls
+                if ('ontouchstart' in window) {
+                    document.getElementById('mobileControls').style.display = 'flex';
+                    
+                    document.getElementById('fireBtn').addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.fireBall();
+                    });
+                }
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.startGame();
+            }
+
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.gameRunning = true;
+                this.wave = 1;
+                this.score = 0;
+                this.baseHealth = 100;
+                this.resetAmmo();
+                this.loadWave();
+                this.setupBumpers();
+                this.gameLoop();
+                this.playSound(440, 200);
+            }
+
+            resetAmmo() {
+                this.ballAmmo = {
+                    normal: Infinity,
+                    explosive: 3 + this.wave,
+                    multi: 2 + Math.floor(this.wave / 2),
+                    guided: 1 + Math.floor(this.wave / 3),
+                    ultimate: 1,  // Always 1 per wave
+                    freeze: 2 + Math.floor(this.wave / 4)
+                };
+                this.updateBallSelection();
+            }
+
+            loadWave() {
+                this.enemies = [];
+                const enemyCount = 3 + this.wave;
+                
+                for (let i = 0; i < enemyCount; i++) {
+                    const lane = this.lanes[Math.floor(Math.random() * this.lanes.length)];
+                    const enemy = {
+                        x: this.canvas.width + 40 + (i * 100), // Start off-screen to the right, spaced out
+                        y: lane.y - 20,
+                        width: 40,
+                        height: 40,
+                        health: 1 + Math.floor(this.wave / 3),
+                        maxHealth: 1 + Math.floor(this.wave / 3),
+                        speed: 0.3 + (this.wave * 0.05),
+                        type: Math.random() < 0.7 ? 'normal' : 'armored',
+                        color: Math.random() < 0.7 ? '#ff4444' : '#ff8800'
+                    };
+                    this.enemies.push(enemy);
+                }
+                
+                this.updateUI();
+            }
+
+            setupBumpers() {
+                this.bumpers = [];
+                // No bumpers - removed for clarity
+            }
+
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // Only allow firing from base area (left side) - wider fire zone
+                if (mouseX > 166) return; // 2/3 wider than original 100px
+                
+                this.mouseDown = true;
+                this.mouseStart.x = mouseX;
+                this.mouseStart.y = mouseY;
+                this.power = 0;
+                this.powerCharging = true;
+            }
+
+            handleMouseMove(e) {
+                if (!this.mouseDown) return;
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseEnd.x = e.clientX - rect.left;
+                this.mouseEnd.y = e.clientY - rect.top;
+            }
+
+            handleMouseUp(e) {
+                if (!this.mouseDown) return;
+                this.mouseDown = false;
+                this.powerCharging = false;
+                this.fireBall();
+            }
+
+            fireBall() {
+                // Handle special weapons
+                if (this.selectedBallType === 'ultimate') {
+                    if (this.ballAmmo.ultimate > 0) {
+                        this.activateUltimateWeapon();
+                        this.ballAmmo.ultimate--;
+                        this.updateBallSelection();
+                        return;
+                    }
+                }
+                
+                if (this.selectedBallType === 'freeze') {
+                    if (this.ballAmmo.freeze > 0 && this.freezeCooldown <= 0) {
+                        this.activateFreezeWeapon();
+                        this.ballAmmo.freeze--;
+                        this.freezeCooldown = this.freezeCooldownMax;
+                        this.updateBallSelection();
+                        return;
+                    }
+                }
+                
+                // Auto-switch to normal ball if current selection is out of ammo
+                if (this.selectedBallType !== 'normal' && this.ballAmmo[this.selectedBallType] <= 0) {
+                    this.selectedBallType = 'normal';
+                    this.updateBallSelection();
+                }
+
+                const dx = this.mouseEnd.x - this.mouseStart.x;
+                const dy = this.mouseEnd.y - this.mouseStart.y;
+                const magnitude = Math.sqrt(dx * dx + dy * dy);
+                
+                if (magnitude < 20) return; // Minimum drag distance
+
+                const speed = 8; // Fixed speed
+                const angle = Math.atan2(dy, dx);
+                const powerLevel = Math.min(100, this.power);
+
+                if (this.selectedBallType === 'multi') {
+                    // Fire 3 balls in tight spread pattern for better enemy coverage
+                    const spreadAngle = 0.1 + (powerLevel / 100) * 0.1; // Much tighter spread
+                    for (let i = -1; i <= 1; i++) {
+                        const ballAngle = angle + (i * spreadAngle);
+                        this.createBall(this.mouseStart.x, this.mouseStart.y, 
+                                      Math.cos(ballAngle) * speed, 
+                                      Math.sin(ballAngle) * speed, 
+                                      'normal', powerLevel);
+                    }
+                } else {
+                    this.createBall(this.mouseStart.x, this.mouseStart.y, 
+                                  Math.cos(angle) * speed, 
+                                  Math.sin(angle) * speed, 
+                                  this.selectedBallType, powerLevel);
+                }
+
+                // Consume ammo
+                if (this.selectedBallType !== 'normal') {
+                    this.ballAmmo[this.selectedBallType]--;
+                    this.updateBallSelection();
+                }
+
+                this.power = 0;
+                this.updatePowerGauge();
+                this.playSound(220, 100);
+            }
+
+            createBall(x, y, vx, vy, type, power = 50) {
+                const ball = {
+                    x: x,
+                    y: y,
+                    vx: vx,
+                    vy: vy,
+                    radius: 8,
+                    type: type,
+                    power: power, // Power level affects damage and effects
+                    life: 300, // frames before disappearing
+                    trail: []
+                };
+                this.balls.push(ball);
+            }
+
+            updatePowerGauge() {
+                const fill = document.getElementById('powerFill');
+                fill.style.height = this.power + '%';
+            }
+
+            updateBallSelection() {
+                document.querySelectorAll('.ball-type').forEach(btn => {
+                    const type = btn.dataset.type;
+                    btn.classList.remove('selected', 'disabled');
+                    
+                    if (type === this.selectedBallType) {
+                        btn.classList.add('selected');
+                    }
+                    
+                    // Special handling for freeze weapon cooldown
+                    if (type === 'freeze' && this.freezeCooldown > 0) {
+                        btn.classList.add('disabled');
+                        btn.style.opacity = '0.3';
+                        btn.style.border = '2px solid #ffaa00';
+                        btn.title = `Freeze Row (Cooldown: ${Math.ceil(this.freezeCooldown/60)}s)`;
+                        return;
+                    }
+                    
+                    if (type !== 'normal' && this.ballAmmo[type] <= 0) {
+                        btn.classList.add('disabled');
+                        // Auto-switch to normal if current selection is out
+                        if (type === this.selectedBallType) {
+                            this.selectedBallType = 'normal';
+                            btn.classList.remove('selected');
+                            document.querySelector('[data-type="normal"]').classList.add('selected');
+                        }
+                    }
+                    
+                    // Update tooltip with remaining ammo
+                    if (type !== 'normal') {
+                        const remaining = this.ballAmmo[type];
+                        const status = remaining > 0 ? `${remaining} left` : 'OUT OF AMMO';
+                        let weaponName = btn.title.split('(')[0];
+                        
+                        if (type === 'freeze' && this.freezeCooldown > 0) {
+                            // Already handled above
+                        } else {
+                            btn.title = `${weaponName}(${status})`;
+                        }
+                        
+                        // Visual indicator for out of ammo
+                        if (remaining === 0) {
+                            btn.style.opacity = '0.3';
+                            btn.style.border = '2px solid #ff4444';
+                        } else {
+                            btn.style.opacity = '1';
+                            btn.style.border = '2px solid #00f5ff';
+                        }
+                    }
+                });
+            }
+
+            activateFreezeWeapon() {
+                // Get the lane that the mouse is pointing to
+                const targetY = this.mouseStart.y;
+                let targetLane = null;
+                let minDistance = Infinity;
+                
+                // Find closest lane to mouse Y position
+                this.lanes.forEach((lane, index) => {
+                    const distance = Math.abs(lane.y - targetY);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        targetLane = index;
+                    }
+                });
+                
+                if (targetLane !== null) {
+                    const lane = this.lanes[targetLane];
+                    
+                    // Freeze all enemies in this lane
+                    this.enemies.forEach(enemy => {
+                        const enemyLaneY = enemy.y + enemy.height/2;
+                        if (Math.abs(enemyLaneY - lane.y) < 30) { // Within lane range
+                            this.frozenEnemies.add(enemy);
+                            enemy.originalSpeed = enemy.speed;
+                            enemy.speed = 0;
+                            enemy.freezeTime = 300; // 5 seconds
+                        }
+                    });
+                    
+                    // Visual freeze effect for the lane
+                    this.createFreezeEffect(lane.y);
+                    
+                    // Freeze sound effect
+                    this.playSound(800, 200, 'sine');
+                    this.playSound(400, 300, 'triangle');
+                }
+            }
+
+            createScreenFlash() {
+                // Create a temporary screen flash overlay
+                const flash = document.createElement('div');
+                flash.style.position = 'fixed';
+                flash.style.top = '0';
+                flash.style.left = '0';
+                flash.style.width = '100%';
+                flash.style.height = '100%';
+                flash.style.backgroundColor = '#ffffff';
+                flash.style.opacity = '0.8';
+                flash.style.pointerEvents = 'none';
+                flash.style.zIndex = '1000';
+                flash.style.transition = 'opacity 0.3s ease-out';
+                
+                document.body.appendChild(flash);
+                
+                setTimeout(() => {
+                    flash.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(flash);
+                    }, 300);
+                }, 50);
+            }
+
+            createFreezeEffect(laneY) {
+                // Create freeze particles along the lane
+                for (let x = 50; x < this.canvas.width - 50; x += 30) {
+                    for (let i = 0; i < 3; i++) {
+                        this.particles.push({
+                            x: x + Math.random() * 20,
+                            y: laneY + Math.random() * 20 - 10,
+                            vx: 0,
+                            vy: 0,
+                            life: 60,
+                            color: '#00ffff',
+                            size: 3 + Math.random() * 3,
+                            type: 'freeze'
+                        });
+                    }
+                }
+            }
+
+            activateUltimateWeapon() {
+                // Kill 90% of enemies on screen
+                const enemiesToKill = Math.floor(this.enemies.length * 0.9);
+                const enemiesKilled = [];
+                
+                // Randomly select enemies to kill
+                const shuffledEnemies = [...this.enemies].sort(() => Math.random() - 0.5);
+                for (let i = 0; i < enemiesToKill; i++) {
+                    if (shuffledEnemies[i]) {
+                        enemiesKilled.push(shuffledEnemies[i]);
+                    }
+                }
+                
+                // Remove killed enemies and create effects
+                enemiesKilled.forEach(enemy => {
+                    const index = this.enemies.indexOf(enemy);
+                    if (index > -1) {
+                        // Create dramatic explosion effect
+                        this.createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 80, 100);
+                        this.createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#ff00ff');
+                        this.enemies.splice(index, 1);
+                        this.score += 100; // Bonus points for ultimate kills
+                    }
+                });
+                
+                // Screen flash effect
+                this.createScreenFlash();
+                
+                // Epic sound effect
+                this.playSound(100, 500, 'sawtooth');
+                setTimeout(() => this.playSound(200, 300, 'square'), 100);
+                setTimeout(() => this.playSound(400, 200, 'sine'), 200);
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                // Update power when charging - only goes up to max
+                if (this.powerCharging) {
+                    this.power += 2;
+                    if (this.power >= 100) {
+                        this.power = 100;
+                    }
+                    this.updatePowerGauge();
+                }
+
+                // Update balls
+                for (let i = this.balls.length - 1; i >= 0; i--) {
+                    const ball = this.balls[i];
+                    
+                    // Add to trail
+                    ball.trail.push({ x: ball.x, y: ball.y, life: 10 });
+                    ball.trail = ball.trail.filter(t => t.life-- > 0);
+                    
+                    ball.x += ball.vx;
+                    ball.y += ball.vy;
+                    ball.life--;
+                    
+                    // Guided ball behavior
+                    if (ball.type === 'guided' && this.enemies.length > 0) {
+                        const target = this.enemies[0];
+                        const dx = target.x - ball.x;
+                        const dy = target.y - ball.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance > 0) {
+                            const guideStrength = 0.2 + (ball.power / 100) * 0.3;
+                            ball.vx += (dx / distance) * guideStrength;
+                            ball.vy += (dy / distance) * guideStrength;
+                        }
+                    }
+                    
+                    // Enemy collisions
+                    for (let j = this.enemies.length - 1; j >= 0; j--) {
+                        const enemy = this.enemies[j];
+                        if (this.checkCollision(ball, enemy)) {
+                            this.hitEnemy(enemy, ball);
+                            this.balls.splice(i, 1);
+                            break;
+                        }
+                    }
+                    
+                    // Remove balls that are off screen or expired
+                    if (ball.x < 0 || ball.x > this.canvas.width || 
+                        ball.y < 0 || ball.y > this.canvas.height || 
+                        ball.life <= 0) {
+                        this.balls.splice(i, 1);
+                    }
+                }
+                
+                // Update enemies
+                for (let i = this.enemies.length - 1; i >= 0; i--) {
+                    const enemy = this.enemies[i];
+                    
+                    // Handle frozen enemies
+                    if (this.frozenEnemies.has(enemy)) {
+                        enemy.freezeTime--;
+                        if (enemy.freezeTime <= 0) {
+                            this.frozenEnemies.delete(enemy);
+                            enemy.speed = enemy.originalSpeed || 1;
+                        }
+                    }
+                    
+                    enemy.x -= enemy.speed;
+                    
+                    // Enemy reaches base
+                    if (enemy.x < 50) {
+                        this.baseHealth -= 10;
+                        this.enemies.splice(i, 1);
+                        // Remove from frozen set if it was frozen
+                        this.frozenEnemies.delete(enemy);
+                        this.playSound(150, 200, 'sawtooth');
+                        
+                        if (this.baseHealth <= 0) {
+                            this.endGame(false);
+                        }
+                    }
+                }
+                
+                // Update freeze cooldown
+                if (this.freezeCooldown > 0) {
+                    this.freezeCooldown--;
+                }
+                
+                // Update explosions
+                for (let i = this.explosions.length - 1; i >= 0; i--) {
+                    const explosion = this.explosions[i];
+                    explosion.life--;
+                    explosion.radius += 2;
+                    
+                    if (explosion.life <= 0) {
+                        this.explosions.splice(i, 1);
+                    }
+                }
+                
+                // Update particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const particle = this.particles[i];
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    particle.vy += 0.1; // gravity
+                    
+                    if (particle.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+                
+                // Check wave completion
+                if (this.enemies.length === 0) {
+                    this.completeWave();
+                }
+                
+                this.updateUI();
+            }
+
+            hitEnemy(enemy, ball) {
+                // Calculate damage based on ball power
+                const baseDamage = 1;
+                const powerMultiplier = 1 + (ball.power / 100);
+                const damage = Math.floor(baseDamage * powerMultiplier);
+                
+                enemy.health -= damage;
+                this.score += 10 * damage;
+                
+                // Create particles
+                this.createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color);
+                
+                if (enemy.health <= 0) {
+                    this.score += 50;
+                    
+                    // Explosive ball creates explosion - power affects radius
+                    if (ball.type === 'explosive') {
+                        const explosionRadius = 60 + (ball.power / 100) * 40;
+                        this.createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, explosionRadius, ball.power);
+                    }
+                    
+                    // Remove enemy
+                    const index = this.enemies.indexOf(enemy);
+                    if (index > -1) {
+                        this.enemies.splice(index, 1);
+                    }
+                    
+                    this.playSound(660, 150);
+                } else {
+                    this.playSound(440, 100);
+                }
+            }
+
+            createExplosion(x, y, radius = 60, power = 50) {
+                const explosion = {
+                    x: x,
+                    y: y,
+                    radius: 10,
+                    maxRadius: radius,
+                    life: 30
+                };
+                this.explosions.push(explosion);
+                
+                // Damage nearby enemies - power affects damage
+                const explosionDamage = 1 + Math.floor(power / 50);
+                this.enemies.forEach(enemy => {
+                    const distance = Math.sqrt(
+                        Math.pow(enemy.x + enemy.width/2 - x, 2) +
+                        Math.pow(enemy.y + enemy.height/2 - y, 2)
+                    );
+                    
+                    if (distance < radius) {
+                        enemy.health -= explosionDamage;
+                        if (enemy.health <= 0) {
+                            this.score += 50;
+                            const index = this.enemies.indexOf(enemy);
+                            if (index > -1) {
+                                this.enemies.splice(index, 1);
+                            }
+                        }
+                    }
+                });
+                
+                this.playSound(200, 300, 'sawtooth');
+            }
+
+            createParticles(x, y, color) {
+                for (let i = 0; i < 8; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: (Math.random() - 0.5) * 6,
+                        life: 30,
+                        color: color
+                    });
+                }
+            }
+
+            checkCollision(obj1, obj2) {
+                return obj1.x < obj2.x + obj2.width &&
+                       obj1.x + (obj1.radius || obj1.width) > obj2.x &&
+                       obj1.y < obj2.y + obj2.height &&
+                       obj1.y + (obj1.radius || obj1.height) > obj2.y;
+            }
+
+            completeWave() {
+                this.wave++;
+                this.score += 100 * this.wave;
+                
+                if (this.wave > this.maxWaves) {
+                    this.endGame(true);
+                } else {
+                    // Restore some ammo for next wave
+                    this.resetAmmo();
+                    this.loadWave();
+                    this.playSound(880, 300);
+                }
+            }
+
+            endGame(victory) {
+                this.gameRunning = false;
+                
+                const title = document.getElementById('gameOverTitle');
+                const text = document.getElementById('gameOverText');
+                const finalScore = document.getElementById('finalScore');
+                
+                if (victory) {
+                    title.textContent = '🏆 Mission Accomplished!';
+                    text.textContent = 'All enemy waves defeated! The base is secure!';
+                } else {
+                    title.textContent = '💥 Base Destroyed!';
+                    text.textContent = 'The enemy has breached your defenses!';
+                }
+                
+                finalScore.textContent = `Final Score: ${this.score}`;
+                this.gameOver.style.display = 'flex';
+                
+                // Save high score
+                const bestScore = parseInt(localStorage.getItem('strikeCommanderBest') || '0');
+                if (this.score > bestScore) {
+                    localStorage.setItem('strikeCommanderBest', this.score.toString());
+                }
+            }
+
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+
+            render() {
+                // Clear canvas
+                this.ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw lanes
+                this.ctx.strokeStyle = '#00f5ff40';
+                this.ctx.lineWidth = 1;
+                this.lanes.forEach(lane => {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(50, lane.y);
+                    this.ctx.lineTo(this.canvas.width - 50, lane.y);
+                    this.ctx.stroke();
+                });
+                
+                // Draw base
+                this.ctx.fillStyle = '#00ff00';
+                this.ctx.fillRect(10, 100, 30, this.canvas.height - 200);
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText('BASE', 12, 95);
+                
+                // Draw base firing area indicator - 2/3 wider
+                this.ctx.strokeStyle = '#00ff0060';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.strokeRect(10, 100, 156, this.canvas.height - 200); // 156px instead of 90px
+                this.ctx.setLineDash([]);
+                this.ctx.fillStyle = '#00ff0020';
+                this.ctx.fillRect(10, 100, 156, this.canvas.height - 200);
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '10px Arial';
+                this.ctx.fillText('FIRE ZONE', 15, 115);
+                
+                // Draw enemies
+                this.enemies.forEach(enemy => {
+                    // Health bar
+                    const healthPercent = enemy.health / enemy.maxHealth;
+                    this.ctx.fillStyle = '#ff0000';
+                    this.ctx.fillRect(enemy.x, enemy.y - 8, enemy.width, 4);
+                    this.ctx.fillStyle = '#00ff00';
+                    this.ctx.fillRect(enemy.x, enemy.y - 8, enemy.width * healthPercent, 4);
+                    
+                    // Enemy body
+                    this.ctx.fillStyle = enemy.color;
+                    this.ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                    
+                    // Enemy type indicator
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.font = '20px Arial';
+                    const emoji = enemy.type === 'armored' ? '🛡️' : '🤖';
+                    this.ctx.fillText(emoji, enemy.x + 10, enemy.y + 25);
+                });
+                
+                // Draw balls
+                this.balls.forEach(ball => {
+                    // Trail
+                    ball.trail.forEach((point, index) => {
+                        const alpha = point.life / 10;
+                        this.ctx.fillStyle = `rgba(0, 245, 255, ${alpha})`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    });
+                    
+                    // Ball - size varies with power
+                    let color = '#00f5ff';
+                    let size = ball.radius + (ball.power / 100) * 4;
+                    if (ball.type === 'explosive') color = '#ff4444';
+                    else if (ball.type === 'guided') color = '#ffff00';
+                    
+                    this.ctx.fillStyle = color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(ball.x, ball.y, size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Glow effect - stronger with power
+                    const glowSize = 3 + (ball.power / 100) * 5;
+                    this.ctx.strokeStyle = color;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.arc(ball.x, ball.y, size + glowSize, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                });
+                
+                // Draw explosions
+                this.explosions.forEach(explosion => {
+                    const alpha = explosion.life / 30;
+                    const currentRadius = (explosion.maxRadius || 60) * (1 - explosion.life / 30);
+                    this.ctx.fillStyle = `rgba(255, 100, 0, ${alpha})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(explosion.x, explosion.y, currentRadius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+                
+                // Draw particles
+                this.particles.forEach(particle => {
+                    const alpha = particle.life / 30;
+                    this.ctx.fillStyle = particle.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+                    this.ctx.fillRect(particle.x, particle.y, 3, 3);
+                });
+                
+                // Draw aim line when dragging
+                if (this.mouseDown) {
+                    this.ctx.strokeStyle = '#00f5ff';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.mouseStart.x, this.mouseStart.y);
+                    this.ctx.lineTo(this.mouseEnd.x, this.mouseEnd.y);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                }
+            }
+
+            updateUI() {
+                document.getElementById('currentWave').textContent = this.wave;
+                document.getElementById('currentScore').textContent = this.score;
+                document.getElementById('baseHealth').textContent = this.baseHealth;
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    // Create or reuse AudioContext
+                    if (!this.audioContext) {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    
+                    // Resume context if it's suspended (required in some browsers)
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                    
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start();
+                    oscillator.stop(this.audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not available
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new StrikeCommander();
+        });
+    </script>
+</body>
+</html>

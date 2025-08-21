@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stick Runner Adventure — Fun Kids Game</title>
+  <style>
+    :root{
+      --bg:#87CEEB;
+      --ground:#8BC34A;
+      --panel:#ffffffee;
+      --primary:#FF6B35;
+      --secondary:#4ECDC4;
+      --danger:#FF6B6B;
+    }
+    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg),#B0E0E6)}
+    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .game{width:min(900px,95vw);height:min(600px,85vh);background:linear-gradient(#87CEEB, #98D8E8);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.15);position:relative;overflow:hidden}
+    
+    #backButton{position:fixed;top:20px;left:20px;background:#FF6B35;color:white;border:none;border-radius:12px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 15px rgba(0,0,0,0.2);transition:all 0.3s ease;z-index:1000}
+    #backButton:hover{background:#E5581F;transform:translateY(-2px)}
+    #backButton:active{transform:translateY(0)}
+    
+    header{position:absolute;left:20px;top:15px;z-index:10;display:flex;gap:15px;align-items:center}
+    .panel{background:var(--panel);padding:10px 16px;border-radius:15px;font-weight:700;display:flex;gap:8px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .score-text{font-size:18px;color:#2E7D32}
+    
+    canvas{display:block;width:100%;height:100%;cursor:pointer}
+    
+    .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,#FFE0F0,#F0F8FF);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+    .start-screen h2{margin:0 0 15px 0;color:#FF6B35;font-size:28px}
+    .start-screen p{margin:10px 0;color:#555;font-size:16px;line-height:1.4}
+    .start-btn{margin-top:20px;padding:12px 24px;border-radius:15px;font-weight:800;border:0;background:#4ECDC4;color:white;font-size:18px;cursor:pointer;transition:all 0.3s ease}
+    .start-btn:hover{background:#45B7B8;transform:scale(1.05)}
+    
+    .game-over{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,#FFE0F0,#F0F8FF);padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:none}
+    .game-over h2{margin:0 0 15px 0;color:#FF6B6B;font-size:28px}
+    .game-over p{margin:10px 0;color:#555;font-size:16px}
+    
+    .controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:20px}
+    .control-btn{background:rgba(255,255,255,0.9);border:none;border-radius:15px;padding:15px 20px;font-size:20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.3s ease;color:#333}
+    .control-btn:hover{background:white;transform:translateY(-2px)}
+    .control-btn:active{transform:translateY(0)}
+    
+    @media (max-width:600px){.game{height:min(500px,85vh)}.panel{padding:8px 12px}.controls{bottom:10px;gap:15px}.control-btn{padding:12px 16px;font-size:18px}}
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="game" id="gameRoot">
+        <header>
+          <div class="panel">
+            <span class="score-text">Score: <span id="score">0</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text">Best: <span id="bestScore">0</span></span>
+          </div>
+        </header>
+
+        <div class="start-screen" id="startScreen">
+          <h2>🏃‍♂️ Stick Runner Adventure! 🏃‍♂️</h2>
+          <p>Help the stick figure run and jump through obstacles!</p>
+          <p>⬆️ Press SPACE or UP arrow to JUMP</p>
+          <p>⬇️ Press DOWN arrow to DUCK</p>
+          <p>📱 Or use the buttons below on mobile!</p>
+          <button class="start-btn" id="startBtn">Start Running!</button>
+        </div>
+
+        <div class="game-over" id="gameOverScreen">
+          <h2>💥 Oops! You crashed! 💥</h2>
+          <p id="finalScore">Final Score: 0</p>
+          <p id="newRecord" style="color:#4ECDC4;font-weight:bold;display:none">🎉 New Best Score! 🎉</p>
+          <button class="start-btn" id="restartBtn">Try Again!</button>
+        </div>
+
+        <div class="controls" id="mobileControls">
+          <button class="control-btn" id="jumpBtn">⬆️ JUMP</button>
+          <button class="control-btn" id="duckBtn">⬇️ DUCK</button>
+        </div>
+
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Canvas setup
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = 900;
+  let H = canvas.height = 600;
+
+  const scoreEl = document.getElementById('score');
+  const bestScoreEl = document.getElementById('bestScore');
+  const startScreen = document.getElementById('startScreen');
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  const finalScoreEl = document.getElementById('finalScore');
+  const newRecordEl = document.getElementById('newRecord');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const backBtn = document.getElementById('backButton');
+  const jumpBtn = document.getElementById('jumpBtn');
+  const duckBtn = document.getElementById('duckBtn');
+  const mobileControls = document.getElementById('mobileControls');
+
+  // Game state
+  let gameRunning = false;
+  let gameSpeed = 4;
+  let score = 0;
+  let bestScore = parseInt(localStorage.getItem('stickRunnerBest') || '0');
+  let frame = 0;
+  let groundY = H - 100;
+
+  // Player
+  const player = {
+    x: 150,
+    y: groundY - 80,
+    w: 20,
+    h: 80,
+    vy: 0,
+    onGround: true,
+    jumping: false,
+    ducking: false,
+    animFrame: 0
+  };
+
+  // Game objects
+  let obstacles = [];
+  let coins = [];
+  let clouds = [];
+  let particles = [];
+
+  // Physics
+  const gravity = 0.8;
+  const jumpPower = -16;
+
+  // Initialize
+  bestScoreEl.textContent = bestScore;
+
+  // Resize handling
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width = rect.width;
+    H = canvas.height = rect.height;
+    groundY = H - 100;
+    ctx.imageSmoothingEnabled = true;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Input handling
+  const keys = {};
+  window.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (gameRunning && player.onGround && !player.ducking) {
+        jump();
+      } else if (!gameRunning) {
+        startGame();
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (gameRunning) {
+        duck();
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.key.toLowerCase()] = false;
+    if (e.key === 'ArrowDown') {
+      stopDucking();
+    }
+  });
+
+  // Mobile controls
+  jumpBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (gameRunning && player.onGround && !player.ducking) {
+      jump();
+    }
+  });
+
+  duckBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (gameRunning) {
+      duck();
+    }
+  });
+
+  duckBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    stopDucking();
+  });
+
+  // Touch controls for mobile
+  let touchStartY = 0;
+  canvas.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (!gameRunning) {
+      startGame();
+      return;
+    }
+    
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = touchStartY - touchEndY;
+    
+    if (Math.abs(deltaY) > 30) {
+      if (deltaY > 0 && player.onGround && !player.ducking) {
+        // Swipe up - jump
+        jump();
+      } else if (deltaY < 0) {
+        // Swipe down - duck
+        duck();
+      }
+    }
+  });
+
+  function jump() {
+    if (player.onGround && !player.ducking) {
+      player.vy = jumpPower;
+      player.onGround = false;
+      player.jumping = true;
+      playSound(520, 0.1);
+    }
+  }
+
+  function duck() {
+    if (player.onGround) {
+      player.ducking = true;
+      // Move player down to slide on grass - closer to ground level
+      player.y = groundY - 30; // Much lower position for sliding effect
+      player.h = 30; // Reduce height when ducking
+    }
+  }
+
+  function stopDucking() {
+    player.ducking = false;
+    // Return to normal standing position
+    if (player.onGround) {
+      player.y = groundY - 80; // Normal standing position
+      player.h = 80; // Restore normal height
+    }
+  }
+
+  function startGame() {
+    gameRunning = true;
+    gameSpeed = 4;
+    score = 0;
+    frame = 0;
+    
+    // Reset player
+    player.y = groundY - 80;
+    player.vy = 0;
+    player.onGround = true;
+    player.jumping = false;
+    player.ducking = false;
+    player.animFrame = 0;
+    
+    // Clear arrays
+    obstacles = [];
+    coins = [];
+    particles = [];
+    
+    // Initialize clouds
+    clouds = [];
+    for (let i = 0; i < 5; i++) {
+      clouds.push({
+        x: Math.random() * W * 2,
+        y: 50 + Math.random() * 150,
+        speed: 0.5 + Math.random() * 1,
+        size: 40 + Math.random() * 60
+      });
+    }
+    
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    mobileControls.style.display = 'flex';
+  }
+
+  function gameOver() {
+    gameRunning = false;
+    mobileControls.style.display = 'none';
+    
+    // Check for new best score
+    let newRecord = false;
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('stickRunnerBest', bestScore.toString());
+      bestScoreEl.textContent = bestScore;
+      newRecord = true;
+    }
+    
+    finalScoreEl.textContent = `Final Score: ${score}`;
+    newRecordEl.style.display = newRecord ? 'block' : 'none';
+    
+    setTimeout(() => {
+      gameOverScreen.style.display = 'block';
+    }, 1000);
+    
+    // Create crash particles
+    createCrashParticles(player.x, player.y);
+    playSound(150, 0.3);
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', startGame);
+  backBtn.addEventListener('click', () => {
+    window.location.href = 'home.html';
+  });
+
+  function spawnObstacle() {
+    // Check if there's already an obstacle too close
+    const minDistance = 200; // Minimum pixels between obstacles
+    const lastObstacle = obstacles[obstacles.length - 1];
+    if (lastObstacle && (W + 50) - lastObstacle.x < minDistance) {
+      return; // Don't spawn if too close to last obstacle
+    }
+    
+    const types = ['cactus', 'rock', 'bird'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    let obstacle = {
+      x: W + 50,
+      type: type,
+      passed: false
+    };
+    
+    switch (type) {
+      case 'cactus':
+        obstacle.y = groundY - 60;
+        obstacle.w = 25;
+        obstacle.h = 60;
+        break;
+      case 'rock':
+        obstacle.y = groundY - 30;
+        obstacle.w = 40;
+        obstacle.h = 30;
+        break;
+      case 'bird':
+        obstacle.y = groundY - 80 - Math.random() * 20;
+        obstacle.w = 35;
+        obstacle.h = 25;
+        obstacle.wingFlap = 0;
+        break;
+    }
+    
+    obstacles.push(obstacle);
+  }
+
+  function spawnCoin() {
+    coins.push({
+      x: W + 50,
+      y: groundY - 80 - Math.random() * 100,
+      w: 20,
+      h: 20,
+      collected: false,
+      spin: 0
+    });
+  }
+
+  function createCrashParticles(x, y) {
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 12,
+        vy: Math.random() * -8 - 2,
+        life: 60,
+        color: ['#FF6B6B', '#FFD700', '#4ECDC4', '#FF6B35'][Math.floor(Math.random() * 4)]
+      });
+    }
+  }
+
+  function playSound(freq, duration) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) {
+      // Ignore audio errors
+    }
+  }
+
+  function update() {
+    if (!gameRunning) return;
+    
+    frame++;
+    
+    // Increase speed gradually
+    gameSpeed += 0.001;
+    
+    // Update score
+    score += 1;
+    scoreEl.textContent = Math.floor(score);
+    
+    // Player physics
+    if (!player.onGround) {
+      player.vy += gravity;
+      player.y += player.vy;
+      
+      if (player.y >= groundY - player.h) {
+        player.y = groundY - player.h;
+        player.vy = 0;
+        player.onGround = true;
+        player.jumping = false;
+      }
+    }
+    
+    // Update player animation
+    if (player.onGround && !player.ducking) {
+      player.animFrame += 0.3;
+    }
+    
+    // Spawn obstacles - increased spacing for easier gameplay
+    if (frame % Math.floor(120 / gameSpeed) === 0) {
+      if (Math.random() < 0.6) {
+        spawnObstacle();
+      }
+    }
+    
+    // Spawn coins
+    if (frame % Math.floor(120 / gameSpeed) === 0) {
+      if (Math.random() < 0.4) {
+        spawnCoin();
+      }
+    }
+    
+    // Update obstacles
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const obs = obstacles[i];
+      obs.x -= gameSpeed;
+      
+      if (obs.type === 'bird') {
+        obs.wingFlap += 0.4;
+      }
+      
+      // Check collision
+      if (!obs.passed && 
+          player.x < obs.x + obs.w &&
+          player.x + player.w > obs.x &&
+          player.y < obs.y + obs.h &&
+          player.y + player.h > obs.y) {
+        
+        // Adjust collision for ducking
+        let playerCollisionH = player.h;
+        let playerCollisionY = player.y;
+        if (player.ducking) {
+          playerCollisionH = player.h * 0.5;
+          playerCollisionY = player.y + player.h * 0.5;
+        }
+        
+        if (playerCollisionY < obs.y + obs.h &&
+            playerCollisionY + playerCollisionH > obs.y) {
+          gameOver();
+          return;
+        }
+      }
+      
+      // Mark as passed for scoring
+      if (!obs.passed && obs.x + obs.w < player.x) {
+        obs.passed = true;
+      }
+      
+      // Remove if off screen
+      if (obs.x + obs.w < 0) {
+        obstacles.splice(i, 1);
+      }
+    }
+    
+    // Update coins
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const coin = coins[i];
+      coin.x -= gameSpeed;
+      coin.spin += 0.2;
+      
+      // Check collection
+      if (!coin.collected &&
+          player.x < coin.x + coin.w &&
+          player.x + player.w > coin.x &&
+          player.y < coin.y + coin.h &&
+          player.y + player.h > coin.y) {
+        coin.collected = true;
+        score += 50;
+        playSound(660, 0.1);
+        
+        // Create coin particles
+        for (let j = 0; j < 8; j++) {
+          particles.push({
+            x: coin.x,
+            y: coin.y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: Math.random() * -4 - 1,
+            life: 30,
+            color: '#FFD700'
+          });
+        }
+      }
+      
+      // Remove if off screen or collected
+      if (coin.x + coin.w < 0 || coin.collected) {
+        coins.splice(i, 1);
+      }
+    }
+    
+    // Update clouds
+    clouds.forEach(cloud => {
+      cloud.x -= cloud.speed;
+      if (cloud.x + cloud.size < 0) {
+        cloud.x = W + cloud.size;
+        cloud.y = 50 + Math.random() * 150;
+      }
+    });
+    
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.3;
+      p.life--;
+      
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+  }
+
+  function draw() {
+    // Clear canvas
+    ctx.clearRect(0, 0, W, H);
+    
+    // Draw background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, '#87CEEB');
+    gradient.addColorStop(1, '#98D8E8');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+    
+    // Draw clouds
+    clouds.forEach(cloud => {
+      drawCloud(cloud.x, cloud.y, cloud.size);
+    });
+    
+    // Draw ground
+    ctx.fillStyle = '#8BC34A';
+    ctx.fillRect(0, groundY, W, H - groundY);
+    
+    // Draw grass details
+    ctx.fillStyle = '#7CB342';
+    for (let i = 0; i < W; i += 20) {
+      const offset = Math.sin((frame * 0.1) + i * 0.1) * 2;
+      ctx.fillRect(i - (frame * gameSpeed) % 20, groundY - 5 + offset, 3, 8);
+      ctx.fillRect(i + 10 - (frame * gameSpeed) % 20, groundY - 3 + offset, 2, 6);
+    }
+    
+    // Draw obstacles
+    obstacles.forEach(obs => {
+      drawObstacle(obs);
+    });
+    
+    // Draw coins
+    coins.forEach(coin => {
+      if (!coin.collected) {
+        drawCoin(coin);
+      }
+    });
+    
+    // Draw player
+    drawPlayer();
+    
+    // Draw particles
+    particles.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life / 60;
+      ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+      ctx.globalAlpha = 1;
+    });
+    
+    // Draw speed indicator
+    if (gameRunning) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillRect(W - 120, 20, 100, 20);
+      ctx.fillStyle = '#FF6B35';
+      ctx.fillRect(W - 118, 22, (gameSpeed - 4) * 10, 16);
+      ctx.fillStyle = '#333';
+      ctx.font = '12px Comic Sans MS';
+      ctx.fillText('Speed', W - 115, 15);
+    }
+  }
+
+  function drawCloud(x, y, size) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.4, y, size * 0.4, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.8, y, size * 0.3, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.2, y - size * 0.2, size * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawPlayer() {
+    ctx.save();
+    ctx.translate(player.x + player.w/2, player.y + player.h/2);
+    
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    
+    if (player.ducking) {
+      // Ducking/sliding pose - lower to the ground
+      // Head
+      ctx.beginPath();
+      ctx.arc(5, -10, 6, 0, Math.PI * 2); // Moved head forward and down
+      ctx.fillStyle = '#FFE4B5';
+      ctx.fill();
+      ctx.stroke();
+      
+      // Body (more horizontal for sliding)
+      ctx.beginPath();
+      ctx.moveTo(-10, -5);
+      ctx.lineTo(20, 0); // Angled body leaning forward
+      ctx.stroke();
+      
+      // Arms (reaching forward for balance)
+      ctx.beginPath();
+      ctx.moveTo(0, -5);
+      ctx.lineTo(15, -10);
+      ctx.moveTo(5, -3);
+      ctx.lineTo(20, -5);
+      ctx.stroke();
+      
+      // Legs (bent and trailing behind)
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-15, 8);
+      ctx.moveTo(5, 0);
+      ctx.lineTo(-8, 10);
+      ctx.stroke();
+      
+      // Add sliding dust effect
+      if (frame % 3 === 0) {
+        particles.push({
+          x: player.x - 10,
+          y: player.y + player.h + 5,
+          vx: -2 - Math.random() * 3,
+          vy: -1 - Math.random() * 2,
+          life: 20,
+          color: '#D2B48C' // Dust color
+        });
+      }
+    } else {
+      // Running pose
+      const legOffset = Math.sin(player.animFrame) * 10;
+      const armOffset = Math.sin(player.animFrame + Math.PI) * 8;
+      
+      // Head
+      ctx.beginPath();
+      ctx.arc(0, -25, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFE4B5';
+      ctx.fill();
+      ctx.stroke();
+      
+      // Body
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(0, 10);
+      ctx.stroke();
+      
+      // Arms
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(-12 + armOffset, 5);
+      ctx.moveTo(0, -10);
+      ctx.lineTo(12 - armOffset, 5);
+      ctx.stroke();
+      
+      // Legs
+      ctx.beginPath();
+      ctx.moveTo(0, 10);
+      ctx.lineTo(-8 + legOffset, 25);
+      ctx.moveTo(0, 10);
+      ctx.lineTo(8 - legOffset, 25);
+      ctx.stroke();
+    }
+    
+    // Eyes
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    if (player.ducking) {
+      ctx.arc(2, -13, 1.5, 0, Math.PI * 2); // Smaller eyes for ducking
+      ctx.arc(8, -13, 1.5, 0, Math.PI * 2);
+    } else {
+      ctx.arc(-3, -28, 2, 0, Math.PI * 2);
+      ctx.arc(3, -28, 2, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    
+    // Smile
+    ctx.beginPath();
+    if (player.ducking) {
+      ctx.arc(5, -8, 3, 0, Math.PI); // Smaller smile for ducking
+    } else {
+      ctx.arc(0, -22, 4, 0, Math.PI);
+    }
+    ctx.stroke();
+    
+    ctx.restore();
+  }
+
+  function drawObstacle(obs) {
+    ctx.save();
+    
+    switch (obs.type) {
+      case 'cactus':
+        ctx.fillStyle = '#228B22';
+        ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        
+        // Cactus arms
+        ctx.fillRect(obs.x - 8, obs.y + 15, 8, 3);
+        ctx.fillRect(obs.x + obs.w, obs.y + 25, 8, 3);
+        
+        // Spikes
+        ctx.fillStyle = '#32CD32';
+        for (let i = 0; i < obs.h; i += 8) {
+          ctx.fillRect(obs.x - 2, obs.y + i, 4, 2);
+          ctx.fillRect(obs.x + obs.w - 2, obs.y + i + 4, 4, 2);
+        }
+        break;
+        
+      case 'rock':
+        ctx.fillStyle = '#808080';
+        ctx.beginPath();
+        ctx.ellipse(obs.x + obs.w/2, obs.y + obs.h/2, obs.w/2, obs.h/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Rock highlight
+        ctx.fillStyle = '#A9A9A9';
+        ctx.beginPath();
+        ctx.ellipse(obs.x + obs.w/3, obs.y + obs.h/3, obs.w/4, obs.h/4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'bird':
+        const wingOffset = Math.sin(obs.wingFlap) * 5;
+        
+        // Body
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.ellipse(obs.x + obs.w/2, obs.y + obs.h/2, obs.w/3, obs.h/3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Wings
+        ctx.fillStyle = '#654321';
+        ctx.beginPath();
+        ctx.ellipse(obs.x + obs.w/4, obs.y + obs.h/2 + wingOffset, obs.w/4, obs.h/6, 0, 0, Math.PI * 2);
+        ctx.ellipse(obs.x + 3*obs.w/4, obs.y + obs.h/2 - wingOffset, obs.w/4, obs.h/6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Beak
+        ctx.fillStyle = '#FFA500';
+        ctx.beginPath();
+        ctx.moveTo(obs.x + obs.w - 5, obs.y + obs.h/2);
+        ctx.lineTo(obs.x + obs.w + 5, obs.y + obs.h/2);
+        ctx.lineTo(obs.x + obs.w, obs.y + obs.h/2 + 3);
+        ctx.closePath();
+        ctx.fill();
+        break;
+    }
+    
+    ctx.restore();
+  }
+
+  function drawCoin(coin) {
+    ctx.save();
+    ctx.translate(coin.x + coin.w/2, coin.y + coin.h/2);
+    ctx.rotate(coin.spin);
+    
+    // Coin body
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(0, 0, coin.w/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Coin border
+    ctx.strokeStyle = '#FFA500';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Coin symbol
+    ctx.fillStyle = '#FFA500';
+    ctx.font = 'bold 12px Comic Sans MS';
+    ctx.textAlign = 'center';
+    ctx.fillText('$', 0, 4);
+    
+    ctx.restore();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Start the game loop
+  gameLoop();
+
+  // Show mobile controls on touch devices
+  if ('ontouchstart' in window) {
+    mobileControls.style.display = 'flex';
+  }
+})();
+</script>
+</body>
+</html>

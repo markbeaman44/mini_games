@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Catcher — Fun Kids Game</title>
+  <style>
+    :root{
+      --bg-sky:#87CEEB;
+      --bg-grass:#90EE90;
+      --paint-red:#FF6B6B;
+      --paint-blue:#4ECDC4;
+      --paint-yellow:#FFD93D;
+      --paint-orange:#FF8C42;
+      --paint-purple:#A8E6CF;
+      --paint-green:#88D8A3;
+      --glove-brown:#8B4513;
+      --glove-dark:#654321;
+      --panel:#ffffff99;
+      --text-dark:#2C3E50;
+    }
+    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg-sky),var(--bg-grass));overflow:hidden}
+    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .game{width:min(900px,95vw);height:min(600px,85vh);background:linear-gradient(180deg,#87CEEB 0%,#98FB98 70%,#90EE90 100%);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.15);position:relative;overflow:hidden;border:4px solid var(--paint-yellow)}
+    
+    #backButton{position:fixed;top:20px;left:20px;background:var(--paint-red);color:white;border:none;border-radius:16px;padding:10px 18px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 15px rgba(255,107,107,0.3);transition:all 0.3s ease;z-index:1000;border:3px solid white}
+    #backButton:hover{background:#FF5252;transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,107,107,0.5)}
+    #backButton:active{transform:translateY(0)}
+    
+    header{position:absolute;left:20px;top:15px;z-index:10;display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+    .panel{background:var(--panel);backdrop-filter:blur(5px);padding:10px 16px;border-radius:20px;font-weight:700;display:flex;gap:8px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);border:3px solid white}
+    .score-text{font-size:18px;color:var(--text-dark);text-shadow:1px 1px 2px rgba(255,255,255,0.8)}
+    
+    canvas{display:block;width:100%;height:100%;cursor:crosshair}
+    
+    .start-screen{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(240,248,255,0.95));backdrop-filter:blur(10px);padding:30px;border-radius:25px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3);border:4px solid var(--paint-blue);max-width:400px}
+    .start-screen h2{margin:0 0 15px 0;color:var(--paint-red);font-size:28px;text-shadow:2px 2px 4px rgba(0,0,0,0.1)}
+    .start-screen p{margin:10px 0;color:var(--text-dark);font-size:16px;line-height:1.4;font-weight:600}
+
+    /* Instructions Popup */
+    .instructions-popup {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,248,255,0.95));
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 25px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      border: 4px solid var(--paint-blue);
+      max-width: 400px;
+      display: none;
+    }
+    .instructions-popup h2 {
+      margin: 0 0 15px 0;
+      color: var(--paint-red);
+      font-size: 28px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .instructions-popup p {
+      margin: 10px 0;
+      color: var(--text-dark);
+      font-size: 16px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+    .start-btn{margin-top:20px;padding:12px 24px;border-radius:20px;font-weight:800;border:3px solid var(--paint-green);background:var(--paint-green);color:white;font-size:18px;cursor:pointer;transition:all 0.3s ease;text-shadow:1px 1px 2px rgba(0,0,0,0.2);box-shadow:0 4px 12px rgba(136,216,163,0.4)}
+    .start-btn:hover{background:#7BC97B;transform:scale(1.05);box-shadow:0 6px 20px rgba(136,216,163,0.6)}
+    
+    .game-over{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,240,240,0.95));backdrop-filter:blur(10px);padding:30px;border-radius:25px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3);display:none;border:4px solid var(--paint-red);max-width:350px}
+    .game-over h2{margin:0 0 15px 0;color:var(--paint-red);font-size:28px;text-shadow:2px 2px 4px rgba(0,0,0,0.1)}
+    .game-over p{margin:10px 0;color:var(--text-dark);font-size:16px;font-weight:600}
+    
+    .controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:20px}
+    .control-btn{background:rgba(255,255,255,0.9);border:3px solid var(--paint-purple);border-radius:20px;padding:15px 20px;font-size:20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.3s ease;color:var(--paint-purple);text-shadow:1px 1px 2px rgba(255,255,255,0.8)}
+    .control-btn:hover{background:var(--paint-purple);color:white;transform:translateY(-2px);box-shadow:0 6px 20px rgba(168,230,207,0.4)}
+    .control-btn:active{transform:translateY(0)}
+    
+    .clouds{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+    .cloud{position:absolute;background:rgba(255,255,255,0.8);border-radius:50px;animation:float 10s infinite linear}
+    
+    @keyframes float{
+      from{transform:translateX(-100px)}
+      to{transform:translateX(calc(100vw + 100px))}
+    }
+    
+    @keyframes bounce{
+      0%,100%{transform:scale(1)}
+      50%{transform:scale(1.1)}
+    }
+    
+    .bounce{animation:bounce 0.3s ease}
+    
+    .strikes{position:absolute;top:80px;right:20px;z-index:10}
+    .strike{display:inline-block;width:20px;height:20px;background:var(--paint-red);border-radius:50%;margin:0 3px;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+    .strike.inactive{background:#ccc}
+    
+    @media (max-width:600px){
+      .game{height:min(500px,85vh)}
+      .panel{padding:8px 12px;font-size:14px}
+      .controls{bottom:10px;gap:15px}
+      .control-btn{padding:12px 16px;font-size:18px}
+      .start-screen,.game-over{padding:20px;margin:0 10px}
+    }
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="game" id="gameRoot">
+        <div class="clouds" id="cloudField"></div>
+        
+        <header>
+          <div class="panel">
+            <span class="score-text">⚾ Score: <span id="score">0</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text">🏆 Best: <span id="bestScore">0</span></span>
+          </div>
+          <div class="panel">
+            <span class="score-text">❤️ Lives: <span id="lives">3</span></span>
+          </div>
+        </header>
+
+        <div class="strikes" id="strikeIndicator">
+          <div class="strike" id="strike1"></div>
+          <div class="strike" id="strike2"></div>
+          <div class="strike" id="strike3"></div>
+        </div>
+
+        <div class="start-screen" id="startScreen">
+          <h2>⚾ Catcher Challenge! ⚾</h2>
+          <p>Use your baseball glove to catch falling balls!</p>
+          <p>🎯 Catch baseballs to score points</p>
+          <p>💩 Avoid catching poop - it costs you a life!</p>
+          <p>⚠️ Missing 3 balls = Strike out!</p>
+          <p>🏃‍♂️ Move with ARROW KEYS or mouse</p>
+          <p>📱 On mobile, touch and drag to move!</p>
+          <button class="start-btn" id="startBtn">Play Ball!</button>
+        </div>
+
+        <div class="instructions-popup" id="instructionsPopup">
+          <h2>⚾ How to Play ⚾</h2>
+          <p><strong>🎯 Goal:</strong> Catch falling baseballs with your glove!</p>
+          <p><strong>🕹️ Controls:</strong> Arrow keys, mouse, or touch to move</p>
+          <p><strong>⚾ Scoring:</strong> Catch baseballs to earn points</p>
+          <p><strong>💩 Avoid:</strong> Don't catch poop - you'll lose a life!</p>
+          <p><strong>⚠️ Strikes:</strong> Missing 3 balls = Game Over</p>
+          <p><strong>🚀 Tip:</strong> Speed increases as you score more!</p>
+          <button class="start-btn" id="closeInstructions">Play Ball!</button>
+        </div>
+
+        <div class="game-over" id="gameOverScreen">
+          <h2>⚾ Game Over! ⚾</h2>
+          <p id="gameOverReason">Strike out!</p>
+          <p id="finalScore">Final Score: 0</p>
+          <p id="newRecord" style="color:var(--paint-green);font-weight:bold;display:none">🎉 New Best Score! 🎉</p>
+          <button class="start-btn" id="restartBtn">Try Again!</button>
+        </div>
+
+        <div class="controls" id="mobileControls">
+          <div class="control-btn">📱 Touch & Drag to Move Glove</div>
+        </div>
+
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // Canvas setup
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = 900;
+  let H = canvas.height = 600;
+
+  const scoreEl = document.getElementById('score');
+  const bestScoreEl = document.getElementById('bestScore');
+  const livesEl = document.getElementById('lives');
+  const startScreen = document.getElementById('startScreen');
+  const instructionsPopup = document.getElementById('instructionsPopup');
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  const gameOverReasonEl = document.getElementById('gameOverReason');
+  const finalScoreEl = document.getElementById('finalScore');
+  const newRecordEl = document.getElementById('newRecord');
+  const startBtn = document.getElementById('startBtn');
+  const closeInstructions = document.getElementById('closeInstructions');
+  const restartBtn = document.getElementById('restartBtn');
+  const backBtn = document.getElementById('backButton');
+  const mobileControls = document.getElementById('mobileControls');
+  const cloudField = document.getElementById('cloudField');
+  const strikeIndicator = document.getElementById('strikeIndicator');
+
+  // Game state
+  let gameRunning = false;
+  let fallSpeed = 0.8; // Start much slower for kids
+  let score = 0;
+  let lives = 3;
+  let strikes = 0;
+  let bestScore = parseInt(localStorage.getItem('catcherBest') || '0');
+  let frame = 0;
+  let speedIncreaseThreshold = 15; // Increase speed every 15 points (slower progression)
+
+  // Player glove
+  const glove = {
+    x: W / 2,
+    y: H - 120, // Moved higher to be above mobile controls
+    w: 60,
+    h: 40,
+    speed: 6
+  };
+
+  // Game objects
+  let fallingObjects = [];
+  let particles = [];
+  let clouds = [];
+
+  // Input handling
+  const keys = {};
+  let mouseX = glove.x;
+  let isTouching = false;
+
+  // Initialize
+  bestScoreEl.textContent = bestScore;
+  createClouds();
+
+  // Resize handling
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width = rect.width;
+    H = canvas.height = rect.height;
+    ctx.imageSmoothingEnabled = true;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Create floating clouds background
+  function createClouds() {
+    cloudField.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const cloud = document.createElement('div');
+      cloud.className = 'cloud';
+      cloud.style.top = Math.random() * 30 + '%';
+      cloud.style.width = (60 + Math.random() * 40) + 'px';
+      cloud.style.height = (30 + Math.random() * 20) + 'px';
+      cloud.style.animationDelay = Math.random() * 10 + 's';
+      cloud.style.animationDuration = (8 + Math.random() * 4) + 's';
+      cloudField.appendChild(cloud);
+    }
+  }
+
+  // Input handling
+  window.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      if (instructionsPopup.style.display === 'block') {
+        hideInstructions();
+      } else if (startScreen.style.display === 'block') {
+        hideInstructions();
+      } else if (!gameRunning) {
+        startGame();
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  // Mouse/Touch controls
+  canvas.addEventListener('mousemove', (e) => {
+    if (gameRunning) {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = (e.clientX - rect.left) * (W / rect.width);
+    }
+  });
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    isTouching = true;
+    if (!gameRunning) {
+      startGame();
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    mouseX = (touch.clientX - rect.left) * (W / rect.width);
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (gameRunning && isTouching) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      mouseX = (touch.clientX - rect.left) * (W / rect.width);
+    }
+  });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    isTouching = false;
+  });
+
+  function startGame() {
+    gameRunning = true;
+    fallSpeed = 0.8; // Start very slow for kids
+    score = 0;
+    lives = 3;
+    strikes = 0;
+    frame = 0;
+    speedIncreaseThreshold = 15; // Slower progression
+    
+    // Reset glove
+    glove.x = W / 2;
+    glove.y = H - 120; // Position above mobile controls
+    
+    // Clear arrays
+    fallingObjects = [];
+    particles = [];
+    
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    mobileControls.style.display = 'block';
+    
+    updateUI();
+    updateStrikes();
+  }
+
+  function gameOver(reason) {
+    gameRunning = false;
+    mobileControls.style.display = 'none';
+    
+    // Check for new best score
+    let newRecord = false;
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('catcherBest', bestScore.toString());
+      bestScoreEl.textContent = bestScore;
+      newRecord = true;
+    }
+    
+    gameOverReasonEl.textContent = reason;
+    finalScoreEl.textContent = `Final Score: ${score}`;
+    newRecordEl.style.display = newRecord ? 'block' : 'none';
+    
+    setTimeout(() => {
+      gameOverScreen.style.display = 'block';
+    }, 1000);
+    
+    // Create sad particles
+    createParticles(glove.x, glove.y, '#FF6B6B', 15);
+    playSound(150, 0.5);
+  }
+
+  function updateUI() {
+    scoreEl.textContent = score;
+    livesEl.textContent = lives;
+  }
+
+  function updateStrikes() {
+    const strikeElements = [
+      document.getElementById('strike1'),
+      document.getElementById('strike2'),
+      document.getElementById('strike3')
+    ];
+    
+    strikeElements.forEach((element, index) => {
+      if (index < strikes) {
+        element.classList.remove('inactive');
+      } else {
+        element.classList.add('inactive');
+      }
+    });
+  }
+
+  function showInstructions() {
+    instructionsPopup.style.display = 'block';
+  }
+
+  function hideInstructions() {
+    instructionsPopup.style.display = 'none';
+    startGame();
+  }
+
+  // Event listeners
+  startBtn.addEventListener('click', hideInstructions);
+  closeInstructions.addEventListener('click', hideInstructions);
+  restartBtn.addEventListener('click', startGame);
+  backBtn.addEventListener('click', () => {
+    window.location.href = 'home.html';
+  });
+
+  function spawnFallingObject() {
+    const types = ['baseball', 'poop'];
+    const weights = [0.85, 0.15]; // 85% baseballs, 15% poop - easier for kids
+    
+    let type;
+    const random = Math.random();
+    if (random < weights[0]) {
+      type = 'baseball';
+    } else {
+      type = 'poop';
+    }
+    
+    fallingObjects.push({
+      x: 50 + Math.random() * (W - 100),
+      y: -30,
+      w: type === 'baseball' ? 25 : 20,
+      h: type === 'baseball' ? 25 : 20,
+      type: type,
+      speed: fallSpeed + Math.random() * 0.5, // Reduced speed variation for consistency
+      rotation: 0,
+      caught: false
+    });
+  }
+
+  function createParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 10,
+        vy: (Math.random() - 0.5) * 10 - 5,
+        life: 30 + Math.random() * 30,
+        maxLife: 60,
+        color: color,
+        size: Math.random() * 4 + 2
+      });
+    }
+  }
+
+  function playSound(freq, duration) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) {
+      // Ignore audio errors
+    }
+  }
+
+  function update() {
+    if (!gameRunning) return;
+    
+    frame++;
+    
+    // Increase speed based on score (much slower progression)
+    if (score > 0 && score % speedIncreaseThreshold === 0 && score > (speedIncreaseThreshold - 1)) {
+      fallSpeed += 0.15; // Smaller speed increases
+      speedIncreaseThreshold += 15; // Wait longer between increases
+      createParticles(W/2, 50, '#FFD93D', 10); // Speed up celebration
+    }
+    
+    // Glove movement
+    let targetX = glove.x;
+    
+    // Keyboard controls
+    if (keys['arrowleft'] || keys['a']) targetX -= glove.speed;
+    if (keys['arrowright'] || keys['d']) targetX += glove.speed;
+    
+    // Mouse/touch controls
+    if (isTouching || Math.abs(mouseX - glove.x) > 5) {
+      const dx = mouseX - glove.x;
+      targetX = glove.x + dx * 0.15; // Smooth following
+    }
+    
+    // Keep glove in bounds
+    glove.x = Math.max(glove.w/2, Math.min(W - glove.w/2, targetX));
+    
+    // Spawn falling objects (much slower spawn rate for kids)
+    if (frame % Math.max(120 - Math.floor(fallSpeed * 20), 90) === 0) {
+      if (Math.random() < 0.6) { // Reduced probability too
+        spawnFallingObject();
+      }
+    }
+    
+    // Update falling objects
+    for (let i = fallingObjects.length - 1; i >= 0; i--) {
+      const obj = fallingObjects[i];
+      obj.y += obj.speed;
+      obj.rotation += 0.1;
+      
+      // Check collision with glove
+      if (!obj.caught && 
+          obj.x > glove.x - glove.w/2 && 
+          obj.x < glove.x + glove.w/2 &&
+          obj.y > glove.y - glove.h/2 && 
+          obj.y < glove.y + glove.h/2) {
+        
+        obj.caught = true;
+        
+        if (obj.type === 'baseball') {
+          score++;
+          createParticles(obj.x, obj.y, '#4ECDC4', 8);
+          playSound(660, 0.1);
+          
+          // Add bounce effect to glove
+          document.getElementById('gameRoot').classList.add('bounce');
+          setTimeout(() => {
+            document.getElementById('gameRoot').classList.remove('bounce');
+          }, 300);
+        } else if (obj.type === 'poop') {
+          lives--;
+          createParticles(obj.x, obj.y, '#8B4513', 12);
+          playSound(200, 0.3);
+          
+          if (lives <= 0) {
+            gameOver('You caught too much poop!');
+            return;
+          }
+        }
+        
+        fallingObjects.splice(i, 1);
+        updateUI();
+        continue;
+      }
+      
+      // Check if baseball missed (reached bottom)
+      if (obj.y > H + 30) {
+        if (obj.type === 'baseball') {
+          strikes++;
+          updateStrikes();
+          playSound(300, 0.2);
+          
+          if (strikes >= 3) {
+            gameOver('Strike out! You missed 3 baseballs!');
+            return;
+          }
+        }
+        
+        fallingObjects.splice(i, 1);
+      }
+    }
+    
+    // Update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.3; // gravity
+      p.life--;
+      
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+  }
+
+  function draw() {
+    // Clear canvas with gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, H);
+    gradient.addColorStop(0, '#87CEEB');
+    gradient.addColorStop(0.7, '#98FB98');
+    gradient.addColorStop(1, '#90EE90');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
+    
+    // Draw grass texture
+    ctx.fillStyle = '#7CB342';
+    for (let i = 0; i < W; i += 15) {
+      const height = 5 + Math.sin(frame * 0.02 + i * 0.1) * 3;
+      ctx.fillRect(i, H - 20, 3, height);
+    }
+    
+    // Draw falling objects
+    fallingObjects.forEach(obj => {
+      drawFallingObject(obj);
+    });
+    
+    // Draw glove
+    drawGlove();
+    
+    // Draw particles
+    particles.forEach(p => {
+      const alpha = p.life / p.maxLife;
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+      ctx.globalAlpha = 1;
+    });
+    
+    // Draw speed indicator
+    if (gameRunning) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fillRect(W - 120, H - 40, 100, 20);
+      ctx.fillStyle = '#FF8C42';
+      ctx.fillRect(W - 118, H - 38, (fallSpeed - 2) * 20, 16);
+      ctx.fillStyle = '#2C3E50';
+      ctx.font = 'bold 12px Comic Sans MS';
+      ctx.fillText('Speed', W - 115, H - 45);
+    }
+  }
+
+  function drawGlove() {
+    ctx.save();
+    ctx.translate(glove.x, glove.y);
+    
+    // Glove shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.ellipse(0, 10, glove.w/2 + 2, glove.h/2 + 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Main glove body
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, glove.w/2, glove.h/2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Glove webbing
+    ctx.fillStyle = '#654321';
+    ctx.beginPath();
+    ctx.ellipse(-5, -5, 15, 8, Math.PI/4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Glove fingers
+    ctx.fillStyle = '#8B4513';
+    for (let i = 0; i < 4; i++) {
+      const angle = (i - 1.5) * 0.5;
+      const x = Math.cos(angle) * 20;
+      const y = Math.sin(angle) * 20 - 10;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 8, 15, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Glove stitching
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, glove.w/2 - 5, glove.h/2 - 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Glove highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(-8, -8, 12, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  }
+
+  function drawFallingObject(obj) {
+    ctx.save();
+    ctx.translate(obj.x, obj.y);
+    ctx.rotate(obj.rotation);
+    
+    if (obj.type === 'baseball') {
+      // Baseball
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, obj.w/2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Baseball stitching
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, obj.w/2 - 2, Math.PI/4, 3*Math.PI/4, false);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, obj.w/2 - 2, 5*Math.PI/4, 7*Math.PI/4, false);
+      ctx.stroke();
+      
+      // Small stitching lines
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI) / 6 + Math.PI/4;
+        const x1 = Math.cos(angle) * (obj.w/2 - 6);
+        const y1 = Math.sin(angle) * (obj.w/2 - 6);
+        const x2 = Math.cos(angle) * (obj.w/2 - 2);
+        const y2 = Math.sin(angle) * (obj.w/2 - 2);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      
+      // Baseball shine
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.ellipse(-4, -4, 6, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+    } else if (obj.type === 'poop') {
+      // Poop
+      ctx.fillStyle = '#8B4513';
+      
+      // Bottom section
+      ctx.beginPath();
+      ctx.ellipse(0, 3, obj.w/2, obj.h/3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Middle section
+      ctx.beginPath();
+      ctx.ellipse(-2, 0, obj.w/3, obj.h/3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Top section
+      ctx.beginPath();
+      ctx.ellipse(1, -4, obj.w/4, obj.h/4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Stink lines
+      ctx.strokeStyle = '#90EE90';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        const x = -6 + i * 6;
+        ctx.beginPath();
+        ctx.moveTo(x, -obj.h/2 - 5);
+        ctx.quadraticCurveTo(x + 2, -obj.h/2 - 10, x, -obj.h/2 - 15);
+        ctx.stroke();
+      }
+      
+      // Poop highlight
+      ctx.fillStyle = 'rgba(139, 69, 19, 0.8)';
+      ctx.beginPath();
+      ctx.ellipse(-2, -2, 3, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.restore();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Start the game loop
+  gameLoop();
+
+  // Show mobile controls on touch devices
+  if ('ontouchstart' in window) {
+    mobileControls.style.display = 'block';
+  }
+
+  // Show instructions on startup
+  showInstructions();
+})();
+</script>
+</body>
+</html>

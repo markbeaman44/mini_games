@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beach Adventure - Mini Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98E4FF 50%, #FFE4B5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #2c3e50;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #2c3e50;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(700px, 90vh);
+            background: linear-gradient(180deg, #87CEEB 0%, #F4E4BC 40%, #DEB887 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .instructions-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .stat-display {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .score-display {
+            color: #f39c12;
+        }
+
+        .level-display {
+            color: #3498db;
+        }
+
+        .tide-timer {
+            color: #e74c3c;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .building-area {
+            position: absolute;
+            bottom: 120px;
+            left: 50px;
+            right: 50px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        /* Sand Blocks */
+        .sand-block {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(139, 69, 19, 0.3);
+        }
+
+        .sand-block:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Block Types */
+        .block-square {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #CD853F 0%, #8B4513 100%);
+        }
+
+        .block-triangle {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid #CD853F;
+            background: none !important;
+            border-radius: 0;
+        }
+
+        .block-arch {
+            width: 60px;
+            height: 40px;
+            border-radius: 30px 30px 0 0;
+            background: linear-gradient(135deg, #F4A460 0%, #DEB887 100%);
+        }
+
+        .block-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #D2691E 0%, #A0522D 100%);
+        }
+
+        .block-diamond {
+            width: 28px;
+            height: 28px;
+            transform: rotate(45deg) !important;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+        }
+
+        .block-rectangle {
+            width: 50px;
+            height: 30px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            border-radius: 4px;
+        }
+
+        /* Missing Block Outlines */
+        .missing-block {
+            position: absolute;
+            border: 3px dashed rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .missing-block:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+
+        .missing-block.square {
+            width: 40px;
+            height: 40px;
+        }
+
+        .missing-block.triangle {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px dashed rgba(255, 255, 255, 0.8);
+            background: none !important;
+            border-radius: 0;
+        }
+
+        .missing-block.arch {
+            width: 60px;
+            height: 40px;
+            border-radius: 30px 30px 0 0;
+        }
+
+        .missing-block.circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .missing-block.diamond {
+            width: 28px;
+            height: 28px;
+            transform: rotate(45deg) !important;
+            border-radius: 4px;
+        }
+
+        .missing-block.rectangle {
+            width: 50px;
+            height: 30px;
+            border-radius: 4px;
+        }
+
+        .missing-block.completed {
+            animation: blockComplete 0.5s ease-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes blockComplete {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1.1); opacity: 0; }
+        }
+
+        @keyframes blockPlace {
+            0% { transform: scale(0) rotate(180deg); }
+            70% { transform: scale(1.1) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Toolbox */
+        .toolbox {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 30;
+        }
+
+        .tool-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 70px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tool-btn.active {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            transform: scale(1.1);
+        }
+
+        /* Button Shape Icons */
+        .tool-btn .shape-icon {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .shape-square {
+            width: 24px;
+            height: 24px;
+            background: #CD853F;
+            border-radius: 3px;
+        }
+
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-bottom: 24px solid #CD853F;
+        }
+
+        .shape-arch {
+            width: 32px;
+            height: 16px;
+            background: #F4A460;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .shape-circle {
+            width: 24px;
+            height: 24px;
+            background: #D2691E;
+            border-radius: 50%;
+        }
+
+        .shape-diamond {
+            width: 20px;
+            height: 20px;
+            background: #DAA520;
+            transform: rotate(45deg);
+            border-radius: 2px;
+        }
+
+        .shape-rectangle {
+            width: 24px;
+            height: 16px;
+            background: #8B4513;
+            border-radius: 2px;
+        }
+
+        /* Water/Tide Animation */
+        .water {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(180deg, rgba(52, 152, 219, 0.8) 0%, rgba(41, 128, 185, 0.9) 100%);
+            transition: height 2s ease-in-out;
+            z-index: 20;
+        }
+
+        .water::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                rgba(255, 255, 255, 0.3) 10px,
+                transparent 20px
+            );
+            animation: wave 3s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(20px); }
+        }
+
+        /* Beach Items */
+        .beach-item {
+            position: absolute;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 15;
+        }
+
+        .beach-item:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        .collected {
+            animation: collect 0.8s ease-out forwards;
+        }
+
+        @keyframes collect {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5) translateY(-30px);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0) translateY(-60px);
+                opacity: 0;
+            }
+        }
+
+        /* Game Over */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-over-content {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Controls */
+        @media (max-width: 768px) {
+            .game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .toolbox {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .tool-btn {
+                padding: 15px;
+                font-size: 0.8rem;
+                min-width: 60px;
+                min-height: 60px;
+            }
+
+            .sand-block {
+                transform: scale(0.8);
+            }
+
+            .building-area {
+                bottom: 100px;
+                left: 20px;
+                right: 20px;
+                height: 350px;
+            }
+        }
+
+        /* Success Animation */
+        .castle-complete {
+            animation: castleSuccess 2s ease-in-out;
+        }
+
+        @keyframes castleSuccess {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.1) rotate(2deg); }
+            75% { transform: scale(1.1) rotate(-2deg); }
+        }
+
+        /* Destruction Effect */
+        .destroyed {
+            animation: destruction 1s ease-out forwards;
+        }
+
+        @keyframes destruction {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(10deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0) rotate(45deg) translateY(50px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back to Hub</button>
+
+    <div class="game-container" id="gameContainer">
+        <!-- Instructions Popup -->
+        <div class="instructions-popup" id="instructionsPopup">
+            <div class="instructions-content">
+                <h2>🏖️ Beach Adventure</h2>
+                <p><strong>Complete the castle before the tide washes it away!</strong></p>
+                <p>🏰 Each level shows an incomplete castle with missing blocks</p>
+                <p>🔍 Find the missing pieces and place the correct block shape</p>
+                <p>🌊 The tide rises every 25 seconds - complete it fast!</p>
+                <p>🧩 Use the right shape: Square, Triangle, Arch, Circle, Diamond, or Rectangle</p>
+                <p>� Click on the dashed outlines to place the matching block type</p>
+                <p>✅ Complete all missing blocks to advance to the next level</p>
+                <p>⌨️ Press SPACEBAR or click button to start!</p>
+                <button class="close-instructions" id="closeInstructions">Start Puzzle!</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area" id="gameArea">
+            <div class="game-ui">
+                <div class="stat-display score-display">Score: <span id="score">0</span></div>
+                <div class="stat-display level-display">Level: <span id="level">1</span></div>
+                <div class="stat-display tide-timer">Tide in: <span id="tideTimer">30</span>s</div>
+            </div>
+
+            <div class="building-area" id="buildingArea">
+                <!-- Sandcastles will be built here -->
+            </div>
+
+            <div class="toolbox">
+                <button class="tool-btn active" id="squareBtn" data-block="square">
+                    <span class="shape-icon shape-square"></span>
+                </button>
+                <button class="tool-btn" id="triangleBtn" data-block="triangle">
+                    <span class="shape-icon shape-triangle"></span>
+                </button>
+                <button class="tool-btn" id="archBtn" data-block="arch">
+                    <span class="shape-icon shape-arch"></span>
+                </button>
+                <button class="tool-btn" id="circleBtn" data-block="circle">
+                    <span class="shape-icon shape-circle"></span>
+                </button>
+                <button class="tool-btn" id="diamondBtn" data-block="diamond">
+                    <span class="shape-icon shape-diamond"></span>
+                </button>
+                <button class="tool-btn" id="rectangleBtn" data-block="rectangle">
+                    <span class="shape-icon shape-rectangle"></span>
+                </button>
+            </div>
+
+            <div class="water" id="water"></div>
+        </div>
+
+        <!-- Game Over -->
+        <div class="game-over" id="gameOver">
+            <div class="game-over-content">
+                <h2 id="gameOverTitle">🌊 Tide Washed Away!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Level Reached: <span id="finalLevel">1</span></p>
+                <p>Highest Castle: <span id="highestCastle">0</span> blocks</p>
+                <p id="performanceText">Keep building to become a master castle architect!</p>
+                <button class="restart-btn" id="restartBtn">Build Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BeachAdventure {
+            constructor() {
+                this.score = 0;
+                this.level = 1;
+                this.isPlaying = false;
+                this.tideTimer = 20;
+                this.waterHeight = 0;
+                this.selectedBlock = 'square';
+                this.castleBlocks = [];
+                this.missingBlocks = [];
+                this.completedBlocks = 0;
+                this.requiredBlocks = 0;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.createCastleTemplates();
+            }
+
+            createCastleTemplates() {
+                this.castleTemplates = [
+                    // Level 1 - Simple Tower
+                    {
+                        placed: [
+                            { x: 400, y: 360, type: 'square' },
+                            { x: 400, y: 320, type: 'square' },
+                            { x: 400, y: 280, type: 'square' }
+                        ],
+                        missing: [
+                            { x: 400, y: 240, type: 'triangle' }
+                        ]
+                    },
+                    // Level 2 - Mixed Shapes
+                    {
+                        placed: [
+                            { x: 360, y: 360, type: 'square' },
+                            { x: 440, y: 360, type: 'square' },
+                            { x: 400, y: 320, type: 'arch' }
+                        ],
+                        missing: [
+                            { x: 400, y: 360, type: 'circle' },
+                            { x: 380, y: 280, type: 'triangle' },
+                            { x: 420, y: 280, type: 'triangle' }
+                        ]
+                    },
+                    // Level 3 - Bridge Castle
+                    {
+                        placed: [
+                            { x: 320, y: 360, type: 'square' },
+                            { x: 320, y: 320, type: 'square' },
+                            { x: 480, y: 360, type: 'square' },
+                            { x: 480, y: 320, type: 'square' }
+                        ],
+                        missing: [
+                            { x: 360, y: 320, type: 'arch' },
+                            { x: 420, y: 320, type: 'arch' },
+                            { x: 340, y: 280, type: 'diamond' },
+                            { x: 460, y: 280, type: 'diamond' }
+                        ]
+                    },
+                    // Level 4 - Complex Castle
+                    {
+                        placed: [
+                            { x: 320, y: 360, type: 'square' },
+                            { x: 360, y: 360, type: 'square' },
+                            { x: 400, y: 360, type: 'square' },
+                            { x: 440, y: 360, type: 'square' },
+                            { x: 480, y: 360, type: 'square' },
+                            { x: 340, y: 320, type: 'circle' },
+                            { x: 460, y: 320, type: 'circle' }
+                        ],
+                        missing: [
+                            { x: 380, y: 320, type: 'arch' },
+                            { x: 420, y: 320, type: 'arch' },
+                            { x: 400, y: 280, type: 'rectangle' },
+                            { x: 340, y: 280, type: 'triangle' },
+                            { x: 460, y: 280, type: 'triangle' },
+                            { x: 400, y: 240, type: 'diamond' }
+                        ]
+                    },
+                    // Level 5+ - All Shapes
+                    {
+                        placed: [
+                            { x: 300, y: 360, type: 'square' },
+                            { x: 340, y: 360, type: 'square' },
+                            { x: 380, y: 360, type: 'square' },
+                            { x: 420, y: 360, type: 'square' },
+                            { x: 460, y: 360, type: 'square' },
+                            { x: 500, y: 360, type: 'square' },
+                            { x: 320, y: 320, type: 'circle' },
+                            { x: 480, y: 320, type: 'circle' }
+                        ],
+                        missing: [
+                            { x: 360, y: 320, type: 'arch' },
+                            { x: 400, y: 320, type: 'rectangle' },
+                            { x: 440, y: 320, type: 'arch' },
+                            { x: 340, y: 280, type: 'diamond' },
+                            { x: 380, y: 280, type: 'circle' },
+                            { x: 420, y: 280, type: 'circle' },
+                            { x: 460, y: 280, type: 'diamond' },
+                            { x: 360, y: 240, type: 'triangle' },
+                            { x: 400, y: 240, type: 'rectangle' },
+                            { x: 440, y: 240, type: 'triangle' }
+                        ]
+                    }
+                ];
+            }
+
+            initializeElements() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.buildingArea = document.getElementById('buildingArea');
+                this.water = document.getElementById('water');
+                this.scoreElement = document.getElementById('score');
+                this.levelElement = document.getElementById('level');
+                this.tideTimerElement = document.getElementById('tideTimer');
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Game over
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.nextLevel();
+                });
+
+                // Tool selection
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const blockType = btn.dataset.block;
+                        
+                        if (blockType) {
+                            this.selectedBlock = blockType;
+                            document.querySelectorAll('[data-block]').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                        }
+                    });
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    const popupVisible = this.instructionsPopup.style.display !== 'none' && 
+                                       window.getComputedStyle(this.instructionsPopup).display !== 'none';
+                    
+                    if (e.key === ' ' && popupVisible) {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.nextLevel();
+                    }
+
+                    // Quick tool selection
+                    if (this.isPlaying) {
+                        if (e.key === '1') this.selectTool('square');
+                        if (e.key === '2') this.selectTool('triangle');
+                        if (e.key === '3') this.selectTool('arch');
+                        if (e.key === '4') this.selectTool('circle');
+                        if (e.key === '5') this.selectTool('diamond');
+                        if (e.key === '6') this.selectTool('rectangle');
+                    }
+                });
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            startGame() {
+                this.isPlaying = true;
+                this.tideTimer = 25 - (this.level * 2); // Progressive difficulty: 25, 23, 21, 19, 17...
+                this.waterHeight = 0;
+                this.castleBlocks = [];
+                this.missingBlocks = [];
+                this.completedBlocks = 0;
+                
+                this.generateCastle();
+                this.updateWaterLevel();
+                this.startTideTimer();
+                this.updateDisplay();
+            }
+
+            generateCastle() {
+                const templateIndex = Math.min(this.level - 1, this.castleTemplates.length - 1);
+                const template = this.castleTemplates[templateIndex];
+                
+                // Place existing castle blocks
+                template.placed.forEach(blockData => {
+                    const block = this.createSandBlock(blockData.x, blockData.y, blockData.type, false);
+                    this.buildingArea.appendChild(block);
+                    this.castleBlocks.push({
+                        element: block,
+                        x: blockData.x,
+                        y: blockData.y,
+                        type: blockData.type
+                    });
+                });
+
+                // Create missing block outlines
+                template.missing.forEach(blockData => {
+                    const outline = this.createMissingBlockOutline(blockData.x, blockData.y, blockData.type);
+                    this.buildingArea.appendChild(outline);
+                    this.missingBlocks.push({
+                        element: outline,
+                        x: blockData.x,
+                        y: blockData.y,
+                        type: blockData.type,
+                        completed: false
+                    });
+                });
+
+                this.requiredBlocks = template.missing.length;
+            }
+
+            createMissingBlockOutline(x, y, type) {
+                const outline = document.createElement('div');
+                outline.className = `missing-block ${type}`;
+                outline.dataset.requiredType = type;
+                
+                // Position based on block type
+                if (type === 'triangle') {
+                    outline.style.left = (x - 20) + 'px';
+                    outline.style.top = (y - 40) + 'px';
+                } else if (type === 'arch') {
+                    outline.style.left = (x - 30) + 'px';
+                    outline.style.top = (y - 20) + 'px';
+                } else if (type === 'diamond') {
+                    outline.style.left = (x - 14) + 'px';
+                    outline.style.top = (y - 14) + 'px';
+                } else {
+                    outline.style.left = (x - 20) + 'px';
+                    outline.style.top = (y - 20) + 'px';
+                }
+
+                // Add click handler for block placement
+                outline.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.attemptBlockPlacement(outline);
+                });
+
+                return outline;
+            }
+
+            attemptBlockPlacement(outline) {
+                if (!this.isPlaying) return;
+
+                const requiredType = outline.dataset.requiredType;
+
+                if (this.selectedBlock === requiredType) {
+                    // Correct block placed!
+                    this.completeBlock(outline);
+                } else {
+                    // Wrong block type
+                    this.showIncorrectPlacement(outline);
+                }
+            }
+
+            completeBlock(outline) {
+                const requiredType = outline.dataset.requiredType;
+                let offsetX = 20, offsetY = 20;
+                
+                // Calculate correct offsets for different block types
+                if (requiredType === 'arch') {
+                    offsetX = 30;
+                } else if (requiredType === 'triangle') {
+                    offsetY = 40;
+                } else if (requiredType === 'diamond') {
+                    offsetX = 14;
+                    offsetY = 14;
+                }
+                
+                const x = parseInt(outline.style.left) + offsetX;
+                const y = parseInt(outline.style.top) + offsetY;
+                
+                // Create the actual block
+                const block = this.createSandBlock(x, y, requiredType, true);
+                this.buildingArea.appendChild(block);
+                
+                // Mark outline as completed
+                outline.classList.add('completed');
+                this.completedBlocks++;
+                
+                // Update score
+                this.updateScore(100 * this.level);
+                this.playPlaceSound();
+
+                // Check if castle is complete
+                if (this.completedBlocks >= this.requiredBlocks) {
+                    setTimeout(() => this.completeLevel(), 500);
+                }
+
+                // Remove outline after animation
+                setTimeout(() => {
+                    if (outline.parentNode) {
+                        outline.remove();
+                    }
+                }, 500);
+            }
+
+            showIncorrectPlacement(outline) {
+                outline.style.borderColor = '#e74c3c';
+                outline.style.background = 'rgba(231, 76, 60, 0.3)';
+                this.playErrorSound();
+                
+                // Reset outline appearance after a moment
+                setTimeout(() => {
+                    outline.style.borderColor = 'rgba(255, 255, 255, 0.8)';
+                    outline.style.background = 'rgba(255, 255, 255, 0.1)';
+                }, 1000);
+            }
+
+            selectTool(tool) {
+                this.selectedBlock = tool;
+                document.querySelectorAll('[data-block]').forEach(b => b.classList.remove('active'));
+                document.querySelector(`[data-block="${tool}"]`).classList.add('active');
+            }
+
+            createSandBlock(x, y, type, isNew = false) {
+                const block = document.createElement('div');
+                block.className = `sand-block block-${type}`;
+                
+                // Position based on block type
+                if (type === 'triangle') {
+                    block.style.left = (x - 20) + 'px';
+                    block.style.top = (y - 40) + 'px';
+                    // Set triangle color
+                    block.style.borderBottomColor = '#CD853F';
+                } else if (type === 'arch') {
+                    block.style.left = (x - 30) + 'px';
+                    block.style.top = (y - 20) + 'px';
+                } else if (type === 'diamond') {
+                    block.style.left = (x - 14) + 'px';
+                    block.style.top = (y - 14) + 'px';
+                } else if (type === 'rectangle') {
+                    block.style.left = (x - 25) + 'px';
+                    block.style.top = (y - 15) + 'px';
+                } else {
+                    // square, circle
+                    block.style.left = (x - 20) + 'px';
+                    block.style.top = (y - 20) + 'px';
+                }
+
+                if (isNew) {
+                    block.style.transform = 'scale(0)';
+                    block.style.animation = 'blockPlace 0.5s ease-out forwards';
+                }
+
+                return block;
+            }
+
+            completeLevel() {
+                this.isPlaying = false;
+                this.updateScore(500 * this.level); // Bonus for completing level
+                
+                // Show level complete message
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('finalLevel').textContent = this.level;
+                document.getElementById('highestCastle').textContent = 'COMPLETED!';
+                
+                document.getElementById('gameOverTitle').textContent = '🏆 Castle Complete!';
+                document.getElementById('performanceText').textContent = 
+                    `Amazing! You completed the level ${this.level} castle before the tide!`;
+                
+                this.gameOver.style.display = 'flex';
+                this.playCollectSound();
+            }
+
+            startTideTimer() {
+                const tideInterval = setInterval(() => {
+                    if (!this.isPlaying) {
+                        clearInterval(tideInterval);
+                        return;
+                    }
+
+                    this.tideTimer--;
+                    this.tideTimerElement.textContent = this.tideTimer;
+                    
+                    if (this.tideTimer <= 0) {
+                        clearInterval(tideInterval);
+                        this.triggerTide();
+                    }
+                }, 1000);
+            }
+
+            triggerTide() {
+                this.isPlaying = false;
+                this.waterHeight = 400; // Full tide
+                this.updateWaterLevel();
+                
+                // Game over - tide reached the castle
+                setTimeout(() => {
+                    document.getElementById('finalScore').textContent = this.score;
+                    document.getElementById('finalLevel').textContent = this.level;
+                    document.getElementById('highestCastle').textContent = `${this.completedBlocks}/${this.requiredBlocks} blocks`;
+                    
+                    document.getElementById('gameOverTitle').textContent = '🌊 Tide Washed Away!';
+                    document.getElementById('performanceText').textContent = 
+                        `The tide came too fast! You completed ${this.completedBlocks} of ${this.requiredBlocks} blocks.`;
+                    
+                    this.gameOver.style.display = 'flex';
+                }, 2000);
+            }
+
+            updateWaterLevel() {
+                this.water.style.height = this.waterHeight + 'px';
+            }
+
+            nextLevel() {
+                if (this.completedBlocks >= this.requiredBlocks) {
+                    this.level++;
+                }
+                this.clearGame();
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+
+            clearGame() {
+                this.buildingArea.querySelectorAll('.sand-block, .missing-block').forEach(el => el.remove());
+                this.castleBlocks = [];
+                this.missingBlocks = [];
+                this.waterHeight = 0;
+                this.completedBlocks = 0;
+                this.updateWaterLevel();
+            }
+
+            updateScore(points) {
+                this.score += points;
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.scoreElement.textContent = this.score;
+                this.levelElement.textContent = this.level;
+            }
+
+            playPlaceSound() {
+                this.playSound(600, 150, 'sine');
+            }
+
+            playCollectSound() {
+                this.playSound(800, 200, 'triangle');
+            }
+
+            playErrorSound() {
+                this.playSound(200, 300, 'sawtooth');
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = type;
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Silent fail if audio context not available
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new BeachAdventure();
+        });
+    </script>
+</body>
+</html>

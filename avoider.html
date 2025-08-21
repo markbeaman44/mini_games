@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dodge! — Simple HTML Canvas Game</title>
+  <style>
+    :root{--bg:#0b1020;--card:#0f1724;--accent:#4fc3f7;--danger:#ff6b6b;--muted:#9aa7bf}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#e6eef8;background:linear-gradient(180deg,var(--bg),#071029)}
+    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .wrap{max-width:880px;padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);box-shadow:0 6px 30px rgba(2,6,23,0.6)}
+    #backButton{position:fixed;top:20px;left:20px;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:background-color 0.3s ease, transform 0.2s ease;z-index:1000}
+    #backButton:hover{background:#ff5252;transform:translateY(-2px)}
+    #backButton:active{transform:translateY(0)}
+    header{display:flex;align-items:center;gap:12px}
+    h1{font-size:20px;margin:0}
+    p.small{margin:6px 0 12px;color:var(--muted);font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    canvas{display:block;border-radius:16px;background:linear-gradient(180deg,#081226,#051022);box-shadow:0 8px 30px rgba(0,0,0,0.15);width:100%;height:480px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#03202b;font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
+    .meta{margin-left:auto;text-align:right;color:var(--muted)}
+    .hint{font-size:13px;color:var(--muted)}
+    @media (max-width:520px){canvas{height:360px}}
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back to Hub</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="wrap">
+        <header>
+          <div>
+            <h1>Dodge! — avoid falling blocks</h1>
+            <p class="small">Move the player left/right (← → or A / D). Survive as long as you can — score increases with time. Tap on-screen arrows on mobile. Press Enter or Space to start.</p>
+          </div>
+          <div class="meta">
+            <div>Score: <span id="uiScore">0</span></div>
+            <div class="hint">Best: <span id="uiBest">0</span></div>
+          </div>
+        </header>
+
+        <canvas id="game" width="800" height="480"></canvas>
+
+        <div class="controls">
+          <button id="startBtn">Start</button>
+          <button id="pauseBtn" class="ghost">Pause</button>
+          <button id="restartBtn" class="ghost">Restart</button>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+            <div class="hint">Touch controls:</div>
+            <button id="leftTouch" class="ghost">◀</button>
+            <button id="rightTouch" class="ghost">▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Simple falling-blocks dodge game
+  (() => {
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width, H = canvas.height;
+
+    // UI
+    const uiScore = document.getElementById('uiScore');
+    const uiBest = document.getElementById('uiBest');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const leftTouch = document.getElementById('leftTouch');
+    const rightTouch = document.getElementById('rightTouch');
+
+    // Game state
+    let running = false, paused = false, gameOver = false;
+    let score = 0, best = Number(localStorage.getItem('dodge_best') || 0);
+    uiBest.textContent = best;
+
+    // Player
+    const player = { x: W/2, y: H - 50, w: 48, h: 12, speed: 360, vx: 0 };
+
+    // Blocks
+    let blocks = [];
+    let spawnTimer = 0, spawnInterval = 1.0; // seconds
+    let gravitySpeed = 160; // base fall speed
+
+    // Timing
+    let last = performance.now();
+
+    // Input
+    const keys = {};
+    addEventListener('keydown', e => { 
+      keys[e.key.toLowerCase()] = true; 
+      if (['arrowleft','arrowright','a','d'].includes(e.key.toLowerCase())) e.preventDefault();
+      // Allow Enter or Space to start/restart game
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!running || gameOver) {
+          if (!running) start();
+          else restart();
+        }
+      }
+    });
+    addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+    // Touch buttons
+    let touchLeft = false, touchRight = false;
+    leftTouch.addEventListener('pointerdown', () => touchLeft = true); leftTouch.addEventListener('pointerup', () => touchLeft = false); leftTouch.addEventListener('pointerleave', () => touchLeft = false);
+    rightTouch.addEventListener('pointerdown', () => touchRight = true); rightTouch.addEventListener('pointerup', () => touchRight = false); rightTouch.addEventListener('pointerleave', () => touchRight = false);
+
+    // Resize handling (keeps virtual coords but scales canvas visually)
+    function fitCanvas(){
+      const ratio = W / H;
+      const maxW = Math.min(window.innerWidth - 60, 1000);
+      const width = Math.max(320, maxW);
+      canvas.style.width = width + 'px';
+      canvas.style.height = Math.round(width / ratio) + 'px';
+    }
+    addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    function spawnBlock(){
+      const bw = 28 + Math.random()*60;
+      const x = Math.random() * (W - bw);
+      const speed = gravitySpeed + Math.random()*120 + score*0.6; // speed up with score
+      blocks.push({x, y:-20, w:bw, h:18, vy: speed, hue: Math.floor(Math.random()*360)});
+    }
+
+    function reset(){
+      blocks = []; score = 0; spawnTimer = 0; spawnInterval = 1.0; gravitySpeed = 160; gameOver = false; player.x = W/2; player.vx = 0;
+      uiScore.textContent = '0';
+    }
+
+    function start(){ running = true; paused = false; reset(); last = performance.now(); loop(); }
+    function pauseToggle(){ if(!running) return; paused = !paused; pauseBtn.textContent = paused ? 'Resume' : 'Pause'; if(!paused) { last = performance.now(); loop(); } }
+    function restart(){ reset(); paused = false; gameOver = false; last = performance.now(); if(!running){ running = true; loop(); } }
+
+    startBtn.addEventListener('click', () => { if(!running) start(); else { restart(); } });
+    pauseBtn.addEventListener('click', pauseToggle);
+    restartBtn.addEventListener('click', restart);
+
+    function rectsCollide(a,b){
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.h + a.y > b.y;
+    }
+
+    function update(dt){
+      if(paused || gameOver) return;
+
+      // Player movement
+      const left = keys['arrowleft'] || keys['a'] || touchLeft;
+      const right = keys['arrowright'] || keys['d'] || touchRight;
+      player.vx = 0;
+      if(left) player.vx = -player.speed;
+      if(right) player.vx = player.speed;
+      player.x += player.vx * dt;
+      if(player.x < 0) player.x = 0; if(player.x + player.w > W) player.x = W - player.w;
+
+      // Spawn logic
+      spawnTimer += dt;
+      if(spawnTimer >= spawnInterval){ spawnTimer = 0; spawnInterval = Math.max(0.45, 0.9 - score*0.01); spawnBlock(); }
+
+      // Update blocks
+      for(let i=blocks.length-1;i>=0;i--){
+        const b = blocks[i];
+        b.y += b.vy * dt;
+        // if off screen remove
+        if(b.y > H + 40) blocks.splice(i,1);
+        // collision
+        const pbox = {x:player.x, y:player.y-8, w:player.w, h:player.h+8};
+        if(rectsCollide(pbox, b)){
+          gameOver = true; running = false;
+          // record best
+          if(score > best){ best = score; localStorage.setItem('dodge_best', best); uiBest.textContent = best; }
+        }
+      }
+
+      // Score increases with time survived
+      score += dt * 10; // smooth score
+      uiScore.textContent = Math.floor(score);
+    }
+
+    function draw(){
+      // clear
+      ctx.clearRect(0,0,W,H);
+
+      // background grid
+      ctx.fillStyle = '#061224';
+      ctx.fillRect(0,0,W,H);
+
+      // subtle stars
+      for(let i=0;i<40;i++){
+        ctx.fillStyle = 'rgba(255,255,255,0.02)';
+        ctx.fillRect((i*37)%W, (i*23)%H, 1,1);
+      }
+
+      // blocks
+      blocks.forEach(b => {
+        ctx.fillStyle = `hsl(${b.hue} 80% 60%)`;
+        roundRect(ctx, b.x, b.y, b.w, b.h, 6);
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+      });
+
+      // player
+      // body
+      ctx.fillStyle = '#4fc3f7';
+      roundRect(ctx, player.x, player.y, player.w, player.h, 6);
+      // eyes
+      ctx.fillStyle = '#012'; ctx.fillRect(player.x+8, player.y-10, 6,6);
+      ctx.fillRect(player.x+player.w-14, player.y-10, 6,6);
+
+      // HUD when game over
+      if(gameOver){
+        ctx.fillStyle = 'rgba(2,6,12,0.6)'; roundRect(ctx, W/2 - 160, H/2 - 80, 320, 160, 10); 
+        ctx.fillStyle = '#fff'; ctx.font = '20px system-ui'; ctx.textAlign = 'center';
+        ctx.fillText('Game Over', W/2, H/2 - 34);
+        ctx.font = '16px system-ui'; ctx.fillText('Score: ' + Math.floor(score), W/2, H/2 - 6);
+        ctx.fillText('Click Restart or Start to play again', W/2, H/2 + 28);
+      }
+
+      // Simple bottom ground line
+      ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0, H-20, W, 20);
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r); ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); ctx.fill();
+    }
+
+    function loop(){
+      if(!running) return; // stop if not running
+      const now = performance.now();
+      let dt = (now - last) / 1000; if(dt > 0.06) dt = 0.06; last = now;
+      update(dt);
+      draw();
+      if(!gameOver && !paused) requestAnimationFrame(loop);
+      if(gameOver) draw();
+    }
+
+    // initial draw
+    draw();
+
+    // allow tapping canvas to restart quickly when game over
+    canvas.addEventListener('pointerdown', () => { if(gameOver) restart(); });
+
+    // small accessibility: click to focus so keyboard works
+    canvas.addEventListener('click', () => canvas.focus());
+
+    // mobile: allow tilt control (optional)
+    if('DeviceOrientationEvent' in window){
+      window.addEventListener('deviceorientation', e => {
+        // gamma ~ left-right tilt [-90,90]
+        if(e.gamma !== null){
+          const tilt = e.gamma; // - left, + right
+          if(Math.abs(tilt) > 8){
+            if(tilt < 0) touchLeft = true; else touchRight = true;
+          } else { touchLeft = false; touchRight = false; }
+        }
+      });
+    }
+
+    // Keep canvas logical size stable on high-DPI screens
+    function fixHiDPI(){
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = canvas.style.width || '800px'; canvas.style.height = canvas.style.height || '480px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    fixHiDPI();
+
+    // Back button functionality
+    document.getElementById('backButton').addEventListener('click', () => {
+      window.location.href = 'home.html';
+    });
+
+    // expose for dev console (optional)
+    window.__dodgeGame = { start, restart, pauseToggle, reset };
+  })();
+  </script>
+</body>
+</html>

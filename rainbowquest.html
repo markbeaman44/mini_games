@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rainbow Quest - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
+            border: 3px solid #4682B4;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .game-header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .rainbow {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background: linear-gradient(90deg, 
+                #ff0000 0%, 
+                #ff8000 16.66%, 
+                #ffff00 33.33%, 
+                #00ff00 50%, 
+                #0080ff 66.66%, 
+                #8000ff 83.33%, 
+                #ff00ff 100%);
+            border-radius: 30px 30px 0 0;
+            border: 2px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s ease;
+            z-index: 10;
+        }
+
+        .rainbow::before {
+            content: '✨';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            animation: sparkle 1s infinite alternate;
+        }
+
+        @keyframes sparkle {
+            0% { transform: translateX(-50%) scale(1); }
+            100% { transform: translateX(-50%) scale(1.2); }
+        }
+
+        .cloud {
+            position: absolute;
+            width: 100px;
+            height: 40px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            opacity: 0.9;
+        }
+
+        .cloud::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            width: 50px;
+            height: 40px;
+            background: white;
+            border-radius: 50px;
+        }
+
+        .cloud::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50px;
+        }
+
+        .cloud.moving-down {
+            background: #f0f0f0;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #ff6b6b;
+        }
+
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .instructions p {
+            margin: 2px 0;
+            font-size: 0.9rem;
+        }
+
+        .start-screen {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(70, 130, 180, 0.95), rgba(25, 25, 112, 0.95));
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #4facfe;
+            color: white;
+        }
+
+        .start-screen h2 {
+            margin: 0 0 15px 0;
+            color: #4facfe;
+            font-size: 28px;
+            text-shadow: 0 0 15px #4facfe;
+        }
+
+        .start-screen p {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.4;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .start-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            border-radius: 15px;
+            font-weight: 800;
+            border: 2px solid #00f2fe;
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(79, 172, 254, 0.6);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-btn:hover {
+            background: white;
+            color: #4682B4;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 850px) {
+            .game-container {
+                width: 95vw;
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="javascript:history.back()" class="back-btn">← Back to Hub</a>
+    
+    <div class="game-container" id="gameContainer">
+        <div class="game-header">
+            <div class="game-title">🌈 Rainbow Quest</div>
+            <div class="score">Score: <span id="score">0</span></div>
+        </div>
+
+        <div class="rainbow" id="rainbow"></div>
+
+        <div class="game-over" id="gameOver">
+            <h2>Game Over!</h2>
+            <p>Your rainbow fell off the clouds!</p>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button class="btn" onclick="restartGame()">Play Again</button>
+            <button class="btn" onclick="window.location.href='home.html'">Back to Hub</button>
+            <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
+                Or press <strong>SPACEBAR</strong> to play again!
+            </p>
+        </div>
+
+        <div class="start-screen" id="startScreen">
+            <h2>🌈 Welcome to Rainbow Quest! 🌈</h2>
+            <p>🎯 Jump on clouds to stay alive!</p>
+            <p>🎮 Use <strong>ARROW KEYS</strong> or <strong>WASD</strong> to move</p>
+            <p>🚀 Press <strong>SPACEBAR</strong> to jump higher</p>
+            <p>⚠️ Don't fall off the screen!</p>
+            <p>🌟 Collect points by landing on clouds!</p>
+            <button class="start-btn" id="startBtn">Start Rainbow Adventure!</button>
+            <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
+                Or press <strong>SPACEBAR</strong> to begin!
+            </p>
+        </div>
+
+        <div class="instructions">
+            <p><strong>Use ARROW KEYS or WASD to move</strong></p>
+            <p><strong>SPACEBAR to jump higher</strong></p>
+            <p>Jump on clouds to stay alive! Don't fall off screen!</p>
+        </div>
+    </div>
+
+    <script>
+        class RainbowQuest {
+            constructor() {
+                this.gameContainer = document.getElementById('gameContainer');
+                this.rainbow = document.getElementById('rainbow');
+                this.scoreElement = document.getElementById('score');
+                this.gameOverElement = document.getElementById('gameOver');
+                this.finalScoreElement = document.getElementById('finalScore');
+                this.startScreen = document.getElementById('startScreen');
+                this.startBtn = document.getElementById('startBtn');
+                
+                this.gameWidth = 800;
+                this.gameHeight = 600;
+                this.isGameRunning = false;
+                this.gameStarted = false;
+                this.score = 0;
+                this.clouds = [];
+                this.lastCloudId = 0;
+                
+                // Rainbow properties
+                this.rainbowX = 370; // Center horizontally
+                this.rainbowY = 400; // Start at Y = 400
+                this.rainbowVelX = 0;
+                this.rainbowVelY = 0;
+                this.rainbowGrounded = false;
+                this.rainbowWidth = 60;
+                this.rainbowHeight = 30;
+                
+                // Physics
+                this.gravity = 0.5;
+                this.jumpPower = -15;
+                this.moveSpeed = 6;
+                this.cloudSpeed = 1.5;
+                this.cloudSpawnTimer = 0;
+                this.cloudLifespan = 6000; // 6 seconds before clouds start moving down faster
+                this.keys = {};
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.createInitialClouds();
+                this.updateRainbowPosition();
+                this.showStartScreen();
+                this.gameLoop();
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.code] = true;
+                    
+                    // Start game with spacebar if on start screen
+                    if (!this.gameStarted && e.code === 'Space') {
+                        this.startGame();
+                    }
+                    
+                    // Restart game with spacebar if on game over screen
+                    if (!this.isGameRunning && this.gameStarted && e.code === 'Space') {
+                        this.quickRestart();
+                    }
+                    
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.code] = false;
+                    e.preventDefault();
+                });
+                
+                // Start button click
+                this.startBtn.addEventListener('click', () => {
+                    this.startGame();
+                });
+                
+                // Prevent page scrolling
+                document.addEventListener('keydown', (e) => {
+                    if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].indexOf(e.code) > -1) {
+                        e.preventDefault();
+                    }
+                }, false);
+            }
+            
+            createInitialClouds() {
+                // Create starting platform positioned for new rainbow start position
+                this.createCloud(350, 430);
+                
+                // Create initial clouds with better spacing for jumpable distances
+                const cloudPositions = [
+                    {x: 200, y: 350},  // Left side, reachable jump
+                    {x: 500, y: 330},  // Right side, reachable jump
+                    {x: 100, y: 280},  // Far left, higher
+                    {x: 600, y: 260},  // Far right, higher
+                    {x: 350, y: 220},  // Center, higher still
+                    {x: 250, y: 170},  // Left-center
+                    {x: 450, y: 150},  // Right-center
+                    {x: 150, y: 100},  // Left side, very high
+                    {x: 550, y: 80},   // Right side, very high
+                    {x: 300, y: 30}    // Center, highest
+                ];
+                
+                cloudPositions.forEach(pos => {
+                    this.createCloud(pos.x, pos.y);
+                });
+            }
+            
+            createCloud(x, y) {
+                const cloud = {
+                    id: this.lastCloudId++,
+                    x: x,
+                    y: y,
+                    width: 100,
+                    height: 40,
+                    element: document.createElement('div'),
+                    birthTime: Date.now(),
+                    movingDown: false
+                };
+                
+                cloud.element.className = 'cloud';
+                cloud.element.style.left = x + 'px';
+                cloud.element.style.top = y + 'px';
+                
+                this.gameContainer.appendChild(cloud.element);
+                this.clouds.push(cloud);
+                
+                return cloud;
+            }
+            
+            showStartScreen() {
+                this.startScreen.style.display = 'block';
+                this.gameStarted = false;
+                this.isGameRunning = false;
+            }
+
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameStarted = true;
+                this.isGameRunning = true;
+                console.log('Game started!');
+            }
+
+            quickRestart() {
+                // Reset game state
+                this.score = 0;
+                this.scoreElement.textContent = this.score;
+                this.rainbowX = 370;
+                this.rainbowY = 400;
+                this.rainbowVelX = 0;
+                this.rainbowVelY = 0;
+                this.rainbowGrounded = false;
+                this.cloudSpawnTimer = 0;
+                
+                // Clear existing clouds
+                this.clouds.forEach(cloud => cloud.element.remove());
+                this.clouds = [];
+                this.lastCloudId = 0;
+                
+                // Create new initial clouds
+                this.createInitialClouds();
+                this.updateRainbowPosition();
+                
+                // Hide game over screen and start game immediately
+                this.gameOverElement.style.display = 'none';
+                this.isGameRunning = true;
+                console.log('Game restarted quickly!');
+            }
+
+            updateRainbowPosition() {
+                this.rainbow.style.left = this.rainbowX + 'px';
+                this.rainbow.style.top = this.rainbowY + 'px';
+            }
+            
+            handleInput() {
+                // Only process movement when game is running
+                if (!this.isGameRunning) return;
+                
+                // Horizontal movement
+                this.rainbowVelX = 0;
+                
+                if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
+                    this.rainbowVelX = -this.moveSpeed;
+                }
+                if (this.keys['ArrowRight'] || this.keys['KeyD']) {
+                    this.rainbowVelX = this.moveSpeed;
+                }
+                
+                // Jumping
+                if ((this.keys['Space'] || this.keys['ArrowUp'] || this.keys['KeyW']) && this.rainbowGrounded) {
+                    this.rainbowVelY = this.jumpPower;
+                    this.rainbowGrounded = false;
+                }
+            }
+            
+            updatePhysics() {
+                // Don't run physics until game is running
+                if (!this.isGameRunning) return;
+                
+                // Apply horizontal movement
+                this.rainbowX += this.rainbowVelX;
+                
+                // Keep rainbow in bounds horizontally
+                if (this.rainbowX < 0) this.rainbowX = 0;
+                if (this.rainbowX > this.gameWidth - this.rainbowWidth) {
+                    this.rainbowX = this.gameWidth - this.rainbowWidth;
+                }
+                
+                // Apply gravity
+                this.rainbowVelY += this.gravity;
+                this.rainbowY += this.rainbowVelY;
+                
+                // Check for death condition - falling off bottom of screen
+                if (this.rainbowY > this.gameHeight + 50) {
+                    this.gameOver();
+                    return;
+                }
+                
+                // Reset grounded state
+                this.rainbowGrounded = false;
+                
+                // Check cloud collisions
+                this.checkCloudCollisions();
+            }
+            
+            checkCloudCollisions() {
+                for (let cloud of this.clouds) {
+                    // Check if rainbow is landing on cloud from above
+                    if (this.rainbowVelY > 0 && // Falling down
+                        this.rainbowX < cloud.x + cloud.width &&
+                        this.rainbowX + this.rainbowWidth > cloud.x &&
+                        this.rainbowY + this.rainbowHeight > cloud.y &&
+                        this.rainbowY + this.rainbowHeight < cloud.y + cloud.height + 10) {
+                        
+                        this.rainbowY = cloud.y - this.rainbowHeight;
+                        this.rainbowVelY = 0;
+                        this.rainbowGrounded = true;
+                        
+                        // Award points for landing on cloud
+                        this.score += 10;
+                        this.scoreElement.textContent = this.score;
+                        break;
+                    }
+                }
+            }
+            
+            updateClouds() {
+                // Don't move clouds until game is running
+                if (!this.isGameRunning) return;
+                
+                const currentTime = Date.now();
+                
+                // Move existing clouds down continuously
+                for (let i = this.clouds.length - 1; i >= 0; i--) {
+                    const cloud = this.clouds[i];
+                    const age = currentTime - cloud.birthTime;
+                    
+                    // All clouds move down gradually
+                    cloud.y += this.cloudSpeed;
+                    
+                    // After some time, clouds start moving down faster (this creates pressure)
+                    if (age > this.cloudLifespan) {
+                        cloud.movingDown = true;
+                        cloud.element.classList.add('moving-down');
+                        cloud.y += this.cloudSpeed * 2; // Move down faster for urgency
+                    }
+                    
+                    cloud.element.style.top = cloud.y + 'px';
+                    
+                    // Remove clouds that are too far down
+                    if (cloud.y > this.gameHeight + 50) {
+                        cloud.element.remove();
+                        this.clouds.splice(i, 1);
+                    }
+                }
+                
+                // More responsive cloud spawning - spawn more frequently
+                this.cloudSpawnTimer++;
+                if (this.cloudSpawnTimer > 90) { // Every 1.5 seconds at 60fps for more clouds
+                    this.cloudSpawnTimer = 0;
+                    
+                    // Always spawn 2-3 clouds to ensure player has options
+                    const numClouds = Math.random() < 0.3 ? 2 : 3;
+                    for (let i = 0; i < numClouds; i++) {
+                        // Create clouds with good horizontal distribution
+                        let x;
+                        if (numClouds === 2) {
+                            x = i === 0 ? 100 + Math.random() * 200 : 500 + Math.random() * 200;
+                        } else {
+                            // Three clouds - left, center, right distribution
+                            if (i === 0) x = 50 + Math.random() * 150;      // Left
+                            else if (i === 1) x = 250 + Math.random() * 300; // Center  
+                            else x = 550 + Math.random() * 150;              // Right
+                        }
+                        const y = -80 - (i * 60); // Spawn higher with good spacing
+                        this.createCloud(x, y);
+                    }
+                }
+            }
+            
+            gameLoop() {
+                // Always run the game loop, but handle input differently based on game state
+                this.handleInput();
+                
+                // Only run physics and cloud updates when game is running
+                if (this.isGameRunning) {
+                    this.updatePhysics();
+                    this.updateClouds();
+                }
+                
+                // Always update rainbow position for smooth rendering
+                this.updateRainbowPosition();
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            gameOver() {
+                this.isGameRunning = false;
+                this.finalScoreElement.textContent = this.score;
+                this.gameOverElement.style.display = 'block';
+            }
+            
+            restart() {
+                // Use the same quick restart logic for the button
+                this.quickRestart();
+            }
+        }
+        
+        // Initialize game
+        let game;
+        
+        window.addEventListener('load', () => {
+            game = new RainbowQuest();
+        });
+        
+        function restartGame() {
+            game.restart();
+        }
+        
+        // Prevent context menu on right click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
