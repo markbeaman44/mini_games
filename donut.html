@@ -6,8 +6,10 @@
   <title>Silly Bounce — Playable 2D Web Game</title>
   <style>
     html,body{
-      height:100%;
+      height: 100vh;
+      height: 100dvh;  
       margin:0;
+      overflow: hidden;
       background:linear-gradient(#b3ecff,#e8f9ff);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;
       user-select:none;
@@ -856,6 +858,13 @@
 
   // Show instructions on start
   instructionsPopup.style.display = 'flex';
+
+  window.addEventListener("load", function() {
+    setTimeout(() => {
+      window.scrollTo(0, 1);
+    }, 100);
+  });
+  
 })();
 </script>
 </body>
