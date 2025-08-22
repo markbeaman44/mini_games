@@ -22,13 +22,42 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
 - **Game Loop**: Most action games use `requestAnimationFrame()` with update/draw pattern
 - **State Objects**: Player state stored in objects like `{ x, y, w, h, speed, ... }`
 
-### Visual Design System
-- **Gradients**: Heavy use of `linear-gradient()` and `radial-gradient()` for backgrounds
-- **Game Container**: Standard pattern `width: min(900px, 95vw); height: min(600px, 85vh)`
-- **Centering**: Use flexbox centering on body: `display: flex; flex-direction: column; align-items: center; justify-content: center;`
-- **No Margin**: Game container should NOT use `margin: auto` - let flexbox handle centering
-- **Responsive**: `@media` queries for mobile with touch controls
-- **Color Themes**: Each game has distinct color palette (space = neon, puzzle = pastels, etc.)
+### Game Container & Layout Pattern
+- **Game Wrapper**: Use `.game-wrapper` with flexbox centering for consistent tablet/mobile layout
+- **Responsive Sizing**: `width: min(900px, 95vw); height: min(600px, 85vh)` for game containers
+- **Centering Pattern**: 
+  ```css
+  .game-wrapper {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  ```
+- **No Direct Body Centering**: Remove `display: flex` from body, use game-wrapper instead
+- **HTML Structure**: `<body><div class="game-wrapper"><div class="game-container">...</div></div></body>`
+
+### Board Game Scaling Pattern
+For games with grids, boards, or multiple game elements (like dice games, puzzle games):
+- **Constrain Board Height**: Use `max-height: 40vh` (or 30vh on tablets/mobile) to prevent boards from taking entire screen
+- **Set Maximum Element Sizes**: Use `max-width` and `max-height` on grid cells/board spaces (e.g., `max-width: 70px`)
+- **Responsive Grid Cells**: Use `aspect-ratio: 1` with CSS Grid `1fr` columns, but constrain with max dimensions
+- **Reserve Space**: Ensure UI elements (dice, buttons, controls) have enough space below/around the board
+- **Example Pattern**:
+  ```css
+  .board-path {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    max-height: 40vh; /* Prevent board from dominating screen */
+  }
+  .board-space {
+    aspect-ratio: 1;
+    max-width: 70px; /* Constrain individual cells */
+    max-height: 70px;
+  }
+  ```
 
 ## Critical Patterns
 
@@ -184,11 +213,16 @@ function playSound(frequency, duration, type = 'sine') {
       height: 100dvh;
       margin: 0;
       overflow: hidden;
+      color: white;
+    }
+    
+    .game-wrapper {
+      height: 100%;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: white;
+      padding: 20px;
+      box-sizing: border-box;
     }
     
     .game-container {
@@ -203,7 +237,7 @@ function playSound(frequency, duration, type = 'sine') {
   </style>
 </head>
 <body>
-  <button id="backButton">← Back to Hub</button>
+  <button id="backButton">← Back</button>
   <div class="game-container">
     <!-- Instructions Popup (shown first) -->
     <div class="instructions-popup" id="instructionsPopup">

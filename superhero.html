@@ -15,10 +15,19 @@
             font-family: 'Arial', sans-serif;
             background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -469,9 +478,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <div class="start-screen" id="startScreen">
             <h1>🦸 Time Echo Superhero</h1>
             <p>Work with your past selves to save the city!</p>
@@ -518,6 +528,7 @@
             <p id="gameOverText">You've saved the city through time!</p>
             <button class="restart-btn" id="restartBtn">New Mission</button>
         </div>
+    </div>
     </div>
 
     <script>

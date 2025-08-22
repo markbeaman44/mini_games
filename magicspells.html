@@ -12,8 +12,10 @@
             --panel:#111214;
         }
         *{box-sizing:border-box}
-        body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:system-ui,Segoe UI,Arial;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;height:100dvh;overflow:hidden}
-        .container{width:920px;height:640px;background:linear-gradient(180deg,rgba(0,0,0,0.25),rgba(0,0,0,0.15));border-radius:14px;padding:18px;position:relative;overflow:hidden;border:3px solid rgba(255,255,255,0.04)}
+        body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:system-ui,Segoe UI,Arial;color:#fff;height:100vh;height:100dvh;overflow:hidden}
+        
+        .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+        .container{width:min(920px,95vw);height:min(640px,85vh);background:linear-gradient(180deg,rgba(0,0,0,0.25),rgba(0,0,0,0.15));border-radius:14px;padding:18px;position:relative;overflow:hidden;border:3px solid rgba(255,255,255,0.04)}
         .topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px}
         .title{font-size:1.6rem;font-weight:800;display:flex;gap:10px;align-items:center}
         .subtitle{font-size:0.9rem;color:#ffd700}
@@ -88,13 +90,35 @@
         .candy-item{position:absolute;font-size:28px}
 
         @media (max-width:980px){.container{width:95vw;height:85vh}.witch{width:160px;height:200px}.potion{width:64px;height:88px}.potion .bottle{width:46px;height:46px}}
+
+        @media (max-width: 600px) {
+            .container {
+                height: min(600px, 85vh);
+                padding: 15px;
+            }
+            
+            .back-btn {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .start-screen {
+                padding: 20px;
+                margin: 0 10px;
+            }
+            
+            .start-screen h2 {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Back button fixed at top-left of the screen -->
-    <a href="home.html" class="back-btn">← Back to Hub</a>
+    <a href="home.html" class="back-btn">← Back</a>
 
-    <div class="container">
+    <div class="game-wrapper">
+        <div class="container">
         <div class="topbar">
             <div class="title">🪄 Magic Spells <span class="subtitle">— Halloween Lab</span></div>
             <div class="centerDesc">Click any number of potions (mix them) then click the witch to cast the spell.</div>
@@ -144,6 +168,7 @@
             </div>
         </div>
 
+      </div>
       </div>
 
      <script>

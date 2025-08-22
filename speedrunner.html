@@ -18,9 +18,15 @@
             height: 100dvh;
             margin: 0;
             overflow: hidden;
+        }
+
+        .game-wrapper {
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         /* Back button */
@@ -49,8 +55,8 @@
 
         /* Game container */
         .game-container {
-            width: 1000px;
-            height: 600px;
+            width: min(1000px, 95vw);
+            height: min(600px, 85vh);
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 20px;
@@ -408,12 +414,34 @@
                 height: 50px;
             }
         }
+
+        @media (max-width: 600px) {
+            .game-container {
+                height: min(500px, 85vh);
+                padding: 15px;
+            }
+            
+            .back-btn {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .start-screen {
+                padding: 20px;
+                margin: 0 10px;
+            }
+            
+            .start-screen h1 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <a href="home.html" class="back-btn">← Back to Hub</a>
+    <a href="home.html" class="back-btn">← Back</a>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Start Screen -->
         <div class="start-screen" id="startScreen">
             <h1>🏃‍♀️ Speed Runner Challenge!</h1>
@@ -471,6 +499,7 @@
             <div id="achievement"></div>
             <button class="play-again-btn" id="playAgainBtn">Run Again!</button>
         </div>
+    </div>
     </div>
 
     <script>
