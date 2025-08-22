@@ -13,7 +13,7 @@
       --secondary:#4ECDC4;
       --danger:#FF6B6B;
     }
-    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg),#B0E0E6)}
+    html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg),#B0E0E6)}
     .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
     .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
     .game{width:min(900px,95vw);height:min(600px,85vh);background:linear-gradient(#87CEEB, #98D8E8);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.15);position:relative;overflow:hidden}
@@ -832,6 +832,12 @@
     mobileControls.style.display = 'flex';
   }
 })();
+
+window.addEventListener("load", function() {
+  setTimeout(() => {
+    window.scrollTo(0, 1);
+  }, 100);
+});
 </script>
 </body>
 </html>

@@ -14,11 +14,13 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(180deg, #87CEEB 0%, #98FB98 50%, #8B4513 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
         }
 
         #backButton {
@@ -1129,6 +1131,12 @@
 
         // Start the game
         const game = new MountainRescue();
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
     </script>
 </body>
 </html>

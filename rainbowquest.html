@@ -637,6 +637,12 @@
         window.addEventListener('load', () => {
             game = new RainbowQuest();
         });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
         
         function restartGame() {
             game.restart();

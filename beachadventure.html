@@ -14,12 +14,14 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #87CEEB 0%, #98E4FF 50%, #FFE4B5 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
             color: #2c3e50;
         }
 
@@ -1121,6 +1123,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new BeachAdventure();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

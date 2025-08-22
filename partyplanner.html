@@ -924,6 +924,12 @@
         window.addEventListener('load', () => {
             new PartyPlannerGame();
         });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
     </script>
 </body>
 </html>

@@ -17,7 +17,7 @@
       --rocket-body:#4169E1;
       --rocket-flame:#FF4500;
     }
-    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg-space),var(--bg-nebula));overflow:hidden}
+    html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(180deg,var(--bg-space),var(--bg-nebula))}
     .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
     .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
     .game{width:min(900px,95vw);height:min(600px,85vh);background:radial-gradient(ellipse at center, #1A0033 0%, #0D001A 100%);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.15), inset 0 0 50px rgba(0,255,255,0.1);position:relative;overflow:hidden;border:2px solid var(--neon-cyan)}
@@ -783,6 +783,12 @@
     mobileControls.style.display = 'block';
   }
 })();
+
+window.addEventListener("load", function() {
+  setTimeout(() => {
+    window.scrollTo(0, 1);
+  }, 100);
+});
 </script>
 </body>
 </html>

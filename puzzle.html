@@ -13,7 +13,7 @@
       --panel:#ffffffee;
       --success:#4CAF50;
     }
-    html,body{height:100%;margin:0;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(135deg,var(--bg),#F0E5FF)}
+    html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:'Comic Sans MS',cursive,system-ui;background:linear-gradient(135deg,var(--bg),#F0E5FF)}
     .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
     .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
     .game{width:min(800px,95vw);height:min(650px,85vh);background:linear-gradient(135deg,#FFE5F1,#F0E5FF);border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.15);position:relative;overflow:hidden}
@@ -421,6 +421,12 @@
   // Initialize the game
   init();
 })();
+
+window.addEventListener("load", function() {
+  setTimeout(() => {
+    window.scrollTo(0, 1);
+  }, 100);
+});
 </script>
 </body>
 </html>

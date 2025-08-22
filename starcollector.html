@@ -987,6 +987,12 @@
         window.addEventListener('load', () => {
             game = new StarCollector();
         });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
         
         // Prevent context menu
         document.addEventListener('contextmenu', e => e.preventDefault());

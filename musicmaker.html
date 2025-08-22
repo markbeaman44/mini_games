@@ -1061,6 +1061,12 @@
         window.addEventListener('load', () => {
             new BeatBuilder();
         });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
     </script>
 </body>
 </html>

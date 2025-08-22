@@ -14,11 +14,13 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD23F 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         /* Back button */
@@ -783,6 +785,12 @@
             // Initialize game
             updateUI();
         })();
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
     </script>
 </body>
 </html>

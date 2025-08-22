@@ -42,6 +42,37 @@ if ('ontouchstart' in window) {
 touchBtn.addEventListener('touchstart', (e) => { e.preventDefault(); });
 ```
 
+### Mobile Optimization (REQUIRED)
+**Critical mobile improvements that MUST be applied to every game file:**
+
+#### CSS Body Height & Overflow
+All games must include these CSS properties for proper mobile display:
+```css
+html,body {
+  height: 100vh;
+  height: 100dvh;  /* Dynamic viewport height for mobile */
+  margin: 0;
+  overflow: hidden;
+  /* ... other existing styles ... */
+}
+```
+- **`100vh/100dvh`**: Ensures full viewport coverage; `100dvh` accounts for mobile UI elements like address bars
+- **`margin: 0`**: Removes default margins that can cause scrolling
+- **`overflow: hidden`**: Prevents unwanted scrolling and creates immersive full-screen experience
+
+#### Mobile Address Bar Hide Fix
+Add this JavaScript to the end of every game file (before closing `</script>` tag):
+```javascript
+window.addEventListener("load", function() {
+    setTimeout(() => {
+        window.scrollTo(0, 1);
+    }, 100);
+});
+```
+- **Purpose**: Forces mobile browsers to hide the address bar after page load
+- **Timing**: 100ms delay ensures page is fully loaded before scroll attempt
+- **Effect**: Maximizes game screen real estate on mobile devices
+
 ### Game Screen States
 - **Instructions Popup**: Required modal that appears on game load with gameplay instructions
 - **Game Area**: Visible during gameplay  
@@ -113,7 +144,8 @@ function playSound(frequency, duration, type = 'sine') {
 1. Copy existing similar game as template
 2. Update `home.html` games grid with new entry
 3. Change status from "coming-soon" to "available" class
-4. Test back button navigation and mobile responsiveness
+4. **Apply mobile optimizations**: Add mobile CSS and scroll fix
+5. Test back button navigation and mobile responsiveness
 
 ### Game Testing Checklist
 - Back button navigation to hub
@@ -123,6 +155,8 @@ function playSound(frequency, duration, type = 'sine') {
 - Space bar restarts the level/game
 - Game over state and restart functionality
 - A popup with instructions needs to be included
+- **Mobile viewport**: Test `100vh/100dvh` height and `overflow: hidden`
+- **Mobile address bar**: Verify address bar hides on mobile devices
 
 ### Debugging Common Issues
 - **Pokemon encounters not working**: Check `getSpaceType()` function exists and HTML IDs match JavaScript selectors
@@ -146,12 +180,14 @@ function playSound(frequency, duration, type = 'sine') {
     body {
       font-family: 'Arial', sans-serif;
       background: linear-gradient(/* game-specific gradient */);
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
       color: white;
     }
     
@@ -182,7 +218,16 @@ function playSound(frequency, duration, type = 'sine') {
     <!-- Game Over (overlay) -->
     <div class="game-over" id="gameOver"><!-- Game over content --></div>
   </div>
-  <script>/* Game logic */</script>
+  <script>
+    /* Game logic */
+    
+    // Mobile address bar hide fix - REQUIRED
+    window.addEventListener("load", function() {
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+      }, 100);
+    });
+  </script>
 </body>
 </html>
 ```
