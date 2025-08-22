@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -366,7 +373,8 @@
 <body>
     <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Start Screen -->
         <div class="start-screen" id="startScreen">
             <h1>⚡ Strike Commander ⚡</h1>
@@ -432,6 +440,7 @@
                 <button class="restart-btn" id="restartBtn">New Mission</button>
             </div>
         </div>
+    </div>
     </div>
 
     <script>

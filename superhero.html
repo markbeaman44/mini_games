@@ -24,10 +24,18 @@
         .game-wrapper {
             height: 100%;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 20px;
+            padding: 60px 20px 20px;
             box-sizing: border-box;
+        }
+
+        /* Desktop centering */
+        @media (min-width: 1025px) {
+            .game-wrapper {
+                align-items: center;
+                padding: 20px;
+            }
         }
 
         #backButton {
@@ -450,7 +458,7 @@
             to { opacity: 0; transform: scale(1.2); }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .mobile-controls {
                 display: grid;
             }

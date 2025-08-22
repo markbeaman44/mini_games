@@ -22,11 +22,20 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
 - **Game Loop**: Most action games use `requestAnimationFrame()` with update/draw pattern
 - **State Objects**: Player state stored in objects like `{ x, y, w, h, speed, ... }`
 
-### Game Container & Layout Pattern
-- **Game Wrapper**: Use `.game-wrapper` with flexbox centering for consistent tablet/mobile layout
+### Game Container & Layout Pattern (CRITICAL FOR CENTERING)
+- **Game Wrapper**: ALWAYS use `.game-wrapper` with flexbox centering for consistent tablet/mobile layout
 - **Responsive Sizing**: `width: min(900px, 95vw); height: min(600px, 85vh)` for game containers
-- **Centering Pattern**: 
+- **NEVER use body flexbox**: Do NOT put `display: flex` directly on the body element - this causes centering issues on tablets
+- **Required Centering Pattern**: 
   ```css
+  body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+    /* NO display: flex here! */
+  }
+  
   .game-wrapper {
     height: 100%;
     display: flex;
@@ -36,8 +45,9 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
     box-sizing: border-box;
   }
   ```
-- **No Direct Body Centering**: Remove `display: flex` from body, use game-wrapper instead
-- **HTML Structure**: `<body><div class="game-wrapper"><div class="game-container">...</div></div></body>`
+- **Mandatory HTML Structure**: `<body><div class="game-wrapper"><div class="game-container">...</div></div></body>`
+- **Common Mistake**: Putting flexbox centering directly on body causes games to appear too high or too low on tablets
+- **Working Examples**: Reference `panda.html`, `hideseek.html`, `spaceexplorer.html` for correct implementation
 
 ### Board Game Scaling Pattern
 For games with grids, boards, or multiple game elements (like dice games, puzzle games):
@@ -186,11 +196,13 @@ function playSound(frequency, duration, type = 'sine') {
 - A popup with instructions needs to be included
 - **Mobile viewport**: Test `100vh/100dvh` height and `overflow: hidden`
 - **Mobile address bar**: Verify address bar hides on mobile devices
+- **CRITICAL - Tablet Centering**: Verify game is properly centered on tablet screens using game-wrapper pattern
 
 ### Debugging Common Issues
 - **Pokemon encounters not working**: Check `getSpaceType()` function exists and HTML IDs match JavaScript selectors
 - **Mobile controls**: Verify touch event handlers and `touchstart`/`touchend` events
 - **High DPI displays**: Most canvas games include `fixHiDPI()` function for device pixel ratio
+- **Tablet centering issues**: If games appear too high/low on tablets, ensure using game-wrapper pattern instead of body flexbox
 
 ## Code Conventions
 
@@ -238,19 +250,21 @@ function playSound(frequency, duration, type = 'sine') {
 </head>
 <body>
   <button id="backButton">← Back</button>
-  <div class="game-container">
-    <!-- Instructions Popup (shown first) -->
-    <div class="instructions-popup" id="instructionsPopup">
-      <div class="instructions-content">
-        <h2>How to Play</h2>
-        <p>Game instructions...</p>
-        <button class="close-instructions" id="closeInstructions">Start Game!</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <!-- Instructions Popup (shown first) -->
+      <div class="instructions-popup" id="instructionsPopup">
+        <div class="instructions-content">
+          <h2>How to Play</h2>
+          <p>Game instructions...</p>
+          <button class="close-instructions" id="closeInstructions">Start Game!</button>
+        </div>
       </div>
+      <!-- Game Area (shown after instructions) -->
+      <div class="game-area" id="gameArea"><!-- Game content --></div>
+      <!-- Game Over (overlay) -->
+      <div class="game-over" id="gameOver"><!-- Game over content --></div>
     </div>
-    <!-- Game Area (shown after instructions) -->
-    <div class="game-area" id="gameArea"><!-- Game content --></div>
-    <!-- Game Over (overlay) -->
-    <div class="game-over" id="gameOver"><!-- Game over content --></div>
   </div>
   <script>
     /* Game logic */

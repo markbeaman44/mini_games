@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -489,7 +496,8 @@
 <body>
     <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -534,6 +542,7 @@
     <div class="mobile-controls" id="mobileControls">
         <button class="mobile-btn" id="mobileLeft">← Left</button>
         <button class="mobile-btn" id="mobileRight">Right →</button>
+    </div>
     </div>
 
     <script>

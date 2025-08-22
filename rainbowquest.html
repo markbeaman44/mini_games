@@ -14,17 +14,24 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
         }
 
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
         .game-container {
-            width: 800px;
-            height: 600px;
+            width: min(800px, 95vw);
+            height: min(600px, 85vh);
             background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
             border: 3px solid #4682B4;
             border-radius: 15px;
@@ -266,7 +273,8 @@
 <body>
     <a href="javascript:history.back()" class="back-btn">← Back</a>
     
-    <div class="game-container" id="gameContainer">
+    <div class="game-wrapper">
+        <div class="game-container" id="gameContainer">
         <div class="game-header">
             <div class="game-title">🌈 Rainbow Quest</div>
             <div class="score">Score: <span id="score">0</span></div>
@@ -303,6 +311,7 @@
             <p><strong>SPACEBAR to jump higher</strong></p>
             <p>Jump on clouds to stay alive! Don't fall off screen!</p>
         </div>
+    </div>
     </div>
 
     <script>

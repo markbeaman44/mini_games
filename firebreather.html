@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #FF4500 0%, #DC143C 50%, #8B0000 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -465,7 +472,8 @@
 <body>
     <button id="backButton">← Back</button>
 
-    <div class="game-container" id="gameContainer">
+    <div class="game-wrapper">
+        <div class="game-container" id="gameContainer">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -521,6 +529,7 @@
                 <button class="restart-btn" id="restartBtn">Breathe Fire Again</button>
             </div>
         </div>
+    </div>
     </div>
 
     <script>

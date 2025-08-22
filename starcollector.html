@@ -14,17 +14,24 @@
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
             background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #98FB98 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
         }
 
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
         .game-container {
-            width: 900px;
-            height: 600px;
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
             background: linear-gradient(0deg, #87CEEB 0%, #98FB98 100%);
             border: 3px solid #FFD700;
             border-radius: 15px;
@@ -388,7 +395,8 @@
 <body>
     <a href="home.html" class="back-btn">← Back</a>
     
-    <div class="game-container" id="gameContainer">
+    <div class="game-wrapper">
+        <div class="game-container" id="gameContainer">
         <div class="game-header">
             <div class="game-title">⭐ Star Collector ⭐</div>
             <div class="score">
@@ -443,6 +451,7 @@
         <div class="instructions">
             <p><strong>Arrow Keys / WASD:</strong> Move & Jump | <strong>SPACEBAR:</strong> Start/Continue | <strong>Collect all toys to win!</strong></p>
         </div>
+    </div>
     </div>
 
     <script>

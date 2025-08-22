@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #f4e4bc 0%, #ddbf94 50%, #d4a574 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: #8b4513;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -247,7 +254,8 @@
 <body>
     <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -289,6 +297,7 @@
                 <button class="restart-btn" id="restartBtn">Next Level</button>
             </div>
         </div>
+    </div>
     </div>
 
     <script>

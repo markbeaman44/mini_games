@@ -7,7 +7,12 @@
   <style>
     :root{--bg:#0b1020;--card:#0f1724;--accent:#4fc3f7;--danger:#ff6b6b;--muted:#9aa7bf}
     html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#e6eef8;background:linear-gradient(180deg,var(--bg),#071029)}
-    .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+    .game-wrapper{height:100%;display:flex;align-items:flex-start;justify-content:center;padding:80px 20px 20px;box-sizing:border-box}
+    
+    /* Desktop centering */
+    @media (min-width: 1025px) {
+      .game-wrapper{align-items:center;padding:20px;}
+    }
     .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
     .wrap{width:min(900px,95vw);height:min(600px,85vh);padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);box-shadow:0 6px 30px rgba(2,6,23,0.6);overflow:hidden}
     #backButton{position:fixed;top:20px;left:20px;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:background-color 0.3s ease, transform 0.2s ease;z-index:1000}
