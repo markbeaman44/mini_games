@@ -71,7 +71,6 @@
             border: 3px solid #4facfe;
         }
 
-
         .start-screen {
             position: absolute;
             top: 0;
@@ -459,7 +458,13 @@
             to { opacity: 0; transform: scale(1.2); }
         }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 768px) {
+            .game-container {
+                height: min(600px, 90vh);
+            }
+        }
+
+        /* @media (max-width: 768px) {
             .mobile-controls {
                 display: grid;
             }
@@ -483,7 +488,7 @@
             .controls {
                 display: none;
             }
-        }
+        } */
     </style>
 </head>
 <body>
