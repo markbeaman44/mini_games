@@ -71,6 +71,16 @@
             border: 3px solid #4facfe;
         }
 
+        /* Tablet/mobile vertical centering for game-container */
+        @media (max-width: 1024px) {
+            .game-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
         .start-screen {
             position: absolute;
             top: 0;
