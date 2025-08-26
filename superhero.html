@@ -71,15 +71,6 @@
             border: 3px solid #4facfe;
         }
 
-        /* Tablet/mobile vertical centering for game-container */
-        @media (max-width: 1024px) {
-            .game-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
-        }
 
         .start-screen {
             position: absolute;
@@ -500,47 +491,46 @@
 
     <div class="game-wrapper">
         <div class="game-container">
-        <div class="start-screen" id="startScreen">
-            <h1>🦸 Time Echo Superhero</h1>
-            <p>Work with your past selves to save the city!</p>
-            <button class="start-btn" id="startBtn">Start Mission</button>
-        </div>
-
-        <div class="instructions-popup" id="instructionsPopup">
-            <div class="instructions-content">
-                <h2>🕐 How to Play</h2>
-                <p><strong>🦸‍♂️ Your Mission:</strong> Save all civilians by working with your time echoes!</p>
-                <p><strong>⏰ Time Echoes:</strong> Your past movements create "echoes" that help activate switches and clear paths.</p>
-                <p><strong>🎯 Strategy:</strong> Plan your route carefully - your echoes will repeat your exact movements!</p>
-                <p><strong>🔄 Controls:</strong> Use WASD or arrow keys to move, or touch controls on mobile.</p>
-                <p><strong>⚡ Goal:</strong> Rescue all civilians and reach the exit. Some switches need multiple heroes!</p>
-                <button class="close-instructions" id="closeInstructions">Got it! Let's Save the City!</button>
+            <div class="start-screen" id="startScreen">
+                <h1>🦸 Time Echo Superhero</h1>
+                <p>Work with your past selves to save the city!</p>
+                <button class="start-btn" id="startBtn">Start Mission</button>
             </div>
-        </div>
 
-        <div class="game-area" id="gameArea">
-            <div class="time-indicator" id="timeIndicator">Timeline: Present</div>
-            <div class="level-grid" id="levelGrid"></div>
-            
-            <div class="game-ui">
-                <div class="ui-info">
-                    <div>Level: <span id="currentLevel">1</span></div>
-                    <div>Civilians: <span id="civilianCount">0</span></div>
-                    <div>Echoes: <span id="echoCount">0</span></div>
-                </div>
-                <div class="controls">
-                    <button class="control-btn" id="resetMoveBtn">Reset Moves</button>
-                    <button class="control-btn" id="nextTimeBtn">Next Timeline</button>
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🕐 How to Play</h2>
+                    <p><strong>🦸‍♂️ Your Mission:</strong> Save all civilians by working with your time echoes!</p>
+                    <p><strong>⏰ Time Echoes:</strong> Your past movements create "echoes" that help activate switches and clear paths.</p>
+                    <p><strong>🎯 Strategy:</strong> Plan your route carefully - your echoes will repeat your exact movements!</p>
+                    <p><strong>🔄 Controls:</strong> Use WASD or arrow keys to move, or touch controls on mobile.</p>
+                    <p><strong>⚡ Goal:</strong> Rescue all civilians and reach the exit. Some switches need multiple heroes!</p>
+                    <button class="close-instructions" id="closeInstructions">Got it! Let's Save the City!</button>
                 </div>
             </div>
-        </div>
 
-        <div class="game-over" id="gameOver">
-            <h2>Mission Complete!</h2>
-            <p id="gameOverText">You've saved the city through time!</p>
-            <button class="restart-btn" id="restartBtn">New Mission</button>
+            <div class="game-area" id="gameArea">
+                <div class="time-indicator" id="timeIndicator">Timeline: Present</div>
+                <div class="level-grid" id="levelGrid"></div>
+                <div class="game-ui">
+                    <div class="ui-info">
+                        <div>Level: <span id="currentLevel">1</span></div>
+                        <div>Civilians: <span id="civilianCount">0</span></div>
+                        <div>Echoes: <span id="echoCount">0</span></div>
+                    </div>
+                    <div class="controls">
+                        <button class="control-btn" id="resetMoveBtn">Reset Moves</button>
+                        <button class="control-btn" id="nextTimeBtn">Next Timeline</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-over" id="gameOver">
+                <h2>Mission Complete!</h2>
+                <p id="gameOverText">You've saved the city through time!</p>
+                <button class="restart-btn" id="restartBtn">New Mission</button>
+            </div>
         </div>
-    </div>
     </div>
 
     <script>
