@@ -6,7 +6,7 @@
   <title>Dodge! — Simple HTML Canvas Game</title>
   <style>
     :root{--bg:#0b1020;--card:#0f1724;--accent:#4fc3f7;--danger:#ff6b6b;--muted:#9aa7bf}
-    html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#e6eef8;background:linear-gradient(180deg,var(--bg),#071029)}
+    html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#e6eef8;background:linear-gradient(180deg,var(--bg),#1940ab)}
   .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
     
     /* Desktop centering */
@@ -14,7 +14,29 @@
       .game-wrapper{align-items:center;padding:20px;}
     }
     .game-container{display:flex;flex-direction:column;align-items:center;gap:12px}
-    .wrap{width:min(900px,95vw);height:min(600px,85vh);padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);box-shadow:0 6px 30px rgba(2,6,23,0.6);overflow:hidden}
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: min(900px, 95vw);
+      height: min(600px, 85vh);
+      padding: 18px;
+      border-radius: 12px;
+      background: linear-gradient(180deg,rgba(255,255,255,0.02),transparent);
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 16px;
+      background: linear-gradient(180deg,#081226,#051022);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      width: 100%;
+      max-height: 60vh;
+      aspect-ratio: 5/3;
+    }
     #backButton{position:fixed;top:20px;left:20px;background:#ff6b6b;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:700;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:background-color 0.3s ease, transform 0.2s ease;z-index:1000}
     #backButton:hover{background:#ff5252;transform:translateY(-2px)}
     #backButton:active{transform:translateY(0)}
@@ -22,7 +44,6 @@
     h1{font-size:20px;margin:0}
     p.small{margin:6px 0 12px;color:var(--muted);font-size:13px}
     .row{display:flex;gap:10px;align-items:center}
-    canvas{display:block;border-radius:16px;background:linear-gradient(180deg,#081226,#051022);box-shadow:0 8px 30px rgba(0,0,0,0.15);width:100%;max-height:60vh;aspect-ratio:5/3}
     .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     button{background:var(--accent);border:0;padding:8px 12px;border-radius:8px;color:#03202b;font-weight:600;cursor:pointer}
     button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
@@ -36,7 +57,7 @@
       button{padding:6px 10px;font-size:14px}
     }
     
-    @media (max-width:768px){
+    @media (max-width:600px){
       .wrap{padding:12px}
       header{flex-direction:column;gap:8px;text-align:center}
       .meta{margin-left:0;text-align:center}
@@ -47,6 +68,94 @@
     @media (max-width:520px){
       canvas{max-height:40vh}
     }
+
+    /* Tablet Controls Styles (from panda.html, left/right only) */
+    .tablet-controls {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .tablet-controls-left {
+      left: 0;
+      width: 80px;
+      align-items: flex-end;
+      padding-left: 10px;
+    }
+    .tablet-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      font-size: 28px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      pointer-events: auto;
+      margin: 0 0 0 0;
+    }
+    @media (min-width: 720px) and (max-width: 1285px) {
+      .tablet-controls {
+        display: flex;
+      }
+    }
+    @media (max-width: 719px), (min-width: 1286px) {
+      .tablet-controls {
+        display: none !important;
+      }
+    }
+    /* Tablet Controls Styles (from panda.html, left/right only) */
+    .tablet-controls {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .tablet-controls-left {
+      left: 0;
+      width: 80px;
+      align-items: flex-end;
+      padding-left: 10px;
+    }
+    .tablet-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      font-size: 28px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      pointer-events: auto;
+      margin: 0 0 0 0;
+    }
+    @media (min-width: 720px) and (max-width: 1285px) {
+      .tablet-controls {
+        display: flex;
+      }
+    }
+    @media (max-width: 719px), (min-width: 1286px) {
+      .tablet-controls {
+        display: none !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -70,11 +179,11 @@
           <button id="startBtn">Start</button>
           <button id="pauseBtn" class="ghost">Pause</button>
           <button id="restartBtn" class="ghost">Restart</button>
-          <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-            <div class="hint">Touch controls:</div>
-            <button id="leftTouch" class="ghost">◀</button>
-            <button id="rightTouch" class="ghost">▶</button>
-          </div>
+  <!-- Tablet Controls (left/right only, panda.html pattern) -->
+  <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+    <button id="tabletLeft" class="tablet-btn">◀</button>
+    <button id="tabletRight" class="tablet-btn">▶</button>
+  </div>
         </div>
     </div>
   </div>
@@ -92,8 +201,8 @@
     const startBtn = document.getElementById('startBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const restartBtn = document.getElementById('restartBtn');
-    const leftTouch = document.getElementById('leftTouch');
-    const rightTouch = document.getElementById('rightTouch');
+    const tabletLeft = document.getElementById('tabletLeft');
+    const tabletRight = document.getElementById('tabletRight');
 
     // Game state
     let running = false, paused = false, gameOver = false;
@@ -127,27 +236,33 @@
     });
     addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
-    // Touch buttons
+    // Tablet controls JS (from panda.html, left/right only)
+    tabletLeft.addEventListener('touchstart', e => { keys['arrowleft'] = true; keys['ArrowLeft'] = true; e.preventDefault(); });
+    tabletLeft.addEventListener('touchend', e => { keys['arrowleft'] = false; keys['ArrowLeft'] = false; e.preventDefault(); });
+    tabletRight.addEventListener('touchstart', e => { keys['arrowright'] = true; keys['ArrowRight'] = true; e.preventDefault(); });
+    tabletRight.addEventListener('touchend', e => { keys['arrowright'] = false; keys['ArrowRight'] = false; e.preventDefault(); });
+    // For compatibility, keep touchLeft/touchRight logic
     let touchLeft = false, touchRight = false;
-    leftTouch.addEventListener('pointerdown', () => touchLeft = true); leftTouch.addEventListener('pointerup', () => touchLeft = false); leftTouch.addEventListener('pointerleave', () => touchLeft = false);
-    rightTouch.addEventListener('pointerdown', () => touchRight = true); rightTouch.addEventListener('pointerup', () => touchRight = false); rightTouch.addEventListener('pointerleave', () => touchRight = false);
+    tabletLeft.addEventListener('touchstart', () => touchLeft = true);
+    tabletLeft.addEventListener('touchend', () => touchLeft = false);
+    tabletRight.addEventListener('touchstart', () => touchRight = true);
+    tabletRight.addEventListener('touchend', () => touchRight = false);
 
     // Resize handling (keeps virtual coords but scales canvas visually)
     function fitCanvas(){
       const container = canvas.parentElement;
-      const containerWidth = container.clientWidth - 36; // account for padding
+      // Use all available width in .wrap
+      const containerWidth = container.clientWidth;
       const containerHeight = Math.min(window.innerHeight * 0.6, containerWidth * 0.6); // 5:3 aspect ratio with height limit
-      
-      const ratio = W / H;
-      let width = Math.min(containerWidth, 800);
+      const ratio = 5/3;
+      let width = containerWidth;
       let height = width / ratio;
-      
-      // Ensure it fits in the container
       if (height > containerHeight) {
         height = containerHeight;
         width = height * ratio;
       }
-      
+      canvas.width = width;
+      canvas.height = height;
       canvas.style.width = width + 'px';
       canvas.style.height = height + 'px';
     }
@@ -315,3 +430,5 @@
     }, 100);
   });
   </script>
+</body>
+</html>

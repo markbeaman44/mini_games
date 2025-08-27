@@ -49,7 +49,97 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
 - **Common Mistake**: Putting flexbox centering directly on body causes games to appear too high or too low on tablets
 - **Working Examples**: Reference `panda.html`, `hideseek.html`, `spaceexplorer.html` for correct implementation
 
-### Board Game Scaling Pattern
+### Tablet Controls Pattern (REQUIRED FOR ALL GAMES)
+
+**Tablet Controls (Required for all games):**
+- On screens between 720px and 1285px wide, display tablet controls outside the game container.
+- Controls: left/right buttons on the left side, up/down buttons on the right side (outside the game container, vertically centered).
+- Controls must use touch events and update the game logic (e.g., set keys.ArrowLeft, keys.ArrowRight, keys.ArrowUp, keys.ArrowDown).
+- Controls must be hidden for screens below 720px and above 1285px.
+- Example HTML:
+  ```html
+  <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+    <button id="tabletLeft" class="tablet-btn">◀</button>
+    <button id="tabletRight" class="tablet-btn">▶</button>
+  </div>
+  <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+    <button id="tabletUp" class="tablet-btn">⬆</button>
+    <button id="tabletDown" class="tablet-btn">⬇</button>
+  </div>
+  ```
+- Example CSS:
+  ```css
+  .tablet-controls {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .tablet-controls-left {
+    left: 0;
+    width: 80px;
+    align-items: flex-end;
+    padding-left: 10px;
+  }
+  .tablet-controls-right {
+    right: 0;
+    width: 80px;
+    align-items: flex-start;
+    padding-right: 10px;
+  }
+  .tablet-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 800;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    font-size: 28px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+    margin: 0 0 0 0;
+  }
+  @media (min-width: 720px) and (max-width: 1285px) {
+    .tablet-controls {
+      display: flex;
+    }
+  }
+  @media (max-width: 719px), (min-width: 1286px) {
+    .tablet-controls {
+      display: none !important;
+    }
+  }
+  ```
+- Example JS:
+  ```javascript
+  // Tablet controls event listeners
+  const tabletLeft = document.getElementById('tabletLeft');
+  const tabletRight = document.getElementById('tabletRight');
+  const tabletUp = document.getElementById('tabletUp');
+  const tabletDown = document.getElementById('tabletDown');
+
+  tabletLeft.addEventListener('touchstart', e => { keys.ArrowLeft = true; e.preventDefault(); });
+  tabletLeft.addEventListener('touchend', e => { keys.ArrowLeft = false; e.preventDefault(); });
+  tabletRight.addEventListener('touchstart', e => { keys.ArrowRight = true; e.preventDefault(); });
+  tabletRight.addEventListener('touchend', e => { keys.ArrowRight = false; e.preventDefault(); });
+  tabletUp.addEventListener('touchstart', e => {
+    keys.ArrowUp = true;
+    setTimeout(() => keys.ArrowUp = false, 150);
+    e.preventDefault();
+  });
+  tabletDown.addEventListener('touchstart', e => { keys.ArrowDown = true; e.preventDefault(); });
+  tabletDown.addEventListener('touchend', e => { keys.ArrowDown = false; e.preventDefault(); });
+  ```
+
+**This pattern is required for all future games and levels.**
 For games with grids, boards, or multiple game elements (like dice games, puzzle games):
 - **Constrain Board Height**: Use `max-height: 40vh` (or 30vh on tablets/mobile) to prevent boards from taking entire screen
 - **Set Maximum Element Sizes**: Use `max-width` and `max-height` on grid cells/board spaces (e.g., `max-width: 70px`)
