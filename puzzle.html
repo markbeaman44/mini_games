@@ -53,7 +53,7 @@
     .level-complete h2{margin:0 0 15px 0;color:#4CAF50;font-size:24px}
     .level-complete p{margin:8px 0;color:#555;font-size:14px}
     
-    .instructions{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.9);padding:10px 20px;border-radius:12px;text-align:center;font-size:14px;color:#666;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .instructions{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.9);padding:10px 20px;border-radius:12px;text-align:center;font-size:14px;color:#666;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
     
     @keyframes matchPulse{0%{transform:scale(1)}50%{transform:scale(1.2);box-shadow:0 0 20px rgba(76,175,80,0.6)}100%{transform:scale(1)}}
     @keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
@@ -126,7 +126,7 @@
         </div>
         
         <div class="instructions" id="instructions">
-          Click tiles to change their colors and match the target pattern!
+          Match the target pattern!
         </div>
       </div>
     </div>
@@ -340,7 +340,7 @@
 
   function updateInstructions() {
     const numColors = Math.min(3 + Math.floor(currentLevel / 2), colors.length);
-    instructionsEl.textContent = `Click tiles to cycle through ${numColors} colors and match the pattern above!`;
+    instructionsEl.textContent = `Cycle through ${numColors} colors and match the pattern above!`;
   }
 
   function createCelebrationParticles() {
