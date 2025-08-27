@@ -418,6 +418,45 @@
         }
 
         /* Mobile Responsiveness */
+        .tablet-letter-pad {
+            position: fixed;
+            bottom: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            z-index: 999;
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 18px 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        }
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 8px;
+        }
+        .letter-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            background: #f5f5f5;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-letter-pad {
+                display: block;
+            }
+        }
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-letter-pad {
+                display: none !important;
+            }
+        }
         @media (max-width: 768px) {
             .game-container {
                 width: 95vw;
@@ -470,7 +509,38 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back</button>
+        <button id="backButton">← Back</button>
+        <!-- Tablet Letter Pad (A-Z) -->
+        <div class="tablet-letter-pad" id="tabletLetterPad">
+            <div class="letter-grid">
+                <button class="letter-btn">A</button>
+                <button class="letter-btn">B</button>
+                <button class="letter-btn">C</button>
+                <button class="letter-btn">D</button>
+                <button class="letter-btn">E</button>
+                <button class="letter-btn">F</button>
+                <button class="letter-btn">G</button>
+                <button class="letter-btn">H</button>
+                <button class="letter-btn">I</button>
+                <button class="letter-btn">J</button>
+                <button class="letter-btn">K</button>
+                <button class="letter-btn">L</button>
+                <button class="letter-btn">M</button>
+                <button class="letter-btn">N</button>
+                <button class="letter-btn">O</button>
+                <button class="letter-btn">P</button>
+                <button class="letter-btn">Q</button>
+                <button class="letter-btn">R</button>
+                <button class="letter-btn">S</button>
+                <button class="letter-btn">T</button>
+                <button class="letter-btn">U</button>
+                <button class="letter-btn">V</button>
+                <button class="letter-btn">W</button>
+                <button class="letter-btn">X</button>
+                <button class="letter-btn">Y</button>
+                <button class="letter-btn">Z</button>
+            </div>
+        </div>
 
     <div class="game-wrapper">
         <div class="game-container" id="gameContainer">
@@ -549,9 +619,10 @@
                 this.characterSets = {
                     1: 'ABCDEFGHIJK',
                     2: 'LMNOPQRSTUV',
-                    3: 'WXYZ0123456',
-                    4: '789!@#$%^&*',
-                    5: '()[]{};<>?'
+                    3: 'ABCDEFGHIJK',
+                    4: 'LMNOPQRSTUV',
+                    5: 'ABCDEFGHIJK',
+                    6: 'LMNOPQRSTUV',
                 };
 
                 this.initializeElements();
@@ -571,6 +642,7 @@
                 this.fireFlame = document.getElementById('fireFlame');
                 this.targetItem = document.getElementById('targetItem');
                 this.progressBar = document.getElementById('progressBar');
+                this.tabletLetterPad = document.getElementById('tabletLetterPad');
             }
 
             initializeEventListeners() {
@@ -606,16 +678,26 @@
                 this.instructionsPopup.style.display = 'flex';
                 this.gameArea.style.display = 'none';
                 this.gameOver.style.display = 'none';
+                // Hide tablet letter pad
+                this.tabletLetterPad.style.display = 'none';
             }
 
             hideInstructions() {
                 this.instructionsPopup.style.display = 'none';
                 this.gameArea.style.display = 'block';
+                // Show tablet letter pad if on tablet viewport
+                if (window.innerWidth >= 720 && window.innerWidth <= 1285) {
+                    this.tabletLetterPad.style.display = 'block';
+                }
                 this.startGame();
             }
 
             startGame() {
                 this.isPlaying = true;
+                // Show tablet letter pad if on tablet viewport
+                if (window.innerWidth >= 720 && window.innerWidth <= 1285) {
+                    this.tabletLetterPad.style.display = 'block';
+                }
                 this.generateSequence();
                 this.resetTimer();
                 this.updateDisplay();
@@ -810,6 +892,7 @@
                     'Keep practicing your typing to become a master fire breather!';
                 
                 this.gameOver.style.display = 'flex';
+                this.tabletLetterPad.style.display = 'none';
             }
 
             updateDisplay() {
@@ -826,6 +909,10 @@
                 this.stopTimer();
                 this.resetPosition();
                 this.gameOver.style.display = 'none';
+                // Show tablet letter pad if on tablet viewport
+                if (this.tabletLetterPad && window.innerWidth >= 720 && window.innerWidth <= 1285) {
+                    this.tabletLetterPad.style.display = 'block';
+                }
                 this.startGame();
             }
 
@@ -880,7 +967,17 @@
 
         // Initialize game when page loads
         window.addEventListener('load', () => {
-            new FireBreatherGame();
+            const game = new FireBreatherGame();
+            // Tablet letter pad event listeners
+            document.querySelectorAll('.letter-btn').forEach(btn => {
+                btn.addEventListener('touchstart', function(e) {
+                    const letter = btn.textContent;
+                    // Simulate keydown event for game logic
+                    const event = new KeyboardEvent('keydown', { key: letter });
+                    document.dispatchEvent(event);
+                    e.preventDefault();
+                });
+            });
         });
 
         window.addEventListener("load", function() {
