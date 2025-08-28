@@ -293,7 +293,7 @@
       let left = keys['arrowleft'] || keys['a'];
       let right = keys['arrowright'] || keys['d'];
       // On tablet, if touchLeft/touchRight is pressed, override keyboard
-      if (window.innerWidth >= 720 && window.innerWidth <= 1285) {
+      if (window.innerWidth <= 1285) {
         if (touchLeft) { left = true; right = false; }
         if (touchRight) { right = true; left = false; }
       }
@@ -393,19 +393,6 @@
 
     // small accessibility: click to focus so keyboard works
     canvas.addEventListener('click', () => canvas.focus());
-
-    // mobile: allow tilt control (optional)
-    // Only enable tilt controls on mobile screens (<720px)
-    if('DeviceOrientationEvent' in window && window.innerWidth < 720){
-      window.addEventListener('deviceorientation', e => {
-        if(e.gamma !== null){
-          const tilt = e.gamma;
-          if(Math.abs(tilt) > 8){
-            if(tilt < 0) touchLeft = true; else touchRight = true;
-          } else { touchLeft = false; touchRight = false; }
-        }
-      });
-    }
 
     // Keep canvas logical size stable on high-DPI screens
     function fixHiDPI(){
