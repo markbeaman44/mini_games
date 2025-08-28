@@ -75,17 +75,19 @@
       top: 0;
       bottom: 0;
       display: none;
-      flex-direction: column;
-      justify-content: center;
-      gap: 18px;
       z-index: 999;
       pointer-events: none;
     }
     .tablet-controls-left {
       left: 0;
-      width: 80px;
-      align-items: flex-end;
-      padding-left: 10px;
+      width: 120px;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+      padding-left: 30px;
     }
     .tablet-btn {
       width: 56px;
@@ -112,50 +114,6 @@
         display: none !important;
       }
     }
-    /* Tablet Controls Styles (from panda.html, left/right only) */
-    .tablet-controls {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      gap: 18px;
-      z-index: 999;
-      pointer-events: none;
-    }
-    .tablet-controls-left {
-      left: 0;
-      width: 80px;
-      align-items: flex-end;
-      padding-left: 10px;
-    }
-    .tablet-btn {
-      width: 56px;
-      height: 56px;
-      border-radius: 12px;
-      border: none;
-      font-weight: 800;
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-      font-size: 28px;
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      pointer-events: auto;
-      margin: 0 0 0 0;
-    }
-    @media (min-width: 720px) and (max-width: 1285px) {
-      .tablet-controls {
-        display: flex;
-      }
-    }
-    @media (max-width: 719px), (min-width: 1286px) {
-      .tablet-controls {
-        display: none !important;
-      }
-    }
-
   </style>
 </head>
 <body>

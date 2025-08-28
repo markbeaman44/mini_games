@@ -70,28 +70,33 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
 - Example CSS:
   ```css
   .tablet-controls {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    gap: 18px;
-    z-index: 999;
-    pointer-events: none;
-  }
-  .tablet-controls-left {
-    left: 0;
-    width: 80px;
-    align-items: flex-end;
-    padding-left: 10px;
-  }
-  .tablet-controls-right {
-    right: 0;
-    width: 80px;
-    align-items: flex-start;
-    padding-right: 10px;
-  }
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      display: none;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .tablet-controls-left {
+      left: 0;
+      width: 120px;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+      padding-left: 30px;
+    }
+    .tablet-controls-right {
+      right: 0;
+      width: 80px;
+      align-items: flex-start;
+      padding-right: 10px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
   .tablet-btn {
     width: 56px;
     height: 56px;
