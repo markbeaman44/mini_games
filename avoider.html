@@ -195,16 +195,50 @@
     addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
     // Tablet controls JS (from panda.html, left/right only)
-    tabletLeft.addEventListener('touchstart', e => { keys['arrowleft'] = true; keys['ArrowLeft'] = true; e.preventDefault(); });
-    tabletLeft.addEventListener('touchend', e => { keys['arrowleft'] = false; keys['ArrowLeft'] = false; e.preventDefault(); });
-    tabletRight.addEventListener('touchstart', e => { keys['arrowright'] = true; keys['ArrowRight'] = true; e.preventDefault(); });
-    tabletRight.addEventListener('touchend', e => { keys['arrowright'] = false; keys['ArrowRight'] = false; e.preventDefault(); });
+    tabletLeft.addEventListener('touchstart', e => {
+      keys['arrowleft'] = true;
+      keys['ArrowLeft'] = true;
+      keys['arrowright'] = false;
+      keys['ArrowRight'] = false;
+      touchLeft = true;
+      touchRight = false;
+      e.preventDefault();
+    });
+    tabletLeft.addEventListener('touchend', e => {
+      keys['arrowleft'] = false;
+      keys['ArrowLeft'] = false;
+      touchLeft = false;
+      e.preventDefault();
+    });
+    tabletRight.addEventListener('touchstart', e => {
+      keys['arrowright'] = true;
+      keys['ArrowRight'] = true;
+      keys['arrowleft'] = false;
+      keys['ArrowLeft'] = false;
+      touchRight = true;
+      touchLeft = false;
+      e.preventDefault();
+    });
+    tabletRight.addEventListener('touchend', e => {
+      keys['arrowright'] = false;
+      keys['ArrowRight'] = false;
+      touchRight = false;
+      e.preventDefault();
+    });
     // For compatibility, keep touchLeft/touchRight logic
     let touchLeft = false, touchRight = false;
-    tabletLeft.addEventListener('touchstart', () => touchLeft = true);
-    tabletLeft.addEventListener('touchend', () => touchLeft = false);
-    tabletRight.addEventListener('touchstart', () => touchRight = true);
-    tabletRight.addEventListener('touchend', () => touchRight = false);
+
+    // Reset keys when switching between tablet/desktop modes
+    window.addEventListener('resize', () => {
+      if (window.innerWidth < 720 || window.innerWidth > 1285) {
+        keys['arrowleft'] = false;
+        keys['ArrowLeft'] = false;
+        keys['arrowright'] = false;
+        keys['ArrowRight'] = false;
+        touchLeft = false;
+        touchRight = false;
+      }
+    });
 
     // Resize handling (keeps virtual coords but scales canvas visually)
     function fitCanvas(){
