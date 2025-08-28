@@ -402,10 +402,6 @@
                 border-radius: 0;
             }
 
-            .mobile-controls {
-                display: block;
-            }
-
             .instrument-palette {
                 gap: 5px;
             }
@@ -540,13 +536,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Mobile Controls -->
-    <div class="mobile-controls" id="mobileControls">
-        <button class="mobile-btn" id="mobilePlay">▶️</button>
-        <button class="mobile-btn" id="mobileStop">⏹️</button>
-        <button class="mobile-btn" id="mobileClear">🗑️</button>
-    </div>
     </div>
 
     <script>
@@ -610,11 +599,6 @@
                 document.getElementById('clearBtn').addEventListener('click', () => this.clearTimeline());
                 document.getElementById('tempoBtn').addEventListener('click', () => this.changeTempo());
 
-                // Mobile controls
-                document.getElementById('mobilePlay').addEventListener('click', () => this.togglePlay());
-                document.getElementById('mobileStop').addEventListener('click', () => this.stop());
-                document.getElementById('mobileClear').addEventListener('click', () => this.clearTimeline());
-
                 // Game over
                 document.getElementById('restartBtn').addEventListener('click', () => this.restart());
 
@@ -643,11 +627,6 @@
                         this.restart();
                     }
                 });
-
-                // Mobile detection
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'block';
-                }
             }
 
             hideInstructions() {
