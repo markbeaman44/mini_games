@@ -561,11 +561,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Mobile Controls -->
-    <div class="mobile-controls" id="mobileControls">
-        <button class="mobile-btn" id="mobileSlash">⚔️ Slash</button>
-    </div>
     </div>
 
     <script>
@@ -688,12 +683,6 @@
                     this.performSlash();
                 });
 
-                // Mobile slash button
-                document.getElementById('mobileSlash').addEventListener('click', () => {
-                    if (!this.isPlaying || this.slashCooldown) return;
-                    this.performSlash();
-                });
-
                 // Keyboard controls
                 document.addEventListener('keydown', (e) => {
                     // Handle spacebar for instructions popup
@@ -718,11 +707,6 @@
                         this.nextLevel();
                     }
                 });
-
-                // Mobile detection
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'block';
-                }
             }
 
             hideInstructions() {
