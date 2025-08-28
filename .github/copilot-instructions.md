@@ -52,6 +52,7 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
 ### Tablet Controls Pattern (REQUIRED FOR ALL GAMES)
 
 **Tablet Controls (Required for all games):**
+- When the arrow buttons (left, right, up, down) are clicked or tapped, the player will move in that direction. This applies to all games with tablet controls.
 - On screens between 720px and 1285px wide, display tablet controls outside the game container.
 - Controls: left/right buttons on the left side, up/down buttons on the right side (outside the game container, vertically centered).
 - Controls must use touch events and update the game logic (e.g., set keys.ArrowLeft, keys.ArrowRight, keys.ArrowUp, keys.ArrowDown).

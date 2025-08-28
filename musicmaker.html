@@ -917,22 +917,24 @@
                 Object.keys(this.timeline).forEach(track => {
                     this.timeline[track].fill(null);
                 });
-                
-                // Reset visual appearance of slots but preserve dissonance zone styling
+
+                // Reset visual appearance of slots but preserve dissonance zone styling and beat indicators
                 const timelineSlots = document.querySelectorAll('.timeline-slot');
                 timelineSlots.forEach((slot, index) => {
                     const track = slot.parentElement.dataset.track;
                     const position = parseInt(slot.dataset.position);
-                    
-                    // Clear instrument content and styling
+
+                    // Remove instrument but keep beat indicator
+                    const indicator = slot.querySelector('.beat-indicator');
                     slot.textContent = '';
+                    if (indicator) slot.appendChild(indicator);
                     slot.classList.remove('occupied');
-                    
+
                     // Restore dissonance zone styling if this slot is a dissonance zone
                     const isDissonanceZone = this.dissonanceZones.some(zone => 
                         zone.track === track && zone.position === position
                     );
-                    
+
                     if (isDissonanceZone) {
                         slot.style.background = 'rgba(255, 107, 107, 0.3)';
                         slot.style.border = '2px dashed #ff6b6b';
@@ -942,7 +944,18 @@
                         slot.style.border = '';
                     }
                 });
-                
+
+                // Always restore beat indicators to visible if playing
+                if (this.isPlaying) {
+                    this.clearBeatIndicators();
+                    const tracks = document.querySelectorAll('.timeline');
+                    tracks.forEach(track => {
+                        const slot = track.children[this.currentBeat];
+                        const indicator = slot.querySelector('.beat-indicator');
+                        if (indicator) indicator.classList.add('active');
+                    });
+                }
+
                 this.combo = 0;
                 this.updateDisplay();
             }

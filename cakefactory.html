@@ -152,30 +152,51 @@
             text-align: center;
         }
 
-        .controls {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-            gap: 10px;
-        }
-
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border: none;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.8);
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            user-select: none;
-        }
-
-        .control-btn:active {
-            transform: scale(0.95);
-        }
+                /* Tablet Controls Styles (copied from panda.html) */
+                .tablet-controls {
+                    position: fixed;
+                    top: 0;
+                    bottom: 0;
+                    display: none;
+                    z-index: 999;
+                    pointer-events: none;
+                }
+                .tablet-controls-left {
+                    left: 0;
+                    width: 150px;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: flex-end;
+                    gap: 18px;
+                    padding-left: 30px;
+                }
+                .tablet-btn {
+                    width: 56px;
+                    height: 56px;
+                    border-radius: 12px;
+                    border: none;
+                    font-weight: 800;
+                    background: rgba(255,255,255,0.95);
+                    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+                    font-size: 28px;
+                    cursor: pointer;
+                    user-select: none;
+                    -webkit-tap-highlight-color: transparent;
+                    pointer-events: auto;
+                    margin: 0 0 0 0;
+                }
+                @media (min-width: 720px) and (max-width: 1285px) {
+                    .tablet-controls {
+                        display: flex;
+                    }
+                }
+                @media (max-width: 719px), (min-width: 1286px) {
+                    .tablet-controls {
+                        display: none !important;
+                    }
+                }
 
         .instructions-modal {
             position: absolute;
@@ -311,11 +332,10 @@
             </div>
         </div>
 
-        <div class="controls">
-            <button class="control-btn" id="leftBtn">⬅️</button>
-            <button class="control-btn" id="upBtn">⬆️</button>
-            <button class="control-btn" id="rightBtn">➡️</button>
-            <button class="control-btn" id="downBtn">⬇️</button>
+        <!-- Tablet Controls (outside game container) -->
+        <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+            <button id="tabletLeft" class="tablet-btn">◀</button>
+            <button id="tabletRight" class="tablet-btn">▶</button>
         </div>
     </div>
 
@@ -331,11 +351,9 @@
             const closeInstructionsBtn = document.getElementById('closeInstructions');
             const backBtn = document.getElementById('backButton');
             
-            // Mobile controls
-            const leftBtn = document.getElementById('leftBtn');
-            const upBtn = document.getElementById('upBtn');
-            const rightBtn = document.getElementById('rightBtn');
-            const downBtn = document.getElementById('downBtn');
+            // Tablet controls
+            const tabletLeft = document.getElementById('tabletLeft');
+            const tabletRight = document.getElementById('tabletRight');
 
             // Game state
             let gameRunning = false;
@@ -363,7 +381,7 @@
 
             // Input handling
             let keys = {};
-            let touches = {};
+            // Remove touches object, use keys only for tablet controls
 
             // Cake building system
             const cakeLayerTypes = [
@@ -423,9 +441,9 @@
             // Update baker
             function updateBaker() {
                 // Handle input
-                if (keys['ArrowLeft'] || keys['a'] || touches['left']) {
+                if (keys['ArrowLeft'] || keys['a'] || keys.left) {
                     baker.vx = -baker.speed;
-                } else if (keys['ArrowRight'] || keys['d'] || touches['right']) {
+                } else if (keys['ArrowRight'] || keys['d'] || keys.right) {
                     baker.vx = baker.speed;
                 } else {
                     baker.vx *= 0.8; // Friction
@@ -924,46 +942,11 @@
             });
 
             // Touch controls
-            function setupTouchControls() {
-                leftBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    touches['left'] = true;
-                });
-                leftBtn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    touches['left'] = false;
-                });
-
-                rightBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    touches['right'] = true;
-                });
-                rightBtn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    touches['right'] = false;
-                });
-
-                upBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    touches['up'] = true;
-                });
-                upBtn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    touches['up'] = false;
-                });
-
-                downBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    touches['down'] = true;
-                });
-                downBtn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    touches['down'] = false;
-                });
-            }
-
-            // Initialize
-            setupTouchControls();
+            // Tablet controls event listeners (from panda.html)
+            tabletLeft.addEventListener('touchstart', e => { keys.left = true; e.preventDefault(); });
+            tabletLeft.addEventListener('touchend', e => { keys.left = false; e.preventDefault(); });
+            tabletRight.addEventListener('touchstart', e => { keys.right = true; e.preventDefault(); });
+            tabletRight.addEventListener('touchend', e => { keys.right = false; e.preventDefault(); });
             
             // Show instructions on load
             setTimeout(() => {

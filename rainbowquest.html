@@ -268,11 +268,73 @@
                 height: 70vh;
             }
         }
+                    /* Tablet Controls Styles (from panda.html) */
+                    .tablet-controls {
+                        position: fixed;
+                        top: 0;
+                        bottom: 0;
+                        display: none;
+                        z-index: 999;
+                        pointer-events: none;
+                    }
+                    .tablet-controls-left {
+                        left: 0;
+                        width: 150px;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: flex-end;
+                        gap: 18px;
+                        padding-left: 30px;
+                    }
+                    .tablet-controls-right {
+                        right: 0;
+                        width: 80px;
+                        align-items: flex-start;
+                        padding-right: 10px;
+                        flex-direction: column;
+                        justify-content: center;
+                        gap: 18px;
+                    }
+                    .tablet-btn {
+                        width: 56px;
+                        height: 56px;
+                        border-radius: 12px;
+                        border: none;
+                        font-weight: 800;
+                        background: rgba(255,255,255,0.95);
+                        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+                        font-size: 28px;
+                        cursor: pointer;
+                        user-select: none;
+                        -webkit-tap-highlight-color: transparent;
+                        pointer-events: auto;
+                        margin: 0 0 0 0;
+                    }
+                    @media (min-width: 720px) and (max-width: 1285px) {
+                        .tablet-controls {
+                            display: flex;
+                        }
+                    }
+                    @media (max-width: 719px), (min-width: 1286px) {
+                        .tablet-controls {
+                            display: none !important;
+                        }
+                    }
     </style>
 </head>
 <body>
     <a href="javascript:history.back()" class="back-btn">← Back</a>
-    
+    <!-- Tablet Controls (from panda.html, outside game-wrapper) -->
+    <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+      <button id="tabletLeft" class="tablet-btn">◀</button>
+      <button id="tabletRight" class="tablet-btn">▶</button>
+    </div>
+    <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+      <button id="tabletUp" class="tablet-btn">⬆</button>
+      <button id="tabletDown" class="tablet-btn">⬇</button>
+    </div>
     <div class="game-wrapper">
         <div class="game-container" id="gameContainer">
         <div class="game-header">
@@ -309,7 +371,27 @@
     </div>
 
     <script>
-        class RainbowQuest {
+                // Tablet controls event listeners (from panda.html)
+                // Use a global keys object for tablet controls
+                if (!window.keys) window.keys = {};
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+                const tabletUp = document.getElementById('tabletUp');
+                const tabletDown = document.getElementById('tabletDown');
+
+                tabletLeft.addEventListener('touchstart', e => { window.keys.ArrowLeft = true; e.preventDefault(); });
+                tabletLeft.addEventListener('touchend', e => { window.keys.ArrowLeft = false; e.preventDefault(); });
+                tabletRight.addEventListener('touchstart', e => { window.keys.ArrowRight = true; e.preventDefault(); });
+                tabletRight.addEventListener('touchend', e => { window.keys.ArrowRight = false; e.preventDefault(); });
+                tabletUp.addEventListener('touchstart', e => {
+                    window.keys.ArrowUp = true;
+                    setTimeout(() => window.keys.ArrowUp = false, 150);
+                    e.preventDefault();
+                });
+                tabletDown.addEventListener('touchstart', e => { window.keys.ArrowDown = true; e.preventDefault(); });
+                tabletDown.addEventListener('touchend', e => { window.keys.ArrowDown = false; e.preventDefault(); });
+
+                class RainbowQuest {
             constructor() {
                 this.gameContainer = document.getElementById('gameContainer');
                 this.rainbow = document.getElementById('rainbow');
@@ -607,19 +689,22 @@
             }
             
             gameLoop() {
-                // Always run the game loop, but handle input differently based on game state
-                this.handleInput();
-                
-                // Only run physics and cloud updates when game is running
-                if (this.isGameRunning) {
-                    this.updatePhysics();
-                    this.updateClouds();
-                }
-                
-                // Always update rainbow position for smooth rendering
-                this.updateRainbowPosition();
-                
-                requestAnimationFrame(() => this.gameLoop());
+                    // Sync window.keys (tablet controls) with this.keys
+                    if (window.keys) {
+                        for (const k in window.keys) {
+                            this.keys[k] = window.keys[k];
+                        }
+                    }
+                    // Always run the game loop, but handle input differently based on game state
+                    this.handleInput();
+                    // Only run physics and cloud updates when game is running
+                    if (this.isGameRunning) {
+                        this.updatePhysics();
+                        this.updateClouds();
+                    }
+                    // Always update rainbow position for smooth rendering
+                    this.updateRainbowPosition();
+                    requestAnimationFrame(() => this.gameLoop());
             }
             
             gameOver() {

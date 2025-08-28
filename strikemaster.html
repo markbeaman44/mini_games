@@ -422,13 +422,6 @@
             <div class="power-gauge" id="powerGauge">
                 <div class="power-fill" id="powerFill"></div>
             </div>
-
-            <!-- Mobile Controls -->
-            <div class="mobile-controls" id="mobileControls">
-                <div class="mobile-btn" id="aimUpBtn">↑</div>
-                <div class="mobile-btn" id="aimDownBtn">↓</div>
-                <div class="mobile-btn" id="fireBtn">🎳</div>
-            </div>
         </div>
 
         <!-- Game Over Screen -->
@@ -444,7 +437,34 @@
     </div>
 
     <script>
+// Detect touch device (global)
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         class StrikeCommander {
+    fireBallTouch(startX, startY, angle, powerLevel) {
+        const speed = 8;
+        if (this.selectedBallType === 'multi') {
+            const spreadAngle = 0.1 + (powerLevel / 100) * 0.1;
+            for (let i = -1; i <= 1; i++) {
+                const ballAngle = angle + (i * spreadAngle);
+                this.createBall(startX, startY,
+                    Math.cos(ballAngle) * speed,
+                    Math.sin(ballAngle) * speed,
+                    'normal', powerLevel);
+            }
+        } else {
+            this.createBall(startX, startY,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                this.selectedBallType, powerLevel);
+        }
+        // Consume ammo
+        if (this.selectedBallType !== 'normal') {
+            this.ballAmmo[this.selectedBallType]--;
+            this.updateBallSelection();
+        }
+        this.updatePowerGauge();
+        this.playSound(220, 100);
+    }
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
@@ -463,7 +483,6 @@
                 // Ball system
                 this.selectedBallType = 'normal';
                 this.ballAmmo = {
-                    normal: Infinity,
                     explosive: 3,
                     multi: 2,
                     guided: 1,
@@ -502,6 +521,11 @@
                 ];
                 
                 this.audioContext = null;
+                // Touch state for tablet logic
+                this.touchStart = { x: 0, y: 0 };
+                this.touchEnd = { x: 0, y: 0 };
+                this.touchCharging = false;
+                this.touchPower = 0;
                 this.setupEventListeners();
                 this.showInstructions();
             }
@@ -580,16 +604,6 @@
                 document.addEventListener('keyup', (e) => {
                     this.keys[e.key.toLowerCase()] = false;
                 });
-
-                // Mobile controls
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'flex';
-                    
-                    document.getElementById('fireBtn').addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.fireBall();
-                    });
-                }
             }
 
             showInstructions() {
@@ -708,6 +722,60 @@
                 // Auto-switch to normal ball if current selection is out of ammo
                 if (this.selectedBallType !== 'normal' && this.ballAmmo[this.selectedBallType] <= 0) {
                     this.selectedBallType = 'normal';
+                // --- Touch/Tablet Events ---
+                if (isTouchDevice) {
+                    this.canvas.addEventListener('touchstart', (e) => {
+                        if (!this.gameRunning) return;
+                        const rect = this.canvas.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        const x = touch.clientX - rect.left;
+                        const y = touch.clientY - rect.top;
+                        // Only allow firing from base area (left side)
+                        if (x > 166) return;
+                        this.touchStart.x = x;
+                        this.touchStart.y = y;
+                        this.touchEnd.x = x;
+                        this.touchEnd.y = y;
+                        this.touchCharging = true;
+                        this.touchPower = 0;
+                        e.preventDefault();
+                    });
+                    this.canvas.addEventListener('touchmove', (e) => {
+                        if (!this.gameRunning || !this.touchCharging) return;
+                        const rect = this.canvas.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        this.touchEnd.x = touch.clientX - rect.left;
+                        this.touchEnd.y = touch.clientY - rect.top;
+                        e.preventDefault();
+                    });
+                    this.canvas.addEventListener('touchend', (e) => {
+                        if (!this.gameRunning || !this.touchCharging) return;
+                        this.touchCharging = false;
+                        // Calculate direction and power
+                        const dx = this.touchEnd.x - this.touchStart.x;
+                        const dy = this.touchEnd.y - this.touchStart.y;
+                        const magnitude = Math.sqrt(dx * dx + dy * dy);
+                        // If tap (no drag), fire instantly in direction from base to tap
+                        let fireX = this.touchStart.x;
+                        let fireY = this.touchStart.y;
+                        let angle;
+                        if (magnitude < 20) {
+                            // Tap: fire from base center to tap point
+                            fireX = 30; // base center x
+                            fireY = this.touchStart.y;
+                            angle = Math.atan2(this.touchStart.y - fireY, this.touchStart.x - fireX);
+                        } else {
+                            // Drag: fire from start to end
+                            angle = Math.atan2(dy, dx);
+                        }
+                        // Power: charge time (max 100)
+                        let powerLevel = Math.min(100, this.touchPower);
+                        if (powerLevel < 10) powerLevel = 50; // default for tap
+                        this.fireBallTouch(fireX, fireY, angle, powerLevel);
+                        this.touchPower = 0;
+                        e.preventDefault();
+                    });
+                }
                     this.updateBallSelection();
                 }
 
@@ -949,6 +1017,14 @@
                     this.power += 2;
                     if (this.power >= 100) {
                         this.power = 100;
+                    }
+                    this.updatePowerGauge();
+                }
+                // Touch charging for tablet
+                if (this.touchCharging) {
+                    this.touchPower += 2;
+                    if (this.touchPower >= 100) {
+                        this.touchPower = 100;
                     }
                     this.updatePowerGauge();
                 }
