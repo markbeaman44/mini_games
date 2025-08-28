@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -417,51 +424,13 @@
             transform: translateY(-2px);
         }
 
-        /* Mobile Controls */
-        .mobile-controls {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .mobile-btn {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin: 0 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
         /* Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 1285px) {
             .game-container {
-                width: 100vw;
-                height: 100vh;
-                border-radius: 0;
+                height: min(600px, 75vh);
             }
-
-            .mobile-controls {
-                display: block;
-            }
-
-            .puppet {
-                width: 12px;
-                height: 12px;
-            }
-
-            .gate {
-                width: 100px;
-                height: 50px;
-                font-size: 1rem;
+            .player-block {
+                top: min(500px, 60vh) !important;
             }
         }
 
@@ -487,9 +456,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -529,11 +499,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Mobile Controls -->
-    <div class="mobile-controls" id="mobileControls">
-        <button class="mobile-btn" id="mobileLeft">← Left</button>
-        <button class="mobile-btn" id="mobileRight">Right →</button>
     </div>
 
     <script>
@@ -608,15 +573,6 @@
                     this.mouseX = e.touches[0].clientX - rect.left;
                 });
 
-                // Mobile buttons
-                document.getElementById('mobileLeft').addEventListener('click', () => {
-                    this.mouseX = Math.max(300, this.mouseX - 80);
-                });
-
-                document.getElementById('mobileRight').addEventListener('click', () => {
-                    this.mouseX = Math.min(600, this.mouseX + 80);
-                });
-
                 // Keyboard controls
                 document.addEventListener('keydown', (e) => {
                     // Handle spacebar for instructions popup
@@ -644,11 +600,6 @@
                         this.restart();
                     }
                 });
-
-                // Mobile detection
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'block';
-                }
             }
 
             hideInstructions() {
@@ -1246,6 +1197,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new PuppetMaster();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

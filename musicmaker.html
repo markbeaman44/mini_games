@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -395,10 +402,6 @@
                 border-radius: 0;
             }
 
-            .mobile-controls {
-                display: block;
-            }
-
             .instrument-palette {
                 gap: 5px;
             }
@@ -459,9 +462,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -532,12 +536,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Mobile Controls -->
-    <div class="mobile-controls" id="mobileControls">
-        <button class="mobile-btn" id="mobilePlay">▶️</button>
-        <button class="mobile-btn" id="mobileStop">⏹️</button>
-        <button class="mobile-btn" id="mobileClear">🗑️</button>
     </div>
 
     <script>
@@ -601,11 +599,6 @@
                 document.getElementById('clearBtn').addEventListener('click', () => this.clearTimeline());
                 document.getElementById('tempoBtn').addEventListener('click', () => this.changeTempo());
 
-                // Mobile controls
-                document.getElementById('mobilePlay').addEventListener('click', () => this.togglePlay());
-                document.getElementById('mobileStop').addEventListener('click', () => this.stop());
-                document.getElementById('mobileClear').addEventListener('click', () => this.clearTimeline());
-
                 // Game over
                 document.getElementById('restartBtn').addEventListener('click', () => this.restart());
 
@@ -634,11 +627,6 @@
                         this.restart();
                     }
                 });
-
-                // Mobile detection
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'block';
-                }
             }
 
             hideInstructions() {
@@ -929,22 +917,24 @@
                 Object.keys(this.timeline).forEach(track => {
                     this.timeline[track].fill(null);
                 });
-                
-                // Reset visual appearance of slots but preserve dissonance zone styling
+
+                // Reset visual appearance of slots but preserve dissonance zone styling and beat indicators
                 const timelineSlots = document.querySelectorAll('.timeline-slot');
                 timelineSlots.forEach((slot, index) => {
                     const track = slot.parentElement.dataset.track;
                     const position = parseInt(slot.dataset.position);
-                    
-                    // Clear instrument content and styling
+
+                    // Remove instrument but keep beat indicator
+                    const indicator = slot.querySelector('.beat-indicator');
                     slot.textContent = '';
+                    if (indicator) slot.appendChild(indicator);
                     slot.classList.remove('occupied');
-                    
+
                     // Restore dissonance zone styling if this slot is a dissonance zone
                     const isDissonanceZone = this.dissonanceZones.some(zone => 
                         zone.track === track && zone.position === position
                     );
-                    
+
                     if (isDissonanceZone) {
                         slot.style.background = 'rgba(255, 107, 107, 0.3)';
                         slot.style.border = '2px dashed #ff6b6b';
@@ -954,7 +944,18 @@
                         slot.style.border = '';
                     }
                 });
-                
+
+                // Always restore beat indicators to visible if playing
+                if (this.isPlaying) {
+                    this.clearBeatIndicators();
+                    const tracks = document.querySelectorAll('.timeline');
+                    tracks.forEach(track => {
+                        const slot = track.children[this.currentBeat];
+                        const indicator = slot.querySelector('.beat-indicator');
+                        if (indicator) indicator.classList.add('active');
+                    });
+                }
+
                 this.combo = 0;
                 this.updateDisplay();
             }
@@ -1060,6 +1061,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new BeatBuilder();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

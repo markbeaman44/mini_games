@@ -14,12 +14,14 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(180deg, #87CEEB 0%, #98FB98 50%, #8B4513 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         .game-container {
@@ -476,7 +478,7 @@
     </style>
 </head>
 <body>
-    <a href="javascript:history.back()" class="back-btn">← Back to Hub</a>
+    <a href="javascript:history.back()" class="back-btn">← Back</a>
     
     <div class="game-container" id="gameContainer">
         <div class="game-header">
@@ -626,7 +628,7 @@
             <p>Final Score: <span id="finalScore">0</span></p>
             <p>Boulders Blocked: <span id="finalBlocks">0</span></p>
             <button class="btn" onclick="restartGame()">Defend Again!</button>
-            <button class="btn" onclick="window.location.href='home.html'">Back to Hub</button>
+            <button class="btn" onclick="window.location.href='home.html'">Back</button>
             <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
                 Press <strong>SPACEBAR</strong> to try again!
             </p>
@@ -703,6 +705,27 @@
                     this.shieldX = Math.max(0, Math.min(this.gameWidth - this.shieldWidth, this.shieldX));
                     this.shieldY = Math.max(0, Math.min(this.gameHeight - this.shieldHeight, this.shieldY));
                 });
+                    // Touch controls for tablets/mobile
+                    this.gameContainer.addEventListener('touchstart', (e) => {
+                        if (!this.isGameRunning) return;
+                        e.preventDefault();
+                        const rect = this.gameContainer.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        this.shieldX = touch.clientX - rect.left - this.shieldWidth / 2;
+                        this.shieldY = touch.clientY - rect.top - this.shieldHeight / 2;
+                        this.shieldX = Math.max(0, Math.min(this.gameWidth - this.shieldWidth, this.shieldX));
+                        this.shieldY = Math.max(0, Math.min(this.gameHeight - this.shieldHeight, this.shieldY));
+                    });
+                    this.gameContainer.addEventListener('touchmove', (e) => {
+                        if (!this.isGameRunning) return;
+                        e.preventDefault();
+                        const rect = this.gameContainer.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        this.shieldX = touch.clientX - rect.left - this.shieldWidth / 2;
+                        this.shieldY = touch.clientY - rect.top - this.shieldHeight / 2;
+                        this.shieldX = Math.max(0, Math.min(this.gameWidth - this.shieldWidth, this.shieldX));
+                        this.shieldY = Math.max(0, Math.min(this.gameHeight - this.shieldHeight, this.shieldY));
+                    });
                 
                 // Start button - now goes to instructions
                 this.startBtn.addEventListener('click', () => {
@@ -1135,6 +1158,12 @@
         
         window.addEventListener('load', () => {
             game = new CastleDefense();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
         
         function restartGame() {

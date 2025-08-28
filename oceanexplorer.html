@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(180deg, #87CEEB 0%, #4682B4 50%, #191970 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -308,9 +315,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -320,7 +328,6 @@
                 <p><strong>🚀 Physics:</strong> Bigger waves launch people further - aim for maximum distance!</p>
                 <p><strong>🏆 Scoring:</strong> Points based on distance and people launched</p>
                 <p><strong>⚡ Power:</strong> Longer you hold, stronger the wave becomes</p>
-                <p><strong>📱 Mobile:</strong> Touch and hold the wave button</p>
                 <button class="close-instructions" id="closeInstructions">Master the Waves!</button>
             </div>
         </div>
@@ -353,9 +360,7 @@
             </div>
 
             <!-- Mobile Controls -->
-            <div class="mobile-controls" id="mobileControls">
-                <div class="mobile-btn" id="waveBtn">🌊</div>
-            </div>
+            <!-- Mobile Controls removed: waveBtn no longer needed -->
         </div>
 
         <!-- Game Over Screen -->
@@ -371,6 +376,7 @@
                 <button class="restart-btn" id="restartBtn">New Wave Session</button>
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -479,23 +485,33 @@
                     }
                 });
 
-                // Mobile controls
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'flex';
-                    
-                    const waveBtn = document.getElementById('waveBtn');
-                    waveBtn.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.startCharging();
-                    });
+                // Touch controls: hold finger on canvas to power wave, release to fire
+                this.canvas.addEventListener('touchstart', (e) => {
+                    if (!this.gameRunning) return;
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    this.mouseX = touch.clientX - rect.left;
+                    this.mouseY = touch.clientY - rect.top;
+                    this.startCharging();
+                });
 
-                    waveBtn.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        if (this.charging) {
-                            this.releaseWave();
-                        }
-                    });
-                }
+                this.canvas.addEventListener('touchmove', (e) => {
+                    if (!this.gameRunning) return;
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    this.mouseX = touch.clientX - rect.left;
+                    this.mouseY = touch.clientY - rect.top;
+                });
+
+                this.canvas.addEventListener('touchend', (e) => {
+                    if (!this.gameRunning) return;
+                    e.preventDefault();
+                    if (this.charging) {
+                        this.releaseWave();
+                    }
+                });
             }
 
             showInstructions() {
@@ -1163,6 +1179,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new OceanExplorer();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

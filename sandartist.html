@@ -14,13 +14,20 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #f4e4bc 0%, #ddbf94 50%, #d4a574 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
             color: #8b4513;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -146,32 +153,59 @@
         }
 
         /* Mobile Controls */
-        .mobile-controls {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
+        /* Tablet Controls (from panda.html) */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
             display: none;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 50;
+            z-index: 999;
+            pointer-events: none;
         }
-
-        .mobile-btn {
-            width: 50px;
-            height: 50px;
-            background: rgba(139, 69, 19, 0.8);
-            border: 2px solid #cd853f;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
             display: flex;
+            flex-direction: row;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
         }
-
-        .mobile-btn:active {
-            background: rgba(139, 69, 19, 1);
+        .tablet-controls-right {
+            right: 0;
+            width: 80px;
+            align-items: flex-start;
+            padding-right: 10px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0 0 0 0;
+        }
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
         }
 
         /* Game Over Screen */
@@ -220,7 +254,7 @@
             transform: scale(1.05);
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 12px) {
             .game-container {
                 height: min(500px, 85vh);
             }
@@ -245,9 +279,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <!-- Instructions Popup -->
         <div class="instructions-popup" id="instructionsPopup">
             <div class="instructions-content">
@@ -271,12 +306,14 @@
                 <div class="hud-item">Sand: <span id="sandCount">100%</span></div>
                 <div class="hud-item">Time: <span id="gameTime">0:00</span></div>
             </div>
-
-            <!-- Mobile Controls -->
-            <div class="mobile-controls" id="mobileControls">
-                <div class="mobile-btn" id="jumpBtn">↑</div>
-                <div class="mobile-btn" id="leftBtn">←</div>
-                <div class="mobile-btn" id="rightBtn">→</div>
+            <!-- Tablet Controls (from panda.html) -->
+            <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+                <button id="tabletLeft" class="tablet-btn">◀</button>
+                <button id="tabletRight" class="tablet-btn">▶</button>
+            </div>
+            <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+                <button id="tabletUp" class="tablet-btn">⬆</button>
+                <button id="tabletDown" class="tablet-btn">⬇</button>
             </div>
         </div>
 
@@ -289,6 +326,7 @@
                 <button class="restart-btn" id="restartBtn">Next Level</button>
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -406,40 +444,26 @@
                     this.keys[e.key.toLowerCase()] = false;
                 });
 
-                // Mobile controls
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'flex';
-                    
-                    document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['w'] = true;
-                    });
+                // Tablet controls event listeners (from panda.html)
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+                const tabletUp = document.getElementById('tabletUp');
+                const tabletDown = document.getElementById('tabletDown');
 
-                    document.getElementById('jumpBtn').addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['w'] = false;
-                    });
+                // keys object must exist for player movement
+                if (!window.keys) window.keys = {};
 
-                    document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['a'] = true;
-                    });
-
-                    document.getElementById('leftBtn').addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['a'] = false;
-                    });
-
-                    document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.keys['d'] = true;
-                    });
-
-                    document.getElementById('rightBtn').addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        this.keys['d'] = false;
-                    });
-                }
+                tabletLeft.addEventListener('touchstart', e => { this.keys['arrowleft'] = true; e.preventDefault(); });
+                tabletLeft.addEventListener('touchend', e => { this.keys['arrowleft'] = false; e.preventDefault(); });
+                tabletRight.addEventListener('touchstart', e => { this.keys['arrowright'] = true; e.preventDefault(); });
+                tabletRight.addEventListener('touchend', e => { this.keys['arrowright'] = false; e.preventDefault(); });
+                tabletUp.addEventListener('touchstart', e => {
+                    this.keys['arrowup'] = true;
+                    setTimeout(() => this.keys['arrowup'] = false, 150);
+                    e.preventDefault();
+                });
+                tabletDown.addEventListener('touchstart', e => { this.keys['arrowdown'] = true; e.preventDefault(); });
+                tabletDown.addEventListener('touchend', e => { this.keys['arrowdown'] = false; e.preventDefault(); });
             }
 
             showInstructions() {
@@ -765,7 +789,10 @@
                             width: platform.width,
                             height: platform.height
                         };
-                        
+                        // If down key is pressed, skip collision (fall through)
+                        if (this.keys['arrowdown'] || this.keys['s']) {
+                            continue;
+                        }
                         if (this.checkCollision(this.player, platformCollisionBox)) {
                             if (this.player.vy > 0) { // falling
                                 this.player.y = platformCollisionBox.y - this.player.height;
@@ -971,6 +998,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new SandArtist();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

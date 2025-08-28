@@ -22,13 +22,148 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
 - **Game Loop**: Most action games use `requestAnimationFrame()` with update/draw pattern
 - **State Objects**: Player state stored in objects like `{ x, y, w, h, speed, ... }`
 
-### Visual Design System
-- **Gradients**: Heavy use of `linear-gradient()` and `radial-gradient()` for backgrounds
-- **Game Container**: Standard pattern `width: min(900px, 95vw); height: min(600px, 85vh)`
-- **Centering**: Use flexbox centering on body: `display: flex; flex-direction: column; align-items: center; justify-content: center;`
-- **No Margin**: Game container should NOT use `margin: auto` - let flexbox handle centering
-- **Responsive**: `@media` queries for mobile with touch controls
-- **Color Themes**: Each game has distinct color palette (space = neon, puzzle = pastels, etc.)
+### Game Container & Layout Pattern (CRITICAL FOR CENTERING)
+- **Game Wrapper**: ALWAYS use `.game-wrapper` with flexbox centering for consistent tablet/mobile layout
+- **Responsive Sizing**: `width: min(900px, 95vw); height: min(600px, 85vh)` for game containers
+- **NEVER use body flexbox**: Do NOT put `display: flex` directly on the body element - this causes centering issues on tablets
+- **Required Centering Pattern**: 
+  ```css
+  body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+    /* NO display: flex here! */
+  }
+  
+  .game-wrapper {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  ```
+- **Mandatory HTML Structure**: `<body><div class="game-wrapper"><div class="game-container">...</div></div></body>`
+- **Common Mistake**: Putting flexbox centering directly on body causes games to appear too high or too low on tablets
+- **Working Examples**: Reference `panda.html`, `hideseek.html`, `spaceexplorer.html` for correct implementation
+
+### Tablet Controls Pattern (REQUIRED FOR ALL GAMES)
+
+**Tablet Controls (Required for all games):**
+- When the arrow buttons (left, right, up, down) are clicked or tapped, the player will move in that direction. This applies to all games with tablet controls.
+- On screens between 720px and 1285px wide, display tablet controls outside the game container.
+- Controls: left/right buttons on the left side, up/down buttons on the right side (outside the game container, vertically centered).
+- Controls must use touch events and update the game logic (e.g., set keys.ArrowLeft, keys.ArrowRight, keys.ArrowUp, keys.ArrowDown).
+- Controls must be hidden for screens below 720px and above 1285px.
+- Example HTML:
+  ```html
+  <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+    <button id="tabletLeft" class="tablet-btn">◀</button>
+    <button id="tabletRight" class="tablet-btn">▶</button>
+  </div>
+  <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+    <button id="tabletUp" class="tablet-btn">⬆</button>
+    <button id="tabletDown" class="tablet-btn">⬇</button>
+  </div>
+  ```
+- Example CSS:
+  ```css
+  .tablet-controls {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      display: none;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .tablet-controls-left {
+      left: 0;
+      width: 120px;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+      padding-left: 30px;
+    }
+    .tablet-controls-right {
+      right: 0;
+      width: 80px;
+      align-items: flex-start;
+      padding-right: 10px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+  .tablet-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 800;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    font-size: 28px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+    margin: 0 0 0 0;
+  }
+  @media (min-width: 720px) and (max-width: 1285px) {
+    .tablet-controls {
+      display: flex;
+    }
+  }
+  @media (max-width: 719px), (min-width: 1286px) {
+    .tablet-controls {
+      display: none !important;
+    }
+  }
+  ```
+- Example JS:
+  ```javascript
+  // Tablet controls event listeners
+  const tabletLeft = document.getElementById('tabletLeft');
+  const tabletRight = document.getElementById('tabletRight');
+  const tabletUp = document.getElementById('tabletUp');
+  const tabletDown = document.getElementById('tabletDown');
+
+  tabletLeft.addEventListener('touchstart', e => { keys.ArrowLeft = true; e.preventDefault(); });
+  tabletLeft.addEventListener('touchend', e => { keys.ArrowLeft = false; e.preventDefault(); });
+  tabletRight.addEventListener('touchstart', e => { keys.ArrowRight = true; e.preventDefault(); });
+  tabletRight.addEventListener('touchend', e => { keys.ArrowRight = false; e.preventDefault(); });
+  tabletUp.addEventListener('touchstart', e => {
+    keys.ArrowUp = true;
+    setTimeout(() => keys.ArrowUp = false, 150);
+    e.preventDefault();
+  });
+  tabletDown.addEventListener('touchstart', e => { keys.ArrowDown = true; e.preventDefault(); });
+  tabletDown.addEventListener('touchend', e => { keys.ArrowDown = false; e.preventDefault(); });
+  ```
+
+**This pattern is required for all future games and levels.**
+For games with grids, boards, or multiple game elements (like dice games, puzzle games):
+- **Constrain Board Height**: Use `max-height: 40vh` (or 30vh on tablets/mobile) to prevent boards from taking entire screen
+- **Set Maximum Element Sizes**: Use `max-width` and `max-height` on grid cells/board spaces (e.g., `max-width: 70px`)
+- **Responsive Grid Cells**: Use `aspect-ratio: 1` with CSS Grid `1fr` columns, but constrain with max dimensions
+- **Reserve Space**: Ensure UI elements (dice, buttons, controls) have enough space below/around the board
+- **Example Pattern**:
+  ```css
+  .board-path {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    max-height: 40vh; /* Prevent board from dominating screen */
+  }
+  .board-space {
+    aspect-ratio: 1;
+    max-width: 70px; /* Constrain individual cells */
+    max-height: 70px;
+  }
+  ```
 
 ## Critical Patterns
 
@@ -41,6 +176,37 @@ if ('ontouchstart' in window) {
 // Touch button event handling
 touchBtn.addEventListener('touchstart', (e) => { e.preventDefault(); });
 ```
+
+### Mobile Optimization (REQUIRED)
+**Critical mobile improvements that MUST be applied to every game file:**
+
+#### CSS Body Height & Overflow
+All games must include these CSS properties for proper mobile display:
+```css
+html,body {
+  height: 100vh;
+  height: 100dvh;  /* Dynamic viewport height for mobile */
+  margin: 0;
+  overflow: hidden;
+  /* ... other existing styles ... */
+}
+```
+- **`100vh/100dvh`**: Ensures full viewport coverage; `100dvh` accounts for mobile UI elements like address bars
+- **`margin: 0`**: Removes default margins that can cause scrolling
+- **`overflow: hidden`**: Prevents unwanted scrolling and creates immersive full-screen experience
+
+#### Mobile Address Bar Hide Fix
+Add this JavaScript to the end of every game file (before closing `</script>` tag):
+```javascript
+window.addEventListener("load", function() {
+    setTimeout(() => {
+        window.scrollTo(0, 1);
+    }, 100);
+});
+```
+- **Purpose**: Forces mobile browsers to hide the address bar after page load
+- **Timing**: 100ms delay ensures page is fully loaded before scroll attempt
+- **Effect**: Maximizes game screen real estate on mobile devices
 
 ### Game Screen States
 - **Instructions Popup**: Required modal that appears on game load with gameplay instructions
@@ -113,7 +279,8 @@ function playSound(frequency, duration, type = 'sine') {
 1. Copy existing similar game as template
 2. Update `home.html` games grid with new entry
 3. Change status from "coming-soon" to "available" class
-4. Test back button navigation and mobile responsiveness
+4. **Apply mobile optimizations**: Add mobile CSS and scroll fix
+5. Test back button navigation and mobile responsiveness
 
 ### Game Testing Checklist
 - Back button navigation to hub
@@ -123,11 +290,15 @@ function playSound(frequency, duration, type = 'sine') {
 - Space bar restarts the level/game
 - Game over state and restart functionality
 - A popup with instructions needs to be included
+- **Mobile viewport**: Test `100vh/100dvh` height and `overflow: hidden`
+- **Mobile address bar**: Verify address bar hides on mobile devices
+- **CRITICAL - Tablet Centering**: Verify game is properly centered on tablet screens using game-wrapper pattern
 
 ### Debugging Common Issues
 - **Pokemon encounters not working**: Check `getSpaceType()` function exists and HTML IDs match JavaScript selectors
 - **Mobile controls**: Verify touch event handlers and `touchstart`/`touchend` events
 - **High DPI displays**: Most canvas games include `fixHiDPI()` function for device pixel ratio
+- **Tablet centering issues**: If games appear too high/low on tablets, ensure using game-wrapper pattern instead of body flexbox
 
 ## Code Conventions
 
@@ -146,13 +317,20 @@ function playSound(frequency, duration, type = 'sine') {
     body {
       font-family: 'Arial', sans-serif;
       background: linear-gradient(/* game-specific gradient */);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
       overflow: hidden;
       color: white;
+    }
+    
+    .game-wrapper {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
     }
     
     .game-container {
@@ -167,22 +345,33 @@ function playSound(frequency, duration, type = 'sine') {
   </style>
 </head>
 <body>
-  <button id="backButton">← Back to Hub</button>
-  <div class="game-container">
-    <!-- Instructions Popup (shown first) -->
-    <div class="instructions-popup" id="instructionsPopup">
-      <div class="instructions-content">
-        <h2>How to Play</h2>
-        <p>Game instructions...</p>
-        <button class="close-instructions" id="closeInstructions">Start Game!</button>
+  <button id="backButton">← Back</button>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <!-- Instructions Popup (shown first) -->
+      <div class="instructions-popup" id="instructionsPopup">
+        <div class="instructions-content">
+          <h2>How to Play</h2>
+          <p>Game instructions...</p>
+          <button class="close-instructions" id="closeInstructions">Start Game!</button>
+        </div>
       </div>
+      <!-- Game Area (shown after instructions) -->
+      <div class="game-area" id="gameArea"><!-- Game content --></div>
+      <!-- Game Over (overlay) -->
+      <div class="game-over" id="gameOver"><!-- Game over content --></div>
     </div>
-    <!-- Game Area (shown after instructions) -->
-    <div class="game-area" id="gameArea"><!-- Game content --></div>
-    <!-- Game Over (overlay) -->
-    <div class="game-over" id="gameOver"><!-- Game over content --></div>
   </div>
-  <script>/* Game logic */</script>
+  <script>
+    /* Game logic */
+    
+    // Mobile address bar hide fix - REQUIRED
+    window.addEventListener("load", function() {
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+      }, 100);
+    });
+  </script>
 </body>
 </html>
 ```

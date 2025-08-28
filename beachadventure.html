@@ -14,12 +14,14 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #87CEEB 0%, #98E4FF 50%, #FFE4B5 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
             color: #2c3e50;
         }
 
@@ -566,7 +568,7 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
     <div class="game-container" id="gameContainer">
         <!-- Instructions Popup -->
@@ -577,10 +579,8 @@
                 <p>🏰 Each level shows an incomplete castle with missing blocks</p>
                 <p>🔍 Find the missing pieces and place the correct block shape</p>
                 <p>🌊 The tide rises every 25 seconds - complete it fast!</p>
-                <p>🧩 Use the right shape: Square, Triangle, Arch, Circle, Diamond, or Rectangle</p>
                 <p>� Click on the dashed outlines to place the matching block type</p>
                 <p>✅ Complete all missing blocks to advance to the next level</p>
-                <p>⌨️ Press SPACEBAR or click button to start!</p>
                 <button class="close-instructions" id="closeInstructions">Start Puzzle!</button>
             </div>
         </div>
@@ -1121,6 +1121,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new BeachAdventure();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

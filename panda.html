@@ -10,7 +10,7 @@
       --ground:#7bb26b;
       --panel:#ffffffcc;
     }
-    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial}
+    html,body{height:100vh;height:100dvh;margin:0;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial}
     .wrap{height:100%;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;background:linear-gradient(180deg,var(--bg),#d0f7ff)}
     .game{width:min(960px,98vw);height:min(640px,92vh);background:linear-gradient(#dff7ff, #eafcf7);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.15);position:relative;overflow:hidden}
     header{position:absolute;left:14px;top:12px;z-index:10;display:flex;gap:10px;align-items:center}
@@ -47,13 +47,66 @@
     #backButton:active {
       transform: translateY(0);
     }
-    @media (max-width:600px){.bigbtn{width:62px;height:62px}}
+    /* Tablet Controls Styles */
+    .tablet-controls {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      display: none;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .tablet-controls-left {
+      left: 0;
+      width: 120px;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+      padding-left: 30px;
+    }
+    .tablet-controls-right {
+      right: 0;
+      width: 80px;
+      align-items: flex-start;
+      padding-right: 10px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+    .tablet-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      font-size: 28px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      pointer-events: auto;
+      margin: 0 0 0 0;
+    }
+    @media (min-width: 720px) and (max-width: 1285px) {
+      .tablet-controls {
+        display: flex;
+      }
+    }
+    @media (max-width: 719px), (min-width: 1286px) {
+      .tablet-controls {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="game" id="gameRoot">
-      <button id="backButton">← Back to Hub</button>
+      <button id="backButton">← Back</button>
       <header>
         <div class="panel">Level: <span id="level">1</span></div>
         <div class="panel">Lanterns: <span id="score" class="score">0</span>/<span id="totalLanterns">6</span></div>
@@ -67,10 +120,14 @@
 
       <canvas id="c"></canvas>
 
-      <div class="controls" id="touchControls" style="display:none;">
-        <div class="bigbtn" id="leftBtn">◀</div>
-        <div class="bigbtn" id="jumpBtn">⤒</div>
-        <div class="bigbtn" id="rightBtn">▶</div>
+      <!-- Tablet Controls (outside game container) -->
+      <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+        <button id="tabletLeft" class="tablet-btn">◀</button>
+        <button id="tabletRight" class="tablet-btn">▶</button>
+      </div>
+      <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+        <button id="tabletUp" class="tablet-btn">⬆</button>
+        <button id="tabletDown" class="tablet-btn">⬇</button>
       </div>
 
       <div class="footer-note">Theme: Asia — for ages 4–6 • Tap to play on phones</div>
@@ -97,11 +154,16 @@
   const jumpBtn = document.getElementById('jumpBtn');
   const backBtn = document.getElementById('backButton');
 
+  // Tablet controls elements
+  const tabletLeft = document.getElementById('tabletLeft');
+  const tabletRight = document.getElementById('tabletRight');
+  const tabletUp = document.getElementById('tabletUp');
+  const tabletDown = document.getElementById('tabletDown');
+
   let isTouch = 'ontouchstart' in window || navigator.maxTouchPoints>0;
-  if(isTouch) touchControls.style.display = 'flex';
 
   // game state
-  let keys = {left:false,right:false,jump:false};
+  let keys = {left:false,right:false,jump:false,down:false};
   let score = 0;
   let gameRunning = false;
   let currentLevel = 1;
@@ -200,15 +262,6 @@
   }
   startBtn.addEventListener('click', startGame);
 
-  // touch controls
-  leftBtn.addEventListener('pointerdown',()=>keys.left=true);
-  leftBtn.addEventListener('pointerup',()=>keys.left=false);
-  leftBtn.addEventListener('pointerleave',()=>keys.left=false);
-  rightBtn.addEventListener('pointerdown',()=>keys.right=true);
-  rightBtn.addEventListener('pointerup',()=>keys.right=false);
-  rightBtn.addEventListener('pointerleave',()=>keys.right=false);
-  jumpBtn.addEventListener('pointerdown',()=>{ if(panda.onGround) { panda.vy=-16; panda.onGround=false; } });
-
   // keyboard
   window.addEventListener('keydown',(e)=>{
     if(e.key==='ArrowLeft' || e.key==='a') keys.left=true;
@@ -220,6 +273,18 @@
     if(e.key==='ArrowLeft' || e.key==='a') keys.left=false;
     if(e.key==='ArrowRight' || e.key==='d') keys.right=false;
   });
+
+  // Tablet controls event listeners
+  tabletLeft.addEventListener('touchstart', e => { keys.left = true; e.preventDefault(); });
+  tabletLeft.addEventListener('touchend', e => { keys.left = false; e.preventDefault(); });
+  tabletRight.addEventListener('touchstart', e => { keys.right = true; e.preventDefault(); });
+  tabletRight.addEventListener('touchend', e => { keys.right = false; e.preventDefault(); });
+  tabletUp.addEventListener('touchstart', e => {
+    if(panda.onGround){ panda.vy = -16; panda.onGround = false; }
+    e.preventDefault();
+  });
+  tabletDown.addEventListener('touchstart', e => { keys.down = true; e.preventDefault(); });
+  tabletDown.addEventListener('touchend', e => { keys.down = false; e.preventDefault(); });
 
   // simple sound (beep) using WebAudio
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -263,6 +328,12 @@
     if(keys.left) panda.vx = -speed;
     else if(keys.right) panda.vx = speed;
     else panda.vx *= 0.8;
+
+    // Drop through platforms if down is pressed
+    if(keys.down) {
+      // Move panda down quickly (simulate drop through)
+      panda.y += 18 * dt;
+    }
 
     // physics
     panda.vy += gravity*dt*1.2;
@@ -487,6 +558,12 @@
   // start paused
   gameRunning=false;
 })();
+
+window.addEventListener("load", function() {
+  setTimeout(() => {
+    window.scrollTo(0, 1);
+  }, 100);
+});
 </script>
 </body>
 </html>

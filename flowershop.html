@@ -12,7 +12,9 @@
             --panel:#ffffff;
         }
         *{box-sizing:border-box}
-        body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:system-ui,Segoe UI,Arial;color:#2e7d32;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+        body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));font-family:system-ui,Segoe UI,Arial;color:#2e7d32;height:100vh;height:100dvh;overflow:hidden}
+        
+        .game-wrapper{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
         
         /* Back button fixed at top-left of the screen */
         .back-btn{position:fixed;top:15px;left:15px;background:rgba(255,255,255,0.95);color:#4caf50;border:2px solid #4caf50;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:0.95rem;font-weight:bold;text-decoration:none;z-index:2200}
@@ -25,7 +27,7 @@
         .start-btn{margin-top:12px;padding:10px 18px;border-radius:12px;font-weight:800;border:2px solid #4caf50;background:linear-gradient(45deg,#66bb6a 0%,#4caf50 100%);color:white;cursor:pointer}
 
         /* Game container */
-        .game-container{width:800px;height:600px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));border-radius:15px;position:relative;overflow:hidden;border:3px solid #4caf50;box-shadow:0 10px 30px rgba(0,0,0,0.4);margin:0 auto}
+        .game-container{width:min(800px,95vw);height:min(600px,85vh);background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));border-radius:15px;position:relative;overflow:hidden;border:3px solid #4caf50;box-shadow:0 10px 30px rgba(0,0,0,0.4)}
         
         /* Top bar */
         .topbar{display:flex;justify-content:center;align-items:center;flex-direction:column;padding:10px 12px;background:rgba(255,255,255,0.8);border-bottom:2px solid #4caf50}
@@ -114,11 +116,32 @@
             .game-container{width:95vw;height:70vh;max-width:800px}
             .flower{transform:scale(0.8)}
         }
+
+        @media (max-width: 600px) {
+            .game-container {
+                height: min(500px, 85vh);
+                padding: 15px;
+            }
+            
+            .back-btn {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .start-screen {
+                padding: 20px;
+                margin: 0 10px;
+            }
+            
+            .start-screen h2 {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Back button fixed at top-left of the screen -->
-    <a href="home.html" class="back-btn">← Back to Hub</a>
+    <a href="home.html" class="back-btn">← Back</a>
 
     <!-- Start screen -->
     <div class="start-screen" id="startScreen">
@@ -129,7 +152,8 @@
         <button class="start-btn" id="startBtn">Start Gardening</button>
     </div>
 
-    <div class="game-container" id="gameContainer" style="display:none">
+    <div class="game-wrapper">
+        <div class="game-container" id="gameContainer" style="display:none">
         <div class="topbar">
             <div class="title">🌻 Flower Shop Garden</div>
             <div class="subtitle">Click flowers to change their colors!</div>
@@ -138,6 +162,7 @@
         <div class="garden" id="garden">
             <div class="grass"></div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -337,6 +362,12 @@
             // Show start screen on load
             showStartScreen();
         })();
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
     </script>
 </body>
 </html>

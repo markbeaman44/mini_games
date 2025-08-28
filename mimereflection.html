@@ -14,11 +14,19 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(45deg, #1e3c72, #2a5298, #3498db);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
             overflow: hidden;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -508,6 +516,60 @@
         .mobile-btn:hover {
             transform: scale(1.05);
         }
+    /* Tablet Controls (from panda.html) */
+    .tablet-controls {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        display: none;
+        z-index: 999;
+        pointer-events: none;
+    }
+    .tablet-controls-left {
+        left: 0;
+        width: 150px;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        padding-left: 30px;
+    }
+    .tablet-controls-right {
+        right: 0;
+        width: 80px;
+        align-items: flex-start;
+        padding-right: 10px;
+        flex-direction: column;
+        justify-content: center;
+        gap: 18px;
+    }
+    .tablet-btn {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 800;
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        font-size: 28px;
+        cursor: pointer;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        pointer-events: auto;
+        margin: 0 0 0 0;
+    }
+    @media (min-width: 720px) and (max-width: 1285px) {
+        .tablet-controls {
+            display: flex;
+        }
+    }
+    @media (max-width: 719px), (min-width: 1286px) {
+        .tablet-controls {
+            display: none !important;
+        }
+    }
 
         .section-label {
             position: absolute;
@@ -544,9 +606,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
 
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <div class="start-screen" id="startScreen">
             <h1>🎭 Mimic Artist</h1>
             <p>Control mirror reflections to save all civilians!</p>
@@ -643,11 +706,15 @@
                     <button class="control-btn" id="resetBtn">Reset Level</button>
                 </div>
             </div>
-            
-            <div class="mobile-controls" id="mobileControls">
-                <button class="mobile-btn" id="resetMobile">Reset</button>
-                <button class="mobile-btn" id="helpBtn">Help</button>
-                <button class="mobile-btn" id="moveBtn">Move</button>
+
+            <!-- Tablet Controls (from panda.html) -->
+            <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+                <button id="tabletLeft" class="tablet-btn">◀</button>
+                <button id="tabletRight" class="tablet-btn">▶</button>
+            </div>
+            <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+                <button id="tabletUp" class="tablet-btn">⬆</button>
+                <button id="tabletDown" class="tablet-btn">⬇</button>
             </div>
         </div>
 
@@ -656,6 +723,7 @@
             <p id="gameOverText">All civilians rescued through mirror reflections!</p>
             <button class="restart-btn" id="restartBtn">New Mission</button>
         </div>
+    </div>
     </div>
 
     <script>
@@ -758,6 +826,7 @@
                 this.initializeElements();
                 this.bindEvents();
                 this.showInstructions();
+
             }
 
             initializeElements() {
@@ -793,16 +862,6 @@
                 document.getElementById('resetBtn').addEventListener('click', () => {
                     this.resetLevel();
                 });
-
-                // Mobile controls
-                document.getElementById('resetMobile').addEventListener('click', () => {
-                    this.resetLevel();
-                });
-
-                document.getElementById('helpBtn').addEventListener('click', () => {
-                    this.showInstructions();
-                });
-
                 // Keyboard controls
                 document.addEventListener('keydown', (e) => {
                     // Handle spacebar for instructions popup
@@ -853,11 +912,6 @@
                         this.restartGame();
                     }
                 });
-
-                // Touch controls for mobile
-                if ('ontouchstart' in window) {
-                    document.getElementById('mobileControls').style.display = 'grid';
-                }
             }
 
             showInstructions() {
@@ -1204,9 +1258,34 @@
             }
         }
 
-        // Initialize game when page loads
-        window.addEventListener('load', () => {
-            new HeroReflectionGame();
+                // Initialize game when page loads
+                window.addEventListener('load', () => {
+                    const game = new HeroReflectionGame();
+
+                    // Tablet controls event listeners (simple, like superhero.html)
+                    const tabletLeft = document.getElementById('tabletLeft');
+                    const tabletRight = document.getElementById('tabletRight');
+                    const tabletUp = document.getElementById('tabletUp');
+                    const tabletDown = document.getElementById('tabletDown');
+
+                    if (tabletLeft) {
+                        tabletLeft.addEventListener('touchstart', e => { game.moveHero(-1, 0); e.preventDefault(); });
+                    }
+                    if (tabletRight) {
+                        tabletRight.addEventListener('touchstart', e => { game.moveHero(1, 0); e.preventDefault(); });
+                    }
+                    if (tabletUp) {
+                        tabletUp.addEventListener('touchstart', e => { game.moveHero(0, -1); e.preventDefault(); });
+                    }
+                    if (tabletDown) {
+                        tabletDown.addEventListener('touchstart', e => { game.moveHero(0, 1); e.preventDefault(); });
+                    }
+                });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>

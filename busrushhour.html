@@ -14,12 +14,14 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(180deg, #FFE135 0%, #FFA500 50%, #FF6347 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         .game-container {
@@ -141,6 +143,57 @@
             transform: translate(-50%, -50%);
             border-radius: 1px;
         }
+        
+        /* Tablet Controls (panda.html pattern) */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0 0 0 0;
+        }
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
+        }
+        
 
         .bus .wheel-left::after,
         .bus .wheel-right::after {
@@ -471,7 +524,7 @@
     </style>
 </head>
 <body>
-    <a href="javascript:history.back()" class="back-btn">← Back to Hub</a>
+    <a href="javascript:history.back()" class="back-btn">← Back</a>
     
     <div class="game-container" id="gameContainer">
         <div class="game-header">
@@ -509,19 +562,33 @@
             <p>Final Score: <span id="finalScore">0</span> points!</p>
             <p>People Helped: <span id="finalItems">0</span></p>
             <button class="btn" onclick="restartGame()">Play Again!</button>
-            <button class="btn" onclick="window.location.href='home.html'">Back to Hub</button>
+            <button class="btn" onclick="window.location.href='home.html'">Back</button>
             <p style="font-size: 14px; margin-top: 15px; opacity: 0.8;">
                 Press <strong>SPACEBAR</strong> to play again!
             </p>
         </div>
 
         <div class="instructions">
-            <p><strong>Use ARROW KEYS or A/D to move your bus!</strong></p>
             <p>Pick up people who need a ride, avoid the bad weather!</p>
+        </div>
+
+        <!-- Tablet Controls (panda.html pattern) -->
+        <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+            <button id="tabletLeft" class="tablet-btn">◀</button>
+            <button id="tabletRight" class="tablet-btn">▶</button>
         </div>
     </div>
 
     <script>
+        // Tablet controls JS (left/right only)
+        const tabletLeft = document.getElementById('tabletLeft');
+        const tabletRight = document.getElementById('tabletRight');
+
+        tabletLeft.addEventListener('touchstart', e => { if (window.game) game.keys['ArrowLeft'] = true; e.preventDefault(); });
+        tabletLeft.addEventListener('touchend', e => { if (window.game) game.keys['ArrowLeft'] = false; e.preventDefault(); });
+        tabletRight.addEventListener('touchstart', e => { if (window.game) game.keys['ArrowRight'] = true; e.preventDefault(); });
+        tabletRight.addEventListener('touchend', e => { if (window.game) game.keys['ArrowRight'] = false; e.preventDefault(); });
+
         class RainbowBusCollector {
             constructor() {
                 this.gameContainer = document.getElementById('gameContainer');
@@ -838,6 +905,13 @@
         
         window.addEventListener('load', () => {
             game = new RainbowBusCollector();
+            window.game = game;
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
         
         function restartGame() {

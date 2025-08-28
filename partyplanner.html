@@ -14,11 +14,19 @@
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            height: 100%;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             padding: 20px;
+            box-sizing: border-box;
         }
 
         #backButton {
@@ -35,9 +43,11 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: transform 0.2s ease;
             z-index: 1000;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        #backButton:hover {
+        #backButton:hover, #backButton:active {
             transform: translateY(-2px);
         }
 
@@ -248,9 +258,12 @@
             cursor: pointer;
             margin-top: 20px;
             transition: transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        .start-btn:hover, .next-btn:hover, .restart-btn:hover {
+        .start-btn:hover, .next-btn:hover, .restart-btn:hover,
+        .start-btn:active, .next-btn:active, .restart-btn:active {
             transform: translateY(-2px);
         }
 
@@ -347,9 +360,10 @@
     </style>
 </head>
 <body>
-    <button id="backButton">← Back to Hub</button>
+    <button id="backButton">← Back</button>
     
-    <div class="game-container">
+    <div class="game-wrapper">
+        <div class="game-container">
         <div class="header">
             <h1>🎊 Party Planner</h1>
             <p>Balance guest emotions for the perfect party!</p>
@@ -442,6 +456,7 @@
             </div>
         </div>
     </div>
+    </div>
 
     <script>
         class PartyPlannerGame {
@@ -486,7 +501,19 @@
                     window.location.href = 'home.html';
                 });
                 
+                // Add touch support for back button
+                document.getElementById('backButton').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    window.location.href = 'home.html';
+                });
+                
                 document.getElementById('startBtn').addEventListener('click', () => {
+                    this.showInstructions();
+                });
+                
+                // Add touch support for start button
+                document.getElementById('startBtn').addEventListener('touchend', (e) => {
+                    e.preventDefault();
                     this.showInstructions();
                 });
                 
@@ -494,11 +521,29 @@
                     this.hideInstructions();
                 });
                 
+                // Add touch support for start game button
+                document.getElementById('startGameBtn').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.hideInstructions();
+                });
+                
                 document.getElementById('nextLevelBtn').addEventListener('click', () => {
                     this.nextLevel();
                 });
                 
+                // Add touch support for next level button
+                document.getElementById('nextLevelBtn').addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.nextLevel();
+                });
+                
                 document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Add touch support for restart button
+                document.getElementById('restartBtn').addEventListener('touchend', (e) => {
+                    e.preventDefault();
                     this.restartGame();
                 });
                 
@@ -530,11 +575,13 @@
                 document.addEventListener('mousemove', this.handleDragMove.bind(this));
                 document.addEventListener('mouseup', this.handleDragEnd.bind(this));
                 
-                // Touch events
+                // Touch events - only prevent default if touching a guest
                 partyArea.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    this.handleDragStart({ clientX: touch.clientX, clientY: touch.clientY, target: e.target });
+                    if (e.target.classList.contains('guest')) {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        this.handleDragStart({ clientX: touch.clientX, clientY: touch.clientY, target: e.target });
+                    }
                 });
                 
                 document.addEventListener('touchmove', (e) => {
@@ -546,8 +593,10 @@
                 });
                 
                 document.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    this.handleDragEnd();
+                    if (this.draggedGuest) {
+                        e.preventDefault();
+                        this.handleDragEnd();
+                    }
                 });
             }
             
@@ -923,6 +972,12 @@
         // Initialize game when page loads
         window.addEventListener('load', () => {
             new PartyPlannerGame();
+        });
+
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
         });
     </script>
 </body>
