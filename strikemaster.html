@@ -440,32 +440,15 @@
 // Detect touch device (global)
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
         class StrikeCommander {
-    fireBallTouch(startX, startY, angle, powerLevel) {
-        const speed = 8;
-        if (this.selectedBallType === 'multi') {
-            const spreadAngle = 0.1 + (powerLevel / 100) * 0.1;
-            for (let i = -1; i <= 1; i++) {
-                const ballAngle = angle + (i * spreadAngle);
-                this.createBall(startX, startY,
-                    Math.cos(ballAngle) * speed,
-                    Math.sin(ballAngle) * speed,
-                    'normal', powerLevel);
-            }
-        } else {
-            this.createBall(startX, startY,
-                Math.cos(angle) * speed,
-                Math.sin(angle) * speed,
-                this.selectedBallType, powerLevel);
-        }
-        // Consume ammo
-        if (this.selectedBallType !== 'normal') {
-            this.ballAmmo[this.selectedBallType]--;
-            this.updateBallSelection();
-        }
-        this.updatePowerGauge();
-        this.playSound(220, 100);
-    }
             constructor() {
+                // Lane system (must be first)
+                this.lanes = [
+                    { y: 120, active: true },
+                    { y: 200, active: true },
+                    { y: 280, active: true },
+                    { y: 360, active: true },
+                    { y: 440, active: true }
+                ];
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.startScreen = document.getElementById('startScreen');
@@ -485,7 +468,7 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 this.ballAmmo = {
                     explosive: 3,
                     multi: 2,
-                    guided: 1,
+                    shockwave: 1,
                     ultimate: 1,    // Once per wave
                     freeze: 2       // Freeze row weapon
                 };
@@ -507,19 +490,47 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 this.mouseStart = { x: 0, y: 0 };
                 this.mouseEnd = { x: 0, y: 0 };
                 this.power = 0;
-                this.powerDirection = 1;
-                this.powerCharging = false;
-                this.keys = {};
-                
-                // Lane system
-                this.lanes = [
-                    { y: 120, active: true },
-                    { y: 200, active: true },
-                    { y: 280, active: true },
-                    { y: 360, active: true },
-                    { y: 440, active: true }
-                ];
-                
+                    // Unified mouse/touch lane tap/hold logic
+                    let mouseCharging = false;
+                    let mousePower = 0;
+                    let mouseLaneY = null;
+                    this.canvas.addEventListener('mousedown', (e) => {
+                        if (!this.gameRunning) return;
+                        const rect = this.canvas.getBoundingClientRect();
+                        const y = e.clientY - rect.top;
+                        // Find closest lane to mouse y
+                        let closestLane = this.lanes[0].y;
+                        let minDist = Math.abs(y - this.lanes[0].y);
+                        for (let lane of this.lanes) {
+                            const dist = Math.abs(y - lane.y);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                closestLane = lane.y;
+                            }
+                        }
+                        mouseLaneY = closestLane;
+                        mouseCharging = true;
+                        mousePower = 0;
+                    });
+                    this.canvas.addEventListener('mousemove', (e) => {
+                        // Optional: could show lane highlight
+                    });
+                    this.canvas.addEventListener('mouseup', (e) => {
+                        if (!this.gameRunning || !mouseCharging) return;
+                        mouseCharging = false;
+                        let powerLevel = Math.min(100, mousePower);
+                        if (powerLevel < 10) powerLevel = 50;
+                        this.fireBallAlongLane(mouseLaneY, powerLevel);
+                        mousePower = 0;
+                    });
+                    // Mouse charging loop
+                    const chargeInterval = setInterval(() => {
+                        if (mouseCharging) {
+                            mousePower += 2;
+                            if (mousePower > 100) mousePower = 100;
+                            this.updatePowerGauge();
+                        }
+                    }, 16);
                 this.audioContext = null;
                 // Touch state for tablet logic
                 this.touchStart = { x: 0, y: 0 };
@@ -527,6 +538,7 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 this.touchCharging = false;
                 this.touchPower = 0;
                 this.setupEventListeners();
+                this.setupTouchEvents();
                 this.showInstructions();
             }
 
@@ -634,7 +646,7 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                     normal: Infinity,
                     explosive: 3 + this.wave,
                     multi: 2 + Math.floor(this.wave / 2),
-                    guided: 1 + Math.floor(this.wave / 3),
+                    shockwave: 1 + Math.floor(this.wave / 3),
                     ultimate: 1,  // Always 1 per wave
                     freeze: 2 + Math.floor(this.wave / 4)
                 };
@@ -722,102 +734,116 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 // Auto-switch to normal ball if current selection is out of ammo
                 if (this.selectedBallType !== 'normal' && this.ballAmmo[this.selectedBallType] <= 0) {
                     this.selectedBallType = 'normal';
-                // --- Touch/Tablet Events ---
-                if (isTouchDevice) {
-                    this.canvas.addEventListener('touchstart', (e) => {
-                        if (!this.gameRunning) return;
-                        const rect = this.canvas.getBoundingClientRect();
-                        const touch = e.touches[0];
-                        const x = touch.clientX - rect.left;
-                        const y = touch.clientY - rect.top;
-                        // Only allow firing from base area (left side)
-                        if (x > 166) return;
-                        this.touchStart.x = x;
-                        this.touchStart.y = y;
-                        this.touchEnd.x = x;
-                        this.touchEnd.y = y;
-                        this.touchCharging = true;
-                        this.touchPower = 0;
-                        e.preventDefault();
-                    });
-                    this.canvas.addEventListener('touchmove', (e) => {
-                        if (!this.gameRunning || !this.touchCharging) return;
-                        const rect = this.canvas.getBoundingClientRect();
-                        const touch = e.touches[0];
-                        this.touchEnd.x = touch.clientX - rect.left;
-                        this.touchEnd.y = touch.clientY - rect.top;
-                        e.preventDefault();
-                    });
-                    this.canvas.addEventListener('touchend', (e) => {
-                        if (!this.gameRunning || !this.touchCharging) return;
-                        this.touchCharging = false;
-                        // Calculate direction and power
-                        const dx = this.touchEnd.x - this.touchStart.x;
-                        const dy = this.touchEnd.y - this.touchStart.y;
-                        const magnitude = Math.sqrt(dx * dx + dy * dy);
-                        // If tap (no drag), fire instantly in direction from base to tap
-                        let fireX = this.touchStart.x;
-                        let fireY = this.touchStart.y;
-                        let angle;
-                        if (magnitude < 20) {
-                            // Tap: fire from base center to tap point
-                            fireX = 30; // base center x
-                            fireY = this.touchStart.y;
-                            angle = Math.atan2(this.touchStart.y - fireY, this.touchStart.x - fireX);
-                        } else {
-                            // Drag: fire from start to end
-                            angle = Math.atan2(dy, dx);
-                        }
-                        // Power: charge time (max 100)
-                        let powerLevel = Math.min(100, this.touchPower);
-                        if (powerLevel < 10) powerLevel = 50; // default for tap
-                        this.fireBallTouch(fireX, fireY, angle, powerLevel);
-                        this.touchPower = 0;
-                        e.preventDefault();
-                    });
-                }
                     this.updateBallSelection();
                 }
-
-                const dx = this.mouseEnd.x - this.mouseStart.x;
-                const dy = this.mouseEnd.y - this.mouseStart.y;
-                const magnitude = Math.sqrt(dx * dx + dy * dy);
-                
-                if (magnitude < 20) return; // Minimum drag distance
-
-                const speed = 8; // Fixed speed
-                const angle = Math.atan2(dy, dx);
-                const powerLevel = Math.min(100, this.power);
-
-                if (this.selectedBallType === 'multi') {
-                    // Fire 3 balls in tight spread pattern for better enemy coverage
-                    const spreadAngle = 0.1 + (powerLevel / 100) * 0.1; // Much tighter spread
-                    for (let i = -1; i <= 1; i++) {
-                        const ballAngle = angle + (i * spreadAngle);
-                        this.createBall(this.mouseStart.x, this.mouseStart.y, 
-                                      Math.cos(ballAngle) * speed, 
-                                      Math.sin(ballAngle) * speed, 
-                                      'normal', powerLevel);
-                    }
-                } else {
-                    this.createBall(this.mouseStart.x, this.mouseStart.y, 
-                                  Math.cos(angle) * speed, 
-                                  Math.sin(angle) * speed, 
-                                  this.selectedBallType, powerLevel);
-                }
-
-                // Consume ammo
-                if (this.selectedBallType !== 'normal') {
-                    this.ballAmmo[this.selectedBallType]--;
-                    this.updateBallSelection();
-                }
-
-                this.power = 0;
-                this.updatePowerGauge();
-                this.playSound(220, 100);
             }
 
+    // --- Touch/Tablet Events ---
+    setupTouchEvents() {
+        if (isTouchDevice) {
+            let touchChargeInterval = null;
+            this.canvas.addEventListener('touchstart', (e) => {
+                if (!this.gameRunning) return;
+                if (touchChargeInterval) clearInterval(touchChargeInterval);
+                const rect = this.canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                const y = touch.clientY - rect.top;
+                // Find closest lane to touch y
+                let closestLane = this.lanes[0].y;
+                let minDist = Math.abs(y - this.lanes[0].y);
+                for (let lane of this.lanes) {
+                    const dist = Math.abs(y - lane.y);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestLane = lane.y;
+                    }
+                }
+                this.touchLaneY = closestLane;
+                this.touchCharging = true;
+                this.touchPower = 0;
+                touchChargeInterval = setInterval(() => {
+                    if (this.touchCharging) {
+                        this.touchPower += 2;
+                        if (this.touchPower > 100) this.touchPower = 100;
+                        this.updatePowerGauge();
+                    }
+                }, 16);
+                e.preventDefault();
+            });
+            this.canvas.addEventListener('touchmove', (e) => {
+                if (!this.gameRunning || !this.touchCharging) return;
+                e.preventDefault();
+            });
+            const endTouch = (e) => {
+                if (!this.gameRunning || !this.touchCharging) return;
+                this.touchCharging = false;
+                if (touchChargeInterval) {
+                    clearInterval(touchChargeInterval);
+                    touchChargeInterval = null;
+                }
+                let powerLevel = Math.min(100, this.touchPower);
+                if (powerLevel < 10) powerLevel = 50;
+                this.fireBallAlongLane(this.touchLaneY, powerLevel);
+                this.touchPower = 0;
+                this.updatePowerGauge();
+                e.preventDefault();
+            };
+            this.canvas.addEventListener('touchend', endTouch);
+            this.canvas.addEventListener('touchcancel', endTouch);
+        }
+    }
+
+    fireBallAlongLane(laneY, powerLevel) {
+    // ...existing code...
+    }
+
+    fireBallAlongLane(laneY, powerLevel) {
+        const startX = 30; // base edge
+        const startY = laneY;
+        const speed = 8;
+        // Multi-ball: fire 3 balls in a vertical spread, yellow color
+        if (this.selectedBallType === 'multi') {
+            for (let i = -1; i <= 1; i++) {
+                this.createBall(startX, startY + i * 12, speed, 0, 'multi', powerLevel);
+            }
+        } 
+        // Guided replaced with shockwave: vertical slice, electric effect
+        else if (this.selectedBallType === 'guided') {
+            this.activateShockwaveWeapon(laneY);
+        }
+        // Explosive: impacts 3 rows (lanes), bigger explosion
+        else if (this.selectedBallType === 'explosive') {
+            for (let lane of this.lanes) {
+                if (Math.abs(lane.y - laneY) <= 80) { // Impact 3 closest lanes
+                    this.createBall(startX, lane.y, speed, 0, 'explosive', powerLevel);
+                }
+            }
+        }
+        // Ultimate: kill all enemies on screen
+        else if (this.selectedBallType === 'ultimate') {
+            this.activateUltimateWeapon();
+        }
+        // Freeze: freeze the entire row
+        else if (this.selectedBallType === 'freeze') {
+            this.activateFreezeWeapon(laneY);
+        }
+        else {
+            this.createBall(startX, startY, speed, 0, this.selectedBallType, powerLevel);
+        }
+        // Consume ammo
+        if (this.selectedBallType !== 'normal') {
+            this.ballAmmo[this.selectedBallType]--;
+            this.updateBallSelection();
+        }
+        this.updatePowerGauge();
+        this.playSound(220, 100);
+    }
+
             createBall(x, y, vx, vy, type, power = 50) {
+                let color = '#00f5ff';
+                if (type === 'multi') color = '#ffff00'; // yellow
+                if (type === 'explosive') color = '#ff4444';
+                if (type === 'guided') color = '#00ffff';
                 const ball = {
                     x: x,
                     y: y,
@@ -827,7 +853,8 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                     type: type,
                     power: power, // Power level affects damage and effects
                     life: 300, // frames before disappearing
-                    trail: []
+                    trail: [],
+                    color: color
                 };
                 this.balls.push(ball);
             }
@@ -841,11 +868,14 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 document.querySelectorAll('.ball-type').forEach(btn => {
                     const type = btn.dataset.type;
                     btn.classList.remove('selected', 'disabled');
-                    
+                    // Remove guided from UI
+                    if (type === 'guided') {
+                        btn.style.display = 'none';
+                        return;
+                    }
                     if (type === this.selectedBallType) {
                         btn.classList.add('selected');
                     }
-                    
                     // Special handling for freeze weapon cooldown
                     if (type === 'freeze' && this.freezeCooldown > 0) {
                         btn.classList.add('disabled');
@@ -854,30 +884,24 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                         btn.title = `Freeze Row (Cooldown: ${Math.ceil(this.freezeCooldown/60)}s)`;
                         return;
                     }
-                    
                     if (type !== 'normal' && this.ballAmmo[type] <= 0) {
                         btn.classList.add('disabled');
-                        // Auto-switch to normal if current selection is out
                         if (type === this.selectedBallType) {
                             this.selectedBallType = 'normal';
                             btn.classList.remove('selected');
                             document.querySelector('[data-type="normal"]').classList.add('selected');
                         }
                     }
-                    
                     // Update tooltip with remaining ammo
                     if (type !== 'normal') {
                         const remaining = this.ballAmmo[type];
                         const status = remaining > 0 ? `${remaining} left` : 'OUT OF AMMO';
                         let weaponName = btn.title.split('(')[0];
-                        
                         if (type === 'freeze' && this.freezeCooldown > 0) {
                             // Already handled above
                         } else {
                             btn.title = `${weaponName}(${status})`;
                         }
-                        
-                        // Visual indicator for out of ammo
                         if (remaining === 0) {
                             btn.style.opacity = '0.3';
                             btn.style.border = '2px solid #ff4444';
@@ -887,44 +911,60 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                         }
                     }
                 });
+    // ...existing code...
             }
 
-            activateFreezeWeapon() {
-                // Get the lane that the mouse is pointing to
-                const targetY = this.mouseStart.y;
-                let targetLane = null;
-                let minDistance = Infinity;
-                
-                // Find closest lane to mouse Y position
-                this.lanes.forEach((lane, index) => {
-                    const distance = Math.abs(lane.y - targetY);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        targetLane = index;
+            activateFreezeWeapon(laneY) {
+                // Freeze all enemies in the selected lane
+                this.lanes.forEach((lane) => {
+                    if (Math.abs(lane.y - laneY) < 1) {
+                        this.enemies.forEach(enemy => {
+                            const enemyLaneY = enemy.y + enemy.height/2;
+                            if (Math.abs(enemyLaneY - lane.y) < 30) { // Within lane range
+                                this.frozenEnemies.add(enemy);
+                                enemy.originalSpeed = enemy.speed;
+                                enemy.speed = 0;
+                                enemy.freezeTime = 300; // 5 seconds
+                            }
+                        });
+                        // Visual freeze effect for the lane
+                        this.createFreezeEffect(lane.y);
+                        // Freeze sound effect
+                        this.playSound(800, 200, 'sine');
+                        this.playSound(400, 300, 'triangle');
                     }
                 });
-                
-                if (targetLane !== null) {
-                    const lane = this.lanes[targetLane];
-                    
-                    // Freeze all enemies in this lane
-                    this.enemies.forEach(enemy => {
-                        const enemyLaneY = enemy.y + enemy.height/2;
-                        if (Math.abs(enemyLaneY - lane.y) < 30) { // Within lane range
-                            this.frozenEnemies.add(enemy);
-                            enemy.originalSpeed = enemy.speed;
-                            enemy.speed = 0;
-                            enemy.freezeTime = 300; // 5 seconds
+            }
+            activateShockwaveWeapon(laneY) {
+                // Shockwave: vertical slice, electric effect, damages all enemies in lane
+                this.enemies.forEach(enemy => {
+                    const enemyLaneY = enemy.y + enemy.height/2;
+                    if (Math.abs(enemyLaneY - laneY) < 30) {
+                        enemy.health -= 2;
+                        this.createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#00ffff');
+                        if (enemy.health <= 0) {
+                            this.score += 50;
+                            const index = this.enemies.indexOf(enemy);
+                            if (index > -1) {
+                                this.enemies.splice(index, 1);
+                            }
                         }
+                    }
+                });
+                // Visual shockwave effect
+                for (let x = 50; x < this.canvas.width - 50; x += 20) {
+                    this.particles.push({
+                        x: x,
+                        y: laneY,
+                        vx: 0,
+                        vy: (Math.random()-0.5)*2,
+                        life: 30,
+                        color: '#00ffff',
+                        size: 4,
+                        type: 'shockwave'
                     });
-                    
-                    // Visual freeze effect for the lane
-                    this.createFreezeEffect(lane.y);
-                    
-                    // Freeze sound effect
-                    this.playSound(800, 200, 'sine');
-                    this.playSound(400, 300, 'triangle');
                 }
+                this.playSound(1200, 100, 'triangle');
             }
 
             createScreenFlash() {
@@ -970,33 +1010,20 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
             }
 
             activateUltimateWeapon() {
-                // Kill 90% of enemies on screen
-                const enemiesToKill = Math.floor(this.enemies.length * 0.9);
-                const enemiesKilled = [];
-                
-                // Randomly select enemies to kill
-                const shuffledEnemies = [...this.enemies].sort(() => Math.random() - 0.5);
-                for (let i = 0; i < enemiesToKill; i++) {
-                    if (shuffledEnemies[i]) {
-                        enemiesKilled.push(shuffledEnemies[i]);
-                    }
-                }
-                
-                // Remove killed enemies and create effects
+                // Kill ALL enemies on screen
+                const enemiesKilled = [...this.enemies];
                 enemiesKilled.forEach(enemy => {
                     const index = this.enemies.indexOf(enemy);
                     if (index > -1) {
                         // Create dramatic explosion effect
-                        this.createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 80, 100);
+                        this.createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, 120, 100);
                         this.createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#ff00ff');
                         this.enemies.splice(index, 1);
                         this.score += 100; // Bonus points for ultimate kills
                     }
                 });
-                
                 // Screen flash effect
                 this.createScreenFlash();
-                
                 // Epic sound effect
                 this.playSound(100, 500, 'sawtooth');
                 setTimeout(() => this.playSound(200, 300, 'square'), 100);
@@ -1178,10 +1205,10 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                     y: y,
                     radius: 10,
                     maxRadius: radius,
-                    life: 30
+                    life: 30,
+                    expanding: arguments.length > 4 ? arguments[4] : false
                 };
                 this.explosions.push(explosion);
-                
                 // Damage nearby enemies - power affects damage
                 const explosionDamage = 1 + Math.floor(power / 50);
                 this.enemies.forEach(enemy => {
@@ -1189,7 +1216,6 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                         Math.pow(enemy.x + enemy.width/2 - x, 2) +
                         Math.pow(enemy.y + enemy.height/2 - y, 2)
                     );
-                    
                     if (distance < radius) {
                         enemy.health -= explosionDamage;
                         if (enemy.health <= 0) {
@@ -1201,7 +1227,6 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                         }
                     }
                 });
-                
                 this.playSound(200, 300, 'sawtooth');
             }
 
@@ -1289,6 +1314,14 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 this.ctx.fillRect(10, 100, 30, this.canvas.height - 200);
                 this.ctx.fillStyle = 'white';
                 this.ctx.font = '12px Arial';
+                    this.lanes = [
+                        { y: 120, active: true },
+                        { y: 200, active: true },
+                        { y: 280, active: true },
+                        { y: 360, active: true },
+                        { y: 440, active: true }
+                    ];
+
                 this.ctx.fillText('BASE', 12, 95);
                 
                 // Draw base firing area indicator - 2/3 wider
@@ -1357,7 +1390,10 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                 // Draw explosions
                 this.explosions.forEach(explosion => {
                     const alpha = explosion.life / 30;
-                    const currentRadius = (explosion.maxRadius || 60) * (1 - explosion.life / 30);
+                    let currentRadius = (explosion.maxRadius || 60) * (1 - explosion.life / 30);
+                    if (explosion.expanding) {
+                        currentRadius = explosion.radius + (explosion.maxRadius - explosion.radius) * (1 - explosion.life / 30);
+                    }
                     this.ctx.fillStyle = `rgba(255, 100, 0, ${alpha})`;
                     this.ctx.beginPath();
                     this.ctx.arc(explosion.x, explosion.y, currentRadius, 0, Math.PI * 2);
@@ -1371,17 +1407,7 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                     this.ctx.fillRect(particle.x, particle.y, 3, 3);
                 });
                 
-                // Draw aim line when dragging
-                if (this.mouseDown) {
-                    this.ctx.strokeStyle = '#00f5ff';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.setLineDash([5, 5]);
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(this.mouseStart.x, this.mouseStart.y);
-                    this.ctx.lineTo(this.mouseEnd.x, this.mouseEnd.y);
-                    this.ctx.stroke();
-                    this.ctx.setLineDash([]);
-                }
+                // ...existing code...
             }
 
             updateUI() {
@@ -1420,18 +1446,19 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
                     // Audio not available
                 }
             }
-        }
+        // End of StrikeCommander class
+    }
 
-        // Initialize game when page loads
-        window.addEventListener('load', () => {
-            new StrikeCommander();
-        });
+// Initialize game when page loads
+window.addEventListener('load', () => {
+    new StrikeCommander();
+});
 
-        window.addEventListener("load", function() {
-            setTimeout(() => {
-                window.scrollTo(0, 1);
-            }, 100);
-        });
+window.addEventListener("load", function() {
+    setTimeout(() => {
+        window.scrollTo(0, 1);
+    }, 100);
+});
     </script>
 </body>
 </html>
