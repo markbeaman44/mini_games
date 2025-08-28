@@ -444,14 +444,66 @@
         }
 
         @media (max-width: 768px) {
-            .mobile-controls {
-                display: grid;
-            }
-            
             .game-container {
                 width: 100vw;
                 height: 100vh;
                 border-radius: 0;
+            }
+        }
+
+        /* Mobile Controls */
+        /* Tablet Controls (from panda.html) */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+        .tablet-controls-right {
+            right: 0;
+            width: 80px;
+            align-items: flex-start;
+            padding-right: 10px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0 0 0 0;
+        }
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
             }
         }
     </style>
@@ -495,16 +547,16 @@
                 <div>Wind: <span id="windDirection">→</span> <span id="windStrength">0</span></div>
             </div>
 
-            <div class="mobile-controls" id="mobileControls">
-                <div></div>
-                <div class="control-btn" id="upBtn">↑</div>
-                <div></div>
-                <div class="control-btn" id="leftBtn">←</div>
-                <div></div>
-                <div class="control-btn" id="rightBtn">→</div>
-                <div></div>
-                <div class="control-btn" id="downBtn">↓</div>
-                <div></div>
+        </div>
+        <div id="mobileControls"></div>
+            <!-- Tablet Controls (from panda.html) -->
+            <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+                <button id="leftBtn" class="tablet-btn">◀</button>
+                <button id="rightBtn" class="tablet-btn">▶</button>
+            </div>
+            <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+                <button id="upBtn" class="tablet-btn">⬆</button>
+                <button id="downBtn" class="tablet-btn">⬇</button>
             </div>
         </div>
 
@@ -547,7 +599,8 @@
                     y: 200, // Start at appropriate height for shorter world
                     speed: 3,
                     ropeLength: 0,
-                    maxRopeLength: 150
+                    maxRopeLength: 150,
+                    facing: 'right' // 'left' or 'right'
                 };
 
                 // Camera properties
@@ -862,9 +915,11 @@
                 }
                 if (this.keys['a'] || this.keys['arrowleft'] || this.keys['leftBtn']) {
                     moveX -= this.helicopter.speed;
+                    this.helicopter.facing = 'right';
                 }
                 if (this.keys['d'] || this.keys['arrowright'] || this.keys['rightBtn']) {
                     moveX += this.helicopter.speed;
+                    this.helicopter.facing = 'left';
                 }
 
                 // Apply wind effect
@@ -1040,11 +1095,17 @@
                 // Update camera transform
                 this.gameWorld.style.transform = `translate(-${this.camera.x}px, -${this.camera.y}px)`;
 
-                // Update helicopter position
+                // Update helicopter position and facing
                 const helicopterEl = document.getElementById('helicopter');
                 if (helicopterEl) {
                     helicopterEl.style.left = this.helicopter.x + 'px';
                     helicopterEl.style.top = this.helicopter.y + 'px';
+                    // Flip helicopter horizontally if facing left
+                    if (this.helicopter.facing === 'left') {
+                        helicopterEl.style.transform = 'scaleX(-1)';
+                    } else {
+                        helicopterEl.style.transform = 'scaleX(1)';
+                    }
                 }
 
                 // Update rope
