@@ -289,8 +289,16 @@
       if(paused || gameOver) return;
 
       // Player movement
-      const left = keys['arrowleft'] || keys['a'] || touchLeft;
-      const right = keys['arrowright'] || keys['d'] || touchRight;
+      // Always allow keyboard arrows, but prioritize touch if pressed
+      let left = keys['arrowleft'] || keys['a'];
+      let right = keys['arrowright'] || keys['d'];
+      // On tablet, if touchLeft/touchRight is pressed, override keyboard
+      if (window.innerWidth >= 720 && window.innerWidth <= 1285) {
+        if (touchLeft) { left = true; right = false; }
+        if (touchRight) { right = true; left = false; }
+      }
+      // If both are true, don't move
+      if (left && right) { left = false; right = false; }
       player.vx = 0;
       if(left) player.vx = -player.speed;
       if(right) player.vx = player.speed;
