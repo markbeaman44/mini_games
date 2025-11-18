@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Fairy Tale - Christmas Magic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #1a472a 100%);
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #0f2847 0%, #1a1a2e 50%, #0f3d3e 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            color: #333;
+        }
+
+        #backButton:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+
+        .instructions-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .close-instructions {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255,20,147,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255,20,147,0.6);
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 15px 30px;
+            border-radius: 15px;
+            display: flex;
+            gap: 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            z-index: 10;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-label {
+            color: #FFD700;
+        }
+
+        .stat-value {
+            color: white;
+            min-width: 40px;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: none;
+        }
+
+        .fairy {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .wand {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+            z-index: 20;
+            transform: translate(-30px, -30px);
+        }
+
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 20px;
+            pointer-events: none;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Mobile Controls */
+        .mobile-joystick {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            z-index: 50;
+        }
+
+        .joystick-outer {
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255,255,255,0.5);
+        }
+
+        .joystick-inner {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,20,147,0.8);
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.1s;
+            border: 2px solid white;
+        }
+
+        @media (max-width: 719px) {
+            .mobile-joystick {
+                display: block;
+            }
+
+            #gameCanvas {
+                cursor: default;
+            }
+        }
+
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .mobile-joystick {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🎄 Christmas Fairy Magic 🎄</h2>
+                    <p>🧚‍♀️ Christmas fairies are flying around!</p>
+                    <p>🪄 Use your magic pink wand to catch them!</p>
+                    <p>✨ Move your mouse (or finger on mobile) to control the wand</p>
+                    <p>🎯 Catch as many fairies as you can!</p>
+                    <p>⭐ More fairies appear when only 5 are left!</p>
+                    <button class="close-instructions" id="closeInstructions">Start Catching! 🪄</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="stats-panel">
+                    <div class="stat">
+                        <span class="stat-label">Caught:</span>
+                        <span class="stat-value" id="caughtCount">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Fairies:</span>
+                        <span class="stat-value" id="fairyCount">15</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Best:</span>
+                        <span class="stat-value" id="bestScore">0</span>
+                    </div>
+                </div>
+                <canvas id="gameCanvas"></canvas>
+                
+                <!-- Mobile Joystick -->
+                <div class="mobile-joystick" id="mobileJoystick">
+                    <div class="joystick-outer">
+                        <div class="joystick-inner" id="joystickInner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FairyTaleGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.caughtCountEl = document.getElementById('caughtCount');
+                this.fairyCountEl = document.getElementById('fairyCount');
+                this.bestScoreEl = document.getElementById('bestScore');
+                this.mobileJoystick = document.getElementById('mobileJoystick');
+                this.joystickInner = document.getElementById('joystickInner');
+
+                this.fairies = [];
+                this.snowflakes = [];
+                this.caughtCount = 0;
+                this.bestScore = parseInt(localStorage.getItem('fairyTaleBest') || '0');
+                this.gameRunning = false;
+
+                this.wand = {
+                    x: 0,
+                    y: 0,
+                    radius: 30
+                };
+
+                this.fairyColors = [
+                    '#FF69B4', // Hot Pink
+                    '#FFB6C1', // Light Pink
+                    '#FF1493', // Deep Pink
+                    '#FFC0CB', // Pink
+                    '#FF6EC7', // Violet Pink
+                    '#FF85C1', // Rose Pink
+                    '#FF94D6', // Orchid Pink
+                    '#FFA5E0', // Lavender Pink
+                ];
+
+                this.isMobile = 'ontouchstart' in window;
+                this.joystickActive = false;
+                this.joystickStartX = 0;
+                this.joystickStartY = 0;
+                this.joystickDeltaX = 0;
+                this.joystickDeltaY = 0;
+
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.bestScoreEl.textContent = this.bestScore;
+                this.createSnowflakes();
+            }
+
+            setupCanvas() {
+                const container = this.canvas.parentElement.parentElement;
+                this.canvas.width = container.offsetWidth;
+                this.canvas.height = container.offsetHeight;
+            }
+
+            setupEventListeners() {
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+                });
+
+                // Mouse movement
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.wand.x = e.clientX - rect.left;
+                    this.wand.y = e.clientY - rect.top;
+                });
+
+                // Touch movement
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const rect = this.canvas.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    this.wand.x = touch.clientX - rect.left;
+                    this.wand.y = touch.clientY - rect.top;
+                });
+
+                // Mobile joystick
+                this.mobileJoystick.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.joystickActive = true;
+                    const rect = this.mobileJoystick.getBoundingClientRect();
+                    this.joystickStartX = rect.left + rect.width / 2;
+                    this.joystickStartY = rect.top + rect.height / 2;
+                });
+
+                this.mobileJoystick.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (!this.joystickActive) return;
+
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - this.joystickStartX;
+                    const deltaY = touch.clientY - this.joystickStartY;
+
+                    // Limit joystick movement
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const maxDistance = 35;
+
+                    if (distance > maxDistance) {
+                        this.joystickDeltaX = (deltaX / distance) * maxDistance;
+                        this.joystickDeltaY = (deltaY / distance) * maxDistance;
+                    } else {
+                        this.joystickDeltaX = deltaX;
+                        this.joystickDeltaY = deltaY;
+                    }
+
+                    this.joystickInner.style.transform = `translate(${this.joystickDeltaX}px, ${this.joystickDeltaY}px)`;
+                });
+
+                this.mobileJoystick.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.joystickActive = false;
+                    this.joystickDeltaX = 0;
+                    this.joystickDeltaY = 0;
+                    this.joystickInner.style.transform = 'translate(0, 0)';
+                });
+
+                window.addEventListener('resize', () => {
+                    this.setupCanvas();
+                });
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            createSnowflakes() {
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => {
+                        this.addSnowflake();
+                    }, i * 200);
+                }
+            }
+
+            addSnowflake() {
+                const snowflake = {
+                    x: Math.random() * this.canvas.width,
+                    y: -20,
+                    speed: 1 + Math.random() * 2,
+                    size: 15 + Math.random() * 15,
+                    drift: Math.random() * 2 - 1
+                };
+                this.snowflakes.push(snowflake);
+            }
+
+            startGame() {
+                this.gameRunning = true;
+                this.caughtCount = 0;
+                this.updateStats();
+                
+                // Initialize wand position
+                this.wand.x = this.canvas.width / 2;
+                this.wand.y = this.canvas.height / 2;
+
+                // Create initial fairies
+                this.spawnFairies(15);
+
+                this.gameLoop();
+            }
+
+            spawnFairies(count) {
+                for (let i = 0; i < count; i++) {
+                    this.addFairy();
+                }
+            }
+
+            addFairy() {
+                const fairy = {
+                    x: Math.random() * this.canvas.width,
+                    y: Math.random() * this.canvas.height,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: (Math.random() - 0.5) * 3,
+                    color: this.fairyColors[Math.floor(Math.random() * this.fairyColors.length)],
+                    size: 35 + Math.random() * 15,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.05 + Math.random() * 0.05
+                };
+                this.fairies.push(fairy);
+            }
+
+            updateStats() {
+                this.caughtCountEl.textContent = this.caughtCount;
+                this.fairyCountEl.textContent = this.fairies.length;
+                
+                if (this.caughtCount > this.bestScore) {
+                    this.bestScore = this.caughtCount;
+                    this.bestScoreEl.textContent = this.bestScore;
+                    localStorage.setItem('fairyTaleBest', this.bestScore.toString());
+                }
+            }
+
+            update() {
+                // Update joystick-controlled wand movement
+                if (this.joystickActive) {
+                    this.wand.x += this.joystickDeltaX * 0.3;
+                    this.wand.y += this.joystickDeltaY * 0.3;
+
+                    // Keep wand in bounds
+                    this.wand.x = Math.max(0, Math.min(this.canvas.width, this.wand.x));
+                    this.wand.y = Math.max(0, Math.min(this.canvas.height, this.wand.y));
+                }
+
+                // Update fairies
+                for (let i = this.fairies.length - 1; i >= 0; i--) {
+                    const fairy = this.fairies[i];
+                    
+                    fairy.x += fairy.vx;
+                    fairy.y += fairy.vy;
+                    fairy.wobble += fairy.wobbleSpeed;
+
+                    // Bounce off walls
+                    if (fairy.x < 0 || fairy.x > this.canvas.width) {
+                        fairy.vx *= -1;
+                        fairy.x = Math.max(0, Math.min(this.canvas.width, fairy.x));
+                    }
+                    if (fairy.y < 0 || fairy.y > this.canvas.height) {
+                        fairy.vy *= -1;
+                        fairy.y = Math.max(0, Math.min(this.canvas.height, fairy.y));
+                    }
+
+                    // Check collision with wand
+                    const dx = fairy.x - this.wand.x;
+                    const dy = fairy.y - this.wand.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < this.wand.radius + fairy.size / 2) {
+                        // Fairy caught!
+                        this.fairies.splice(i, 1);
+                        this.caughtCount++;
+                        this.updateStats();
+                        this.playSound(800, 100);
+                        this.createSparkles(fairy.x, fairy.y, fairy.color);
+                    }
+                }
+
+                // Add more fairies when only 5 left
+                if (this.fairies.length <= 5) {
+                    this.spawnFairies(10);
+                    this.playSound(1000, 150);
+                }
+
+                // Update snowflakes
+                for (let i = this.snowflakes.length - 1; i >= 0; i--) {
+                    const snowflake = this.snowflakes[i];
+                    snowflake.y += snowflake.speed;
+                    snowflake.x += snowflake.drift;
+
+                    if (snowflake.y > this.canvas.height + 20) {
+                        this.snowflakes.splice(i, 1);
+                        this.addSnowflake();
+                    }
+                }
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw snowflakes
+                for (const snowflake of this.snowflakes) {
+                    this.ctx.font = `${snowflake.size}px Arial`;
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    this.ctx.fillText('❄', snowflake.x, snowflake.y);
+                }
+
+                // Draw fairies
+                for (const fairy of this.fairies) {
+                    this.ctx.save();
+                    this.ctx.translate(fairy.x, fairy.y);
+                    this.ctx.rotate(Math.sin(fairy.wobble) * 0.2);
+
+                    // Fairy glow
+                    this.ctx.shadowColor = fairy.color;
+                    this.ctx.shadowBlur = 20;
+                    
+                    // Fairy body
+                    this.ctx.fillStyle = fairy.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, fairy.size / 2, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Fairy wings
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(-fairy.size / 3, 0, fairy.size / 3, fairy.size / 2, 0, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(fairy.size / 3, 0, fairy.size / 3, fairy.size / 2, 0, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Sparkle
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.fillRect(-2, -2, 4, 4);
+
+                    this.ctx.restore();
+                }
+
+                // Draw magic wand
+                this.ctx.save();
+                this.ctx.translate(this.wand.x, this.wand.y);
+
+                // Wand glow
+                this.ctx.shadowColor = '#FF1493';
+                this.ctx.shadowBlur = 30;
+
+                // Wand star
+                this.drawStar(0, 0, 5, 25, 12, '#FFD700', '#FF1493');
+
+                // Wand handle
+                this.ctx.strokeStyle = '#8B4513';
+                this.ctx.lineWidth = 6;
+                this.ctx.beginPath();
+                this.ctx.moveTo(10, 10);
+                this.ctx.lineTo(30, 30);
+                this.ctx.stroke();
+
+                // Magic sparkles around wand
+                for (let i = 0; i < 3; i++) {
+                    const angle = Date.now() / 500 + (i * Math.PI * 2 / 3);
+                    const sparkleX = Math.cos(angle) * 20;
+                    const sparkleY = Math.sin(angle) * 20;
+                    this.ctx.fillStyle = '#FF69B4';
+                    this.ctx.beginPath();
+                    this.ctx.arc(sparkleX, sparkleY, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+
+                this.ctx.restore();
+            }
+
+            drawStar(x, y, spikes, outerRadius, innerRadius, fillColor, strokeColor) {
+                let rot = Math.PI / 2 * 3;
+                const step = Math.PI / spikes;
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y - outerRadius);
+
+                for (let i = 0; i < spikes; i++) {
+                    this.ctx.lineTo(x + Math.cos(rot) * outerRadius, y + Math.sin(rot) * outerRadius);
+                    rot += step;
+                    this.ctx.lineTo(x + Math.cos(rot) * innerRadius, y + Math.sin(rot) * innerRadius);
+                    rot += step;
+                }
+
+                this.ctx.lineTo(x, y - outerRadius);
+                this.ctx.closePath();
+
+                this.ctx.fillStyle = fillColor;
+                this.ctx.fill();
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+            }
+
+            createSparkles(x, y, color) {
+                // Visual feedback for catching fairy
+                for (let i = 0; i < 8; i++) {
+                    const angle = (Math.PI * 2 * i) / 8;
+                    const particle = {
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * 3,
+                        vy: Math.sin(angle) * 3,
+                        life: 20,
+                        color: color
+                    };
+
+                    const animate = () => {
+                        if (particle.life <= 0) return;
+
+                        this.ctx.save();
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.globalAlpha = particle.life / 20;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, 5, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.restore();
+
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.life--;
+
+                        requestAnimationFrame(animate);
+                    };
+                    animate();
+                }
+            }
+
+            playSound(frequency, duration) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported
+                }
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+
+                this.update();
+                this.draw();
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Initialize game
+        const game = new FairyTaleGame();
+
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

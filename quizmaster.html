@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(700px, 90vh);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #backButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .instructions-content h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions-content p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .instructions-content ul {
+            text-align: left;
+            margin: 20px auto;
+            display: inline-block;
+            font-size: 16px;
+        }
+
+        .instructions-content li {
+            margin: 10px 0;
+        }
+
+        .close-instructions {
+            background: #FFD700;
+            color: #764ba2;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Game Area */
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 30px;
+            flex-direction: column;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .score-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .question-number {
+            background: #FFD700;
+            color: #764ba2;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .lifelines-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lifeline-btn {
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lifeline-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: #FF5252;
+        }
+
+        .lifeline-btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .question-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .question-text {
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1.4;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .answer-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #764ba2;
+            border: 3px solid transparent;
+            padding: 25px;
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .answer-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: #FFD700;
+            border-color: #FFD700;
+        }
+
+        .answer-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .answer-btn.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .answer-btn.incorrect {
+            background: #FF6B6B;
+            color: white;
+            border-color: #FF6B6B;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Game Over */
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 20px;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-over-content h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .final-score {
+            font-size: 36px;
+            margin: 30px 0;
+            font-weight: bold;
+        }
+
+        .performance-message {
+            font-size: 22px;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+
+        .restart-btn {
+            background: #FFD700;
+            color: #764ba2;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-container {
+                height: min(800px, 95vh);
+            }
+
+            .game-area {
+                padding: 20px;
+            }
+
+            .question-text {
+                font-size: 22px;
+            }
+
+            .answers-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .answer-btn {
+                font-size: 18px;
+                padding: 20px;
+                min-height: 70px;
+            }
+
+            .game-header {
+                font-size: 16px;
+            }
+
+            .score-display, .question-number {
+                font-size: 16px;
+                padding: 12px 20px;
+            }
+
+            .lifeline-btn {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+
+            .instructions-content {
+                padding: 30px 20px;
+            }
+
+            .instructions-content h2 {
+                font-size: 28px;
+            }
+
+            .instructions-content p {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .question-text {
+                font-size: 20px;
+            }
+
+            .answer-btn {
+                font-size: 16px;
+                padding: 18px;
+            }
+
+            .lifelines-container {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .lifeline-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+    
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🏆 Quiz Master 🏆</h2>
+                    <p>Welcome to the ultimate quiz challenge!</p>
+                    <ul>
+                        <li>📚 Answer 10 fun questions about math and general knowledge</li>
+                        <li>🎯 Click on the correct answer from 4 choices</li>
+                        <li>💡 You have 3 lifelines that remove 2 wrong answers</li>
+                        <li>⭐ Get 10 points for each correct answer</li>
+                        <li>🏅 Try to get a perfect score of 100!</li>
+                    </ul>
+                    <button class="close-instructions" id="closeInstructions">Start Quiz!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="game-header">
+                    <div class="score-display">Score: <span id="scoreValue">0</span></div>
+                    <div class="question-number">Question <span id="questionNumber">1</span>/10</div>
+                    <div class="lifelines-container">
+                        <button class="lifeline-btn" id="lifeline1">💡 50:50</button>
+                        <button class="lifeline-btn" id="lifeline2">💡 50:50</button>
+                        <button class="lifeline-btn" id="lifeline3">💡 50:50</button>
+                    </div>
+                </div>
+
+                <div class="question-container">
+                    <div class="question-text" id="questionText"></div>
+                </div>
+
+                <div class="answers-grid" id="answersGrid">
+                    <button class="answer-btn" data-index="0"></button>
+                    <button class="answer-btn" data-index="1"></button>
+                    <button class="answer-btn" data-index="2"></button>
+                    <button class="answer-btn" data-index="3"></button>
+                </div>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>Quiz Complete! 🎉</h2>
+                    <div class="final-score">Final Score: <span id="finalScore">0</span>/100</div>
+                    <div class="performance-message" id="performanceMessage"></div>
+                    <button class="restart-btn" id="restartBtn">Play Again!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class QuizGame {
+            constructor() {
+                this.allQuestions = [
+                    {
+                        question: "What is 5 + 3?",
+                        answers: ["8", "7", "9", "6"],
+                        correct: 0
+                    },
+                    {
+                        question: "How many legs does a spider have?",
+                        answers: ["6", "10", "8", "4"],
+                        correct: 2
+                    },
+                    {
+                        question: "What is 12 - 4?",
+                        answers: ["7", "8", "9", "6"],
+                        correct: 1
+                    },
+                    {
+                        question: "What color do you get when you mix blue and yellow?",
+                        answers: ["Green", "Purple", "Orange", "Red"],
+                        correct: 0
+                    },
+                    {
+                        question: "What is 3 × 4?",
+                        answers: ["10", "14", "12", "15"],
+                        correct: 2
+                    },
+                    {
+                        question: "How many days are in a week?",
+                        answers: ["5", "6", "8", "7"],
+                        correct: 3
+                    },
+                    {
+                        question: "What is 15 ÷ 3?",
+                        answers: ["5", "4", "6", "3"],
+                        correct: 0
+                    },
+                    {
+                        question: "Which animal says 'Moo'?",
+                        answers: ["Sheep", "Cow", "Horse", "Pig"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is 7 + 6?",
+                        answers: ["12", "13", "14", "15"],
+                        correct: 1
+                    },
+                    {
+                        question: "How many sides does a triangle have?",
+                        answers: ["4", "5", "3", "6"],
+                        correct: 2
+                    },
+                    {
+                        question: "What is 10 - 7?",
+                        answers: ["3", "4", "2", "5"],
+                        correct: 0
+                    },
+                    {
+                        question: "How many months are in a year?",
+                        answers: ["10", "11", "12", "13"],
+                        correct: 2
+                    },
+                    {
+                        question: "What is 2 × 5?",
+                        answers: ["8", "10", "12", "7"],
+                        correct: 1
+                    },
+                    {
+                        question: "Which shape is round?",
+                        answers: ["Square", "Triangle", "Circle", "Rectangle"],
+                        correct: 2
+                    },
+                    {
+                        question: "What is 20 ÷ 4?",
+                        answers: ["4", "5", "6", "3"],
+                        correct: 1
+                    },
+                    {
+                        question: "How many fingers do you have on one hand?",
+                        answers: ["4", "5", "6", "3"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is 8 + 5?",
+                        answers: ["12", "13", "14", "11"],
+                        correct: 1
+                    },
+                    {
+                        question: "Which animal has a long trunk?",
+                        answers: ["Lion", "Elephant", "Giraffe", "Zebra"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is 9 - 3?",
+                        answers: ["7", "6", "5", "4"],
+                        correct: 1
+                    },
+                    {
+                        question: "What color is the sky on a sunny day?",
+                        answers: ["Green", "Blue", "Red", "Yellow"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is 6 × 2?",
+                        answers: ["10", "11", "12", "14"],
+                        correct: 2
+                    },
+                    {
+                        question: "How many sides does a square have?",
+                        answers: ["3", "4", "5", "6"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is 16 ÷ 2?",
+                        answers: ["6", "7", "8", "9"],
+                        correct: 2
+                    },
+                    {
+                        question: "Which season comes after winter?",
+                        answers: ["Summer", "Spring", "Fall", "Autumn"],
+                        correct: 1
+                    },
+                    {
+                        question: "What is 4 + 9?",
+                        answers: ["12", "13", "14", "15"],
+                        correct: 1
+                    }
+                ];
+
+                // Select 10 random questions for this game
+                this.questions = this.selectRandomQuestions(10);
+
+                this.currentQuestion = 0;
+                this.score = 0;
+                this.lifelines = 3;
+                this.usedLifelinesOnQuestion = [];
+
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.questionText = document.getElementById('questionText');
+                this.answersGrid = document.getElementById('answersGrid');
+                this.scoreValue = document.getElementById('scoreValue');
+                this.questionNumber = document.getElementById('questionNumber');
+                this.finalScore = document.getElementById('finalScore');
+                this.performanceMessage = document.getElementById('performanceMessage');
+
+                this.answerButtons = document.querySelectorAll('.answer-btn');
+                this.lifelineButtons = [
+                    document.getElementById('lifeline1'),
+                    document.getElementById('lifeline2'),
+                    document.getElementById('lifeline3')
+                ];
+
+                this.setupEventListeners();
+            }
+
+            selectRandomQuestions(count) {
+                // Create a copy of all questions
+                const questionsCopy = [...this.allQuestions];
+                const selected = [];
+                
+                // Randomly select 'count' questions
+                for (let i = 0; i < count; i++) {
+                    const randomIndex = Math.floor(Math.random() * questionsCopy.length);
+                    selected.push(questionsCopy[randomIndex]);
+                    questionsCopy.splice(randomIndex, 1);
+                }
+                
+                return selected;
+            }
+
+            setupEventListeners() {
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.startGame();
+                });
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                this.answerButtons.forEach(btn => {
+                    btn.addEventListener('click', () => this.selectAnswer(btn));
+                });
+
+                this.lifelineButtons.forEach((btn, index) => {
+                    btn.addEventListener('click', () => this.useLifeline(index));
+                });
+
+                // Keyboard support
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.startGame();
+                    } else if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+            }
+
+            startGame() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'flex';
+                this.loadQuestion();
+            }
+
+            loadQuestion() {
+                const question = this.questions[this.currentQuestion];
+                this.questionText.textContent = question.question;
+                this.questionNumber.textContent = this.currentQuestion + 1;
+                this.usedLifelinesOnQuestion = [];
+
+                this.answerButtons.forEach((btn, index) => {
+                    btn.textContent = question.answers[index];
+                    btn.disabled = false;
+                    btn.classList.remove('correct', 'incorrect');
+                    btn.style.display = 'flex';
+                    btn.style.opacity = '1';
+                });
+            }
+
+            selectAnswer(btn) {
+                const selectedIndex = parseInt(btn.dataset.index);
+                const question = this.questions[this.currentQuestion];
+                
+                // Disable all buttons
+                this.answerButtons.forEach(b => b.disabled = true);
+
+                if (selectedIndex === question.correct) {
+                    btn.classList.add('correct');
+                    this.score += 10;
+                    this.scoreValue.textContent = this.score;
+                    this.playSound(800, 200);
+                } else {
+                    btn.classList.add('incorrect');
+                    this.answerButtons[question.correct].classList.add('correct');
+                    this.playSound(200, 200);
+                }
+
+                setTimeout(() => {
+                    this.currentQuestion++;
+                    if (this.currentQuestion < this.questions.length) {
+                        this.loadQuestion();
+                    } else {
+                        this.endGame();
+                    }
+                }, 1500);
+            }
+
+            useLifeline(index) {
+                if (this.usedLifelinesOnQuestion.includes(index)) return;
+                
+                const question = this.questions[this.currentQuestion];
+                const correctIndex = question.correct;
+                
+                // Get indices of wrong answers
+                const wrongIndices = [];
+                for (let i = 0; i < 4; i++) {
+                    if (i !== correctIndex) {
+                        wrongIndices.push(i);
+                    }
+                }
+
+                // Randomly select 2 wrong answers to hide
+                const toHide = [];
+                while (toHide.length < 2 && wrongIndices.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * wrongIndices.length);
+                    toHide.push(wrongIndices[randomIndex]);
+                    wrongIndices.splice(randomIndex, 1);
+                }
+
+                // Hide the buttons
+                toHide.forEach(i => {
+                    this.answerButtons[i].disabled = true;
+                    this.answerButtons[i].style.opacity = '0.3';
+                });
+
+                // Disable the lifeline button
+                this.lifelineButtons[index].disabled = true;
+                this.usedLifelinesOnQuestion.push(index);
+                this.lifelines--;
+
+                this.playSound(600, 150);
+            }
+
+            endGame() {
+                this.finalScore.textContent = this.score;
+                
+                let message = '';
+                if (this.score === 100) {
+                    message = '🌟 PERFECT! You\'re a Quiz Master! 🌟';
+                } else if (this.score >= 80) {
+                    message = '🎉 Excellent work! You\'re really smart! 🎉';
+                } else if (this.score >= 60) {
+                    message = '👏 Good job! Keep practicing! 👏';
+                } else if (this.score >= 40) {
+                    message = '💪 Nice try! You can do better! 💪';
+                } else {
+                    message = '📚 Keep learning! Try again! 📚';
+                }
+                
+                this.performanceMessage.textContent = message;
+                this.gameArea.style.display = 'none';
+                this.gameOver.style.display = 'flex';
+                
+                this.playSound(1000, 100);
+                setTimeout(() => this.playSound(1200, 100), 150);
+                setTimeout(() => this.playSound(1400, 200), 300);
+            }
+
+            restartGame() {
+                // Select new random questions for replay
+                this.questions = this.selectRandomQuestions(10);
+                
+                this.currentQuestion = 0;
+                this.score = 0;
+                this.lifelines = 3;
+                this.scoreValue.textContent = '0';
+                
+                this.lifelineButtons.forEach(btn => {
+                    btn.disabled = false;
+                });
+
+                this.gameOver.style.display = 'none';
+                this.gameArea.style.display = 'flex';
+                this.loadQuestion();
+            }
+
+            playSound(frequency, duration) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported
+                }
+            }
+        }
+
+        // Initialize game
+        const game = new QuizGame();
+
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

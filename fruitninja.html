@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Slicer - Mini Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 50%, #f7931e 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content h2 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .instructions-content p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .close-instructions {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.05);
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .score-display {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .timer-display {
+            background: rgba(255, 107, 53, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .game-over-content {
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .game-over-content h2 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .restart-button {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .restart-button:hover {
+            transform: scale(1.05);
+        }
+
+        .apple {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .slash-line {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+            height: 3px;
+            z-index: 15;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .slash-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+
+
+        @media (max-width: 600px) {
+            .game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .instructions-content, .game-over-content {
+                margin: 20px;
+                padding: 25px;
+            }
+
+            .ui-overlay {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+            }
+
+            .score-display, .timer-display {
+                padding: 8px 15px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🍎 Apple Slicer</h2>
+                    <p>Cut as many apples as possible in 60 seconds!</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>• Click and drag to slash through apples</p>
+                    <p>• Each apple = 10 points</p>
+                    <p>• Multiple apples in one slash = bonus!</p>
+                    <p>• Press SPACE to restart anytime</p>
+                    <button class="close-instructions" id="closeInstructions">Start Slicing!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="ui-overlay">
+                    <div class="score-display">
+                        Score: <span id="scoreValue">0</span>
+                    </div>
+                    <div class="timer-display" id="timerDisplay">
+                        Time: 60s
+                    </div>
+                </div>
+                <canvas class="game-canvas" id="gameCanvas"></canvas>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>Time's Up!</h2>
+                    <p>Apples Sliced: <span id="finalScore">0</span></p>
+                    <p>Best Score: <span id="bestScore">0</span></p>
+                    <button class="restart-button" id="restartGame">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AppleSlicerGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                
+                this.score = 0;
+                this.timeLeft = 60;
+                this.gameRunning = false;
+                this.apples = [];
+                this.slashLines = [];
+                this.particles = [];
+                
+                this.isSlashing = false;
+                this.slashStart = { x: 0, y: 0 };
+                this.slashCurrent = { x: 0, y: 0 };
+                
+                this.appleSpawnTimer = 0;
+                this.gameTimer = null;
+
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.loadBestScore();
+            }
+
+            setupCanvas() {
+                const container = this.canvas.parentElement;
+                const rect = container.getBoundingClientRect();
+                
+                // Set canvas size to match container
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                
+                // Ensure canvas style matches actual size
+                this.canvas.style.width = rect.width + 'px';
+                this.canvas.style.height = rect.height + 'px';
+                
+                // Fix high DPI displays
+                const devicePixelRatio = window.devicePixelRatio || 1;
+                if (devicePixelRatio !== 1) {
+                    this.canvas.width = rect.width * devicePixelRatio;
+                    this.canvas.height = rect.height * devicePixelRatio;
+                    this.ctx.scale(devicePixelRatio, devicePixelRatio);
+                    this.canvas.style.width = rect.width + 'px';
+                    this.canvas.style.height = rect.height + 'px';
+                }
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Game over
+                document.getElementById('restartGame').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                // Mouse events for slashing
+                this.canvas.addEventListener('mousedown', (e) => this.startSlash(e));
+                this.canvas.addEventListener('mousemove', (e) => this.updateSlash(e));
+                this.canvas.addEventListener('mouseup', () => this.endSlash());
+
+                // Touch events for mobile
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseEvent = new MouseEvent('mousedown', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    this.startSlash(mouseEvent);
+                });
+
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseEvent = new MouseEvent('mousemove', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    this.updateSlash(mouseEvent);
+                });
+
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.endSlash();
+                });
+
+                // Keyboard events
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        if (this.instructionsPopup.style.display === 'flex') {
+                            this.hideInstructions();
+                        } else if (this.gameOver.style.display === 'flex') {
+                            this.restartGame();
+                        } else if (this.gameRunning) {
+                            this.restartGame();
+                        }
+                    }
+                });
+
+                // Window resize
+                window.addEventListener('resize', () => {
+                    this.setupCanvas();
+                });
+                
+                // Orientation change for mobile/tablet
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => {
+                        this.setupCanvas();
+                    }, 100);
+                });
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                
+                // Ensure canvas is properly sized when game area becomes visible
+                setTimeout(() => {
+                    this.setupCanvas();
+                    this.startGame();
+                }, 50);
+            }
+
+            startGame() {
+                this.score = 0;
+                this.timeLeft = 60;
+                this.gameRunning = true;
+                this.apples = [];
+                this.slashLines = [];
+                this.particles = [];
+                
+                this.updateScore();
+                this.updateTimer();
+                
+                // Start game timer
+                this.gameTimer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimer();
+                    
+                    if (this.timeLeft <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+                
+                // Start game loop
+                this.gameLoop();
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.update();
+                this.draw();
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                // Calculate spawn rate based on time elapsed - LOTS more apples!
+                const timeElapsed = 60 - this.timeLeft;
+                let spawnRate;
+                
+                if (timeElapsed < 30) {
+                    // First 30 seconds: frequent spawning (every ~0.2 seconds)
+                    spawnRate = 12;
+                } else if (timeElapsed < 50) {
+                    // 30-50 seconds: very frequent spawning (every ~0.15 seconds)
+                    spawnRate = 9;
+                } else {
+                    // Final 10 seconds: extremely frequent spawning (every ~0.1 seconds)
+                    spawnRate = 6;
+                }
+                
+                // Spawn apples - Now spawn multiple apples at once for even more action!
+                this.appleSpawnTimer++;
+                if (this.appleSpawnTimer > spawnRate) {
+                    this.spawnApple();
+                    // 50% chance to spawn a second apple at the same time
+                    if (Math.random() < 0.5) {
+                        this.spawnApple();
+                    }
+                    // 25% chance to spawn a third apple for crazy action
+                    if (timeElapsed > 30 && Math.random() < 0.25) {
+                        this.spawnApple();
+                    }
+                    this.appleSpawnTimer = 0;
+                }
+
+                // Update apples
+                this.apples.forEach((apple, index) => {
+                    apple.y += apple.speedY;
+                    apple.x += apple.speedX;
+                    apple.rotation += apple.rotationSpeed;
+
+                    // Remove apples that fall off screen (bottom, left, or right sides)
+                    if (apple.y > this.canvas.height + 100 || 
+                        apple.x < -100 || 
+                        apple.x > this.canvas.width + 100) {
+                        this.apples.splice(index, 1);
+                    }
+                });
+
+                // Update particles
+                this.particles.forEach((particle, index) => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.vy += 0.3; // gravity
+                    particle.life--;
+
+                    if (particle.life <= 0) {
+                        this.particles.splice(index, 1);
+                    }
+                });
+
+                // Fade out slash lines
+                this.slashLines.forEach((line, index) => {
+                    line.opacity -= 0.02;
+                    if (line.opacity <= 0) {
+                        this.slashLines.splice(index, 1);
+                    }
+                });
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw apples
+                this.apples.forEach(apple => {
+                    this.ctx.save();
+                    this.ctx.translate(apple.x, apple.y);
+                    this.ctx.rotate(apple.rotation);
+                    
+                    // Apple body
+                    this.ctx.fillStyle = '#ff4444';
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, apple.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Apple highlight
+                    this.ctx.fillStyle = '#ff8888';
+                    this.ctx.beginPath();
+                    this.ctx.arc(-apple.radius * 0.3, -apple.radius * 0.3, apple.radius * 0.4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Apple stem
+                    this.ctx.fillStyle = '#8B4513';
+                    this.ctx.fillRect(-2, -apple.radius - 8, 4, 8);
+                    
+                    // Apple leaf
+                    this.ctx.fillStyle = '#228B22';
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(8, -apple.radius - 4, 6, 4, Math.PI / 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                });
+
+                // Draw current slash line
+                if (this.isSlashing) {
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.slashStart.x, this.slashStart.y);
+                    this.ctx.lineTo(this.slashCurrent.x, this.slashCurrent.y);
+                    this.ctx.stroke();
+                }
+
+                // Draw slash lines
+                this.slashLines.forEach(line => {
+                    this.ctx.strokeStyle = `rgba(255, 255, 255, ${line.opacity})`;
+                    this.ctx.lineWidth = 3;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(line.startX, line.startY);
+                    this.ctx.lineTo(line.endX, line.endY);
+                    this.ctx.stroke();
+                });
+
+                // Draw particles
+                this.particles.forEach(particle => {
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.globalAlpha = particle.life / particle.maxLife;
+                    this.ctx.fillRect(particle.x - 2, particle.y - 2, 4, 4);
+                    this.ctx.globalAlpha = 1;
+                });
+            }
+
+            spawnApple() {
+                // Ensure canvas dimensions are available
+                if (this.canvas.width <= 0 || this.canvas.height <= 0) {
+                    this.setupCanvas();
+                }
+                
+                // Calculate speed multiplier based on time elapsed
+                const timeElapsed = 60 - this.timeLeft;
+                let speedMultiplier;
+                
+                if (timeElapsed < 30) {
+                    // First 30 seconds: slower speed
+                    speedMultiplier = 0.7;
+                } else if (timeElapsed < 50) {
+                    // 30-50 seconds: normal speed
+                    speedMultiplier = 1.0;
+                } else {
+                    // Final 10 seconds: faster speed
+                    speedMultiplier = 1.4;
+                }
+                
+                // Ensure apples spawn within visible area and stay on screen
+                const margin = 80; // Increased margin to keep apples more centered
+                const spawnWidth = this.canvas.width - (margin * 2);
+                const spawnX = Math.random() * spawnWidth + margin;
+                
+                // Reduce horizontal speed based on screen width to prevent drifting off
+                const maxHorizontalSpeed = Math.min(2, this.canvas.width / 400);
+                
+                const apple = {
+                    x: spawnX,
+                    y: this.canvas.height + 50,
+                    radius: 25 + Math.random() * 10,
+                    speedY: (-5 - Math.random() * 3) * speedMultiplier,
+                    speedX: (Math.random() - 0.5) * maxHorizontalSpeed * speedMultiplier,
+                    rotation: 0,
+                    rotationSpeed: (Math.random() - 0.5) * 0.2,
+                    sliced: false
+                };
+                this.apples.push(apple);
+            }
+
+            startSlash(e) {
+                if (!this.gameRunning) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                this.slashStart.x = e.clientX - rect.left;
+                this.slashStart.y = e.clientY - rect.top;
+                this.slashCurrent.x = this.slashStart.x;
+                this.slashCurrent.y = this.slashStart.y;
+                this.isSlashing = true;
+            }
+
+            updateSlash(e) {
+                if (!this.isSlashing || !this.gameRunning) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                this.slashCurrent.x = e.clientX - rect.left;
+                this.slashCurrent.y = e.clientY - rect.top;
+                
+                // Check for apple collisions with slash line
+                this.checkSlashCollisions();
+            }
+
+            endSlash() {
+                if (!this.isSlashing) return;
+                
+                this.isSlashing = false;
+                
+                // Add slash line to array for visual effect
+                this.slashLines.push({
+                    startX: this.slashStart.x,
+                    startY: this.slashStart.y,
+                    endX: this.slashCurrent.x,
+                    endY: this.slashCurrent.y,
+                    opacity: 0.8
+                });
+            }
+
+            checkSlashCollisions() {
+                const slicedApples = [];
+                
+                this.apples.forEach((apple, index) => {
+                    if (apple.sliced) return;
+                    
+                    const distance = this.distanceToLineSegment(
+                        apple.x, apple.y,
+                        this.slashStart.x, this.slashStart.y,
+                        this.slashCurrent.x, this.slashCurrent.y
+                    );
+                    
+                    if (distance < apple.radius) {
+                        apple.sliced = true;
+                        slicedApples.push(apple);
+                        this.createSliceEffect(apple.x, apple.y);
+                        this.apples.splice(index, 1);
+                    }
+                });
+                
+                // Scoring with combo bonus
+                if (slicedApples.length > 0) {
+                    const basePoints = slicedApples.length * 10;
+                    const comboBonus = slicedApples.length > 1 ? (slicedApples.length - 1) * 5 : 0;
+                    this.score += basePoints + comboBonus;
+                    this.updateScore();
+                    this.playSliceSound();
+                }
+            }
+
+            distanceToLineSegment(px, py, x1, y1, x2, y2) {
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                
+                if (length === 0) {
+                    return Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1));
+                }
+                
+                const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (length * length)));
+                const projection = { x: x1 + t * dx, y: y1 + t * dy };
+                
+                return Math.sqrt((px - projection.x) * (px - projection.x) + (py - projection.y) * (py - projection.y));
+            }
+
+            createSliceEffect(x, y) {
+                // Create particles
+                for (let i = 0; i < 8; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 8,
+                        color: ['#ff4444', '#ff8888', '#ffaaaa'][Math.floor(Math.random() * 3)],
+                        life: 30,
+                        maxLife: 30
+                    });
+                }
+            }
+
+            playSliceSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                } catch (e) {
+                    // Audio context not available
+                }
+            }
+
+            updateScore() {
+                document.getElementById('scoreValue').textContent = this.score;
+            }
+
+            updateTimer() {
+                document.getElementById('timerDisplay').textContent = `Time: ${this.timeLeft}s`;
+                
+                if (this.timeLeft <= 10) {
+                    document.getElementById('timerDisplay').style.background = 'rgba(255, 0, 0, 0.9)';
+                }
+            }
+
+            endGame() {
+                this.gameRunning = false;
+                clearInterval(this.gameTimer);
+                
+                // Check for new best score
+                const currentBest = parseInt(localStorage.getItem('appleSlicerBest') || '0');
+                if (this.score > currentBest) {
+                    localStorage.setItem('appleSlicerBest', this.score.toString());
+                }
+                
+                // Show game over screen
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('bestScore').textContent = Math.max(this.score, currentBest);
+                this.gameOver.style.display = 'flex';
+                this.gameArea.style.display = 'none';
+            }
+
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            loadBestScore() {
+                const bestScore = parseInt(localStorage.getItem('appleSlicerBest') || '0');
+                // Best score will be shown in game over screen
+            }
+        }
+
+        // Initialize game
+        let game;
+        window.addEventListener('load', () => {
+            // Wait for DOM to be fully loaded
+            setTimeout(() => {
+                game = new AppleSlicerGame();
+            }, 100);
+        });
+
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

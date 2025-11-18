@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Star Guitar Hero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: linear-gradient(45deg, #1a1a1a, #333, #1a1a1a);
+            color: #fff;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            transition: background 1s ease-in-out;
+        }
+
+        /* Song Theme Backgrounds */
+        body.thunderstruck {
+            background: linear-gradient(45deg, #1a0033, #4b0082, #663399, #1a0033);
+            animation: lightning 3s ease-in-out infinite alternate;
+        }
+
+        body.rocknroll {
+            background: linear-gradient(45deg, #8b0000, #ff4500, #ff6347, #8b0000);
+        }
+
+        body.highway {
+            background: linear-gradient(45deg, #2f4f4f, #696969, #708090, #2f4f4f);
+        }
+
+        body.metalcore {
+            background: linear-gradient(45deg, #000000, #4b0000, #8b0000, #000000);
+            animation: metalPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes lightning {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.3) contrast(1.2); }
+            100% { filter: brightness(1); }
+        }
+
+        @keyframes metalPulse {
+            0% { filter: brightness(1) saturate(1); }
+            100% { filter: brightness(1.2) saturate(1.5); }
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 107, 53, 0.9);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        #backButton:hover {
+            background: rgba(255, 107, 53, 1);
+            transform: scale(1.05);
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 3px solid #ff6b35;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #ff6b35;
+            text-shadow: 0 0 10px #ff6b35;
+            margin-bottom: 5px;
+        }
+
+        .score-info {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.2em;
+        }
+
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 107, 53, 0.1) 100%);
+        }
+
+        .guitar-neck {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 420px;
+            height: 120px;
+            background: linear-gradient(to right, #8B4513, #D2691E, #8B4513);
+            border: 3px solid #654321;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .strings-container {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 4px solid #ff6b35;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+        }
+
+        .string {
+            width: 70px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff6b35, #ff4500);
+            border: 2px solid #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .string:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .string.active {
+            background: rgba(255, 107, 53, 0.7);
+            transform: scale(0.95);
+        }
+
+        /* Themed String Buttons */
+        .thunderstruck .string {
+            background: linear-gradient(45deg, #9400d3, #6a0dad);
+            box-shadow: 0 0 10px rgba(148, 0, 211, 0.3);
+        }
+
+        .thunderstruck .string:hover {
+            background: rgba(148, 0, 211, 0.3);
+        }
+
+        .thunderstruck .string.active {
+            background: rgba(148, 0, 211, 0.7);
+            box-shadow: 0 0 20px #9400d3;
+        }
+
+        .rocknroll .string {
+            background: linear-gradient(45deg, #ff4500, #dc143c);
+            box-shadow: 0 0 10px rgba(255, 69, 0, 0.3);
+        }
+
+        .rocknroll .string:hover {
+            background: rgba(255, 69, 0, 0.3);
+        }
+
+        .rocknroll .string.active {
+            background: rgba(255, 69, 0, 0.7);
+            box-shadow: 0 0 20px #ff4500;
+        }
+
+        .highway .string {
+            background: linear-gradient(45deg, #708090, #2f4f4f);
+            box-shadow: 0 0 10px rgba(112, 128, 144, 0.3);
+        }
+
+        .highway .string:hover {
+            background: rgba(112, 128, 144, 0.3);
+        }
+
+        .highway .string.active {
+            background: rgba(112, 128, 144, 0.7);
+            box-shadow: 0 0 20px #708090;
+        }
+
+        .metalcore .string {
+            background: linear-gradient(45deg, #8b0000, #000000);
+            box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+            color: #ff0000;
+        }
+
+        .metalcore .string:hover {
+            background: rgba(139, 0, 0, 0.3);
+        }
+
+        .metalcore .string.active {
+            background: rgba(139, 0, 0, 0.8);
+            box-shadow: 0 0 25px #ff0000;
+        }
+
+        .note-highway {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: calc(100% - 120px);
+            pointer-events: none;
+        }
+
+        .note {
+            position: absolute;
+            width: 70px;
+            height: 50px;
+            background: radial-gradient(circle, #ff6b35, #ff4500);
+            border: 3px solid #fff;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        /* Themed Note Styles */
+        .thunderstruck .note {
+            background: radial-gradient(circle, #9400d3, #4b0082);
+            box-shadow: 0 0 15px #9400d3, 0 4px 8px rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+
+        .rocknroll .note {
+            background: radial-gradient(circle, #ff4500, #dc143c);
+            box-shadow: 0 0 10px #ff4500, 0 4px 8px rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+
+        .highway .note {
+            background: radial-gradient(circle, #708090, #2f4f4f);
+            box-shadow: 0 0 10px #708090, 0 4px 8px rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+
+        .metalcore .note {
+            background: radial-gradient(circle, #8b0000, #000000);
+            box-shadow: 0 0 20px #8b0000, 0 4px 8px rgba(0, 0, 0, 0.5);
+            color: #ff0000;
+            animation: metalGlow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes metalGlow {
+            0% { box-shadow: 0 0 10px #8b0000, 0 4px 8px rgba(0, 0, 0, 0.5); }
+            100% { box-shadow: 0 0 25px #ff0000, 0 4px 8px rgba(0, 0, 0, 0.5); }
+        }
+
+        @keyframes fallDown {
+            from {
+                top: -60px;
+            }
+            to {
+                top: calc(100% - 50px);
+            }
+        }
+
+        .hit-zone {
+            position: absolute;
+            top: 50%; /* Middle of screen */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 44px;
+            background: linear-gradient(180deg, 
+                rgba(0, 255, 0, 0.3) 0%, 
+                rgba(0, 255, 0, 0.5) 40%, 
+                rgba(0, 255, 0, 0.8) 50%, 
+                rgba(0, 255, 0, 0.5) 60%, 
+                rgba(0, 255, 0, 0.3) 100%);
+            border: 2px solid rgba(0, 255, 0, 0.5);
+            border-radius: 8px;
+            z-index: 5;
+            animation: hitZonePulse 1.5s ease-in-out infinite alternate;
+        }
+
+        .hit-line {
+            position: absolute;
+            top: 50%; /* Middle of screen */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 4px;
+            background: linear-gradient(90deg, #00ff00, #00ff00);
+            box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            border-radius: 2px;
+            z-index: 10;
+            animation: perfectPulse 1s ease-in-out infinite alternate;
+        }
+
+        .timing-guides {
+            position: absolute;
+            top: 48%; /* Just above hit zone */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 8;
+        }
+
+        .timing-text {
+            position: absolute;
+            top: 44%; /* Above timing guides */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ff00;
+            text-align: center;
+            z-index: 8;
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+
+        .timing-guides {
+            position: absolute;
+            top: 76%; /* Slightly above the hit zone */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 8;
+        }
+
+        .timing-marker {
+            width: 2px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            opacity: 0.7;
+        }
+
+        .timing-text {
+            position: absolute;
+            top: 72%; /* Above the timing guides */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ff00;
+            text-align: center;
+            z-index: 8;
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes perfectPulse {
+            0% {
+                box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            }
+            100% {
+                box-shadow: 0 0 15px #00ff00, 0 0 30px #00ff00, 0 0 40px #00ff00;
+            }
+        }
+
+        @keyframes hitZonePulse {
+            0% {
+                opacity: 0.6;
+                transform: translateX(-50%) scaleY(1);
+            }
+            100% {
+                opacity: 0.9;
+                transform: translateX(-50%) scaleY(1.1);
+            }
+        }
+
+        @keyframes textGlow {
+            0% {
+                text-shadow: 0 0 5px #00ff00;
+                opacity: 0.8;
+            }
+            100% {
+                text-shadow: 0 0 10px #00ff00, 0 0 15px #00ff00;
+                opacity: 1;
+            }
+        }
+
+        .song-select {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ff6b35;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .song-button {
+            display: block;
+            width: 250px;
+            padding: 15px;
+            margin: 10px auto;
+            background: linear-gradient(45deg, #ff6b35, #ff4500);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .song-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #ff6b35;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ff6b35;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+
+        .feedback {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 0 0 10px currentColor;
+            pointer-events: none;
+            z-index: 20;
+            opacity: 0;
+        }
+
+        .feedback.show {
+            opacity: 1;
+            animation: feedbackPop 1s ease-out forwards;
+        }
+
+        @keyframes feedbackPop {
+            0% { opacity: 1; transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+            100% { opacity: 0; transform: translateX(-50%) scale(1) translateY(-30px); }
+        }
+
+        @media (max-width: 480px) {
+            .guitar-neck {
+                width: 340px;
+            }
+            .strings-container {
+                gap: 6px;
+                padding: 8px;
+            }
+            .string {
+                width: 50px;
+                height: 60px;
+                font-size: 1.2em;
+            }
+            .note-highway, .hit-line, .hit-zone, .timing-guides {
+                width: 300px;
+            }
+            .timing-text {
+                font-size: 12px;
+            }
+            .note {
+                width: 50px;
+                height: 40px;
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+    
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="header">
+                <div class="title">🎸 ROCK STAR 🎸</div>
+                <div class="score-info">
+                    <span>Song: <span id="current-song">Choose a Song</span></span>
+                    <span>Score: <span id="score">0</span></span>
+                    <span>Streak: <span id="streak">0</span></span>
+                </div>
+            </div>
+            
+            <div class="game-area" id="gameArea">
+                <div class="note-highway" id="noteHighway"></div>
+                <div class="hit-zone"></div>
+                <!-- <div class="hit-line"></div> -->
+                <div class="timing-guides">
+                    <div class="timing-marker"></div>
+                    <div class="timing-marker"></div>
+                    <div class="timing-marker"></div>
+                    <div class="timing-marker"></div>
+                    <div class="timing-marker"></div>
+                </div>
+                <div class="feedback" id="feedback"></div>
+                
+                <div class="guitar-neck">
+                    <div class="strings-container">
+                        <div class="string" data-key="a" data-string="0">A</div>
+                        <div class="string" data-key="s" data-string="1">S</div>
+                        <div class="string" data-key="d" data-string="2">D</div>
+                        <div class="string" data-key="f" data-string="3">F</div>
+                        <div class="string" data-key="g" data-string="4">G</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="song-select" id="songSelect">
+                <h2 style="color: #ff6b35; margin-bottom: 20px;">Choose Your Rock Song</h2>
+                <button class="song-button" onclick="startSong('thunderstruck')">⚡ Thunder Struck</button>
+                <button class="song-button" onclick="startSong('rocknroll')">🤘 Rock N Roll</button>
+                <button class="song-button" onclick="startSong('highway')">🛣️ Highway to Hell</button>
+                <button class="song-button" onclick="startSong('metalcore')">🔥 Metal Core</button>
+            </div>
+
+            <div class="game-over" id="gameOver">
+                <h2 style="color: #ff6b35;">Song Complete! 🎸</h2>
+                <p style="margin: 20px 0;">Final Score: <span id="finalScore">0</span></p>
+                <p style="margin: 20px 0;">Best Streak: <span id="bestStreak">0</span></p>
+                <button class="song-button" onclick="showSongSelect()">Play Another Song</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class RockStarGame {
+            constructor() {
+                this.score = 0;
+                this.streak = 0;
+                this.bestStreak = 0;
+                this.notes = [];
+                this.gameRunning = false;
+                this.currentSong = null;
+                this.noteSpeed = 4000; // 4 seconds to fall
+                
+                this.setupEventListeners();
+                this.updateDisplay();
+            }
+
+            // Audio system for themed sounds
+            playThemedSound(frequency, duration = 200) {
+                if (!this.currentSong) return;
+                
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // Theme-specific sound modifications
+                    switch(this.currentSong) {
+                        case 'thunderstruck':
+                            // Electric/synthesized sound
+                            oscillator.type = 'sawtooth';
+                            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                            oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.5, audioContext.currentTime + 0.1);
+                            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                            break;
+                            
+                        case 'rocknroll':
+                            // Classic rock guitar sound
+                            oscillator.type = 'square';
+                            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                            break;
+                            
+                        case 'highway':
+                            // Smooth, clean guitar sound  
+                            oscillator.type = 'sine';
+                            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                            gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+                            gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                            break;
+                            
+                        case 'metalcore':
+                            // Heavy, distorted metal sound
+                            oscillator.type = 'sawtooth';
+                            oscillator.frequency.setValueAtTime(frequency * 0.5, audioContext.currentTime);
+                            oscillator.frequency.exponentialRampToValueAtTime(frequency, audioContext.currentTime + 0.05);
+                            gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                            break;
+                            
+                        default:
+                            oscillator.type = 'sine';
+                            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    }
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (error) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            playStringSound(stringIndex) {
+                // Guitar string frequencies (low to high)
+                const frequencies = [82.4, 110, 146.8, 196, 246.9]; // E A D G B
+                this.playThemedSound(frequencies[stringIndex], 300);
+            }
+
+            playHitSound(accuracy) {
+                const baseFreq = 440;
+                let freq, duration;
+                
+                switch(accuracy) {
+                    case 'Perfect':
+                        freq = baseFreq * 2;
+                        duration = 400;
+                        break;
+                    case 'Great':
+                        freq = baseFreq * 1.5;
+                        duration = 300;
+                        break;
+                    case 'Good':
+                        freq = baseFreq * 1.2;
+                        duration = 250;
+                        break;
+                    case 'OK':
+                        freq = baseFreq;
+                        duration = 200;
+                        break;
+                    default:
+                        return;
+                }
+                
+                this.playThemedSound(freq, duration);
+            }
+
+            playMissSound() {
+                // Play a discordant "miss" sound
+                this.playThemedSound(150, 100);
+            }
+
+            playSongIntro(songName) {
+                // Play theme-specific intro chord progression
+                setTimeout(() => {
+                    switch(songName) {
+                        case 'thunderstruck':
+                            // Electric power chord progression
+                            this.playThemedSound(220, 800); // A
+                            setTimeout(() => this.playThemedSound(293.66, 600), 200); // D
+                            setTimeout(() => this.playThemedSound(246.94, 600), 400); // B
+                            break;
+                            
+                        case 'rocknroll':
+                            // Classic rock progression
+                            this.playThemedSound(164.81, 600); // E
+                            setTimeout(() => this.playThemedSound(220, 600), 300); // A
+                            setTimeout(() => this.playThemedSound(246.94, 800), 600); // B
+                            break;
+                            
+                        case 'highway':
+                            // Smooth highway progression
+                            this.playThemedSound(196, 700); // G
+                            setTimeout(() => this.playThemedSound(293.66, 700), 350); // D
+                            setTimeout(() => this.playThemedSound(164.81, 900), 700); // E
+                            break;
+                            
+                        case 'metalcore':
+                            // Heavy, low metal riff
+                            this.playThemedSound(82.41, 400); // Low E
+                            setTimeout(() => this.playThemedSound(87.31, 400), 150); // F
+                            setTimeout(() => this.playThemedSound(92.5, 400), 300); // F#
+                            setTimeout(() => this.playThemedSound(82.41, 600), 450); // Back to E
+                            break;
+                    }
+                }, 500); // Delay to let the theme load
+            }
+
+            setupEventListeners() {
+                // Back button navigation
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Guitar string events
+                const strings = document.querySelectorAll('.string');
+                strings.forEach((string) => {
+                    const stringIndex = parseInt(string.dataset.string);
+                    const key = string.dataset.key;
+                    
+                    // Touch events
+                    string.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (this.gameRunning) {
+                            string.classList.add('active');
+                            this.playStringSound(stringIndex);
+                            this.checkNoteHit(stringIndex);
+                        }
+                    });
+                    
+                    string.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        string.classList.remove('active');
+                    });
+                    
+                    // Click events
+                    string.addEventListener('mousedown', (e) => {
+                        if (this.gameRunning) {
+                            string.classList.add('active');
+                            this.playStringSound(stringIndex);
+                            this.checkNoteHit(stringIndex);
+                        }
+                    });
+                    
+                    string.addEventListener('mouseup', (e) => {
+                        string.classList.remove('active');
+                    });
+                    
+                    string.addEventListener('mouseleave', (e) => {
+                        string.classList.remove('active');
+                    });
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    if (!this.gameRunning) return;
+                    
+                    const key = e.key.toLowerCase();
+                    const keyToString = { 'a': 0, 's': 1, 'd': 2, 'f': 3, 'g': 4 };
+                    
+                    if (keyToString.hasOwnProperty(key)) {
+                        const stringIndex = keyToString[key];
+                        const stringElement = document.querySelector(`[data-string="${stringIndex}"]`);
+                        if (stringElement) {
+                            stringElement.classList.add('active');
+                        }
+                        this.playStringSound(stringIndex);
+                        this.checkNoteHit(stringIndex);
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    const key = e.key.toLowerCase();
+                    const keyToString = { 'a': 0, 's': 1, 'd': 2, 'f': 3, 'g': 4 };
+                    
+                    if (keyToString.hasOwnProperty(key)) {
+                        const stringIndex = keyToString[key];
+                        const stringElement = document.querySelector(`[data-string="${stringIndex}"]`);
+                        if (stringElement) {
+                            stringElement.classList.remove('active');
+                        }
+                    }
+                });
+            }
+
+            startSong(songName) {
+                document.getElementById('songSelect').style.display = 'none';
+                
+                // Apply theme class to body
+                document.body.className = songName.toLowerCase().replace(/\s+/g, '');
+                
+                this.currentSong = songName;
+                this.gameRunning = true;
+                this.score = 0;
+                this.streak = 0;
+                this.notes = [];
+                
+                document.getElementById('current-song').textContent = this.getSongTitle(songName);
+                this.updateDisplay();
+                
+                // Play themed song intro sound
+                this.playSongIntro(songName);
+                
+                this.generateSongPattern(songName);
+            }
+
+            getSongTitle(songName) {
+                const titles = {
+                    'thunderstruck': '⚡ Thunder Struck',
+                    'rocknroll': '🤘 Rock N Roll', 
+                    'highway': '🛣️ Highway to Hell',
+                    'metalcore': '🔥 Metal Core'
+                };
+                return titles[songName] || songName;
+            }
+
+            generateSongPattern(songName) {
+                const patterns = {
+                    'thunderstruck': [
+                        { time: 2000, string: 0 }, { time: 3000, string: 2 }, { time: 4000, string: 1 },
+                        { time: 5000, string: 4 }, { time: 6000, string: 0 }, { time: 7000, string: 2 },
+                        { time: 8000, string: 1 }, { time: 9000, string: 3 }, { time: 10000, string: 4 },
+                        { time: 11000, string: 0 }, { time: 12000, string: 1 }, { time: 13000, string: 2 },
+                        { time: 14000, string: 4 }, { time: 15000, string: 3 }, { time: 16000, string: 0 },
+                        { time: 17000, string: 2 }, { time: 18000, string: 1 }, { time: 19000, string: 4 },
+                        { time: 20000, string: 0 }, { time: 21000, string: 3 }, { time: 22000, string: 2 },
+                        { time: 23000, string: 1 }, { time: 24000, string: 4 }, { time: 25000, string: 0 }
+                    ],
+                    'rocknroll': [
+                        { time: 2000, string: 0 }, { time: 3000, string: 1 }, { time: 4000, string: 2 },
+                        { time: 5000, string: 3 }, { time: 6000, string: 4 }, { time: 7000, string: 2 },
+                        { time: 8000, string: 0 }, { time: 9000, string: 4 }, { time: 10000, string: 1 },
+                        { time: 11000, string: 3 }, { time: 12000, string: 2 }, { time: 13000, string: 0 },
+                        { time: 14000, string: 4 }, { time: 15000, string: 1 }, { time: 16000, string: 3 },
+                        { time: 17000, string: 2 }, { time: 18000, string: 0 }, { time: 19000, string: 4 },
+                        { time: 20000, string: 1 }, { time: 21000, string: 2 }, { time: 22000, string: 3 },
+                        { time: 23000, string: 0 }, { time: 24000, string: 4 }, { time: 25000, string: 1 }
+                    ],
+                    'highway': [
+                        { time: 2000, string: 0 }, { time: 3000, string: 0 }, { time: 4000, string: 2 },
+                        { time: 5000, string: 4 }, { time: 6000, string: 3 }, { time: 7000, string: 1 },
+                        { time: 8000, string: 0 }, { time: 9000, string: 2 }, { time: 10000, string: 4 },
+                        { time: 11000, string: 1 }, { time: 12000, string: 3 }, { time: 13000, string: 0 },
+                        { time: 14000, string: 2 }, { time: 15000, string: 4 }, { time: 16000, string: 1 },
+                        { time: 17000, string: 3 }, { time: 18000, string: 0 }, { time: 19000, string: 4 },
+                        { time: 20000, string: 2 }, { time: 21000, string: 1 }, { time: 22000, string: 3 },
+                        { time: 23000, string: 0 }, { time: 24000, string: 4 }, { time: 25000, string: 2 }
+                    ],
+                    'metalcore': [
+                        { time: 1500, string: 0 }, { time: 2500, string: 2 }, { time: 3500, string: 4 },
+                        { time: 4500, string: 1 }, { time: 5500, string: 3 }, { time: 6500, string: 0 },
+                        { time: 7500, string: 4 }, { time: 8500, string: 2 }, { time: 9500, string: 1 },
+                        { time: 10500, string: 3 }, { time: 11500, string: 0 }, { time: 12500, string: 4 },
+                        { time: 13500, string: 2 }, { time: 14500, string: 1 }, { time: 15500, string: 3 },
+                        { time: 16500, string: 0 }, { time: 17500, string: 4 }, { time: 18500, string: 2 },
+                        { time: 19500, string: 1 }, { time: 20500, string: 3 }, { time: 21500, string: 0 },
+                        { time: 22500, string: 4 }, { time: 23500, string: 2 }, { time: 24500, string: 1 }
+                    ]
+                };
+
+                const pattern = patterns[songName] || patterns['rocknroll'];
+                
+                pattern.forEach(note => {
+                    setTimeout(() => {
+                        if (this.gameRunning) {
+                            this.spawnNote(note.string);
+                        }
+                    }, note.time);
+                });
+
+                // End game after song finishes
+                setTimeout(() => {
+                    this.endGame();
+                }, Math.max(...pattern.map(n => n.time)) + 6000);
+            }
+
+            spawnNote(stringIndex) {
+                const note = document.createElement('div');
+                note.className = 'note';
+                note.textContent = '♫';
+                note.style.left = `${stringIndex * 80 + (window.innerWidth <= 480 ? 25 : 10)}px`;
+                note.dataset.string = stringIndex;
+                note.dataset.spawnTime = Date.now();
+                note.style.animation = `fallDown ${this.noteSpeed}ms linear`;
+                
+                document.getElementById('noteHighway').appendChild(note);
+                this.notes.push(note);
+
+                // Remove note after animation
+                setTimeout(() => {
+                    if (note.parentNode) {
+                        note.remove();
+                        const index = this.notes.indexOf(note);
+                        if (index > -1) {
+                            this.notes.splice(index, 1);
+                            // Missed note
+                            this.streak = 0;
+                            this.updateDisplay();
+                        }
+                    }
+                }, this.noteSpeed);
+            }
+
+            checkNoteHit(stringIndex) {
+                // Find the closest note to the hit line for this string
+                const stringNotes = this.notes.filter(note => 
+                    parseInt(note.dataset.string) === stringIndex
+                );
+
+                if (stringNotes.length === 0) return;
+
+                // Find the note that's closest to the hit line timing
+                const currentTime = Date.now();
+                let closestNote = null;
+                let closestTimeDiff = Infinity;
+
+                stringNotes.forEach(note => {
+                    const spawnTime = parseInt(note.dataset.spawnTime);
+                    const noteAge = currentTime - spawnTime;
+                    const hitTiming = this.noteSpeed * 0.8; // Hit line at 80% of fall time
+                    const timeDiff = Math.abs(noteAge - hitTiming);
+                    
+                    if (timeDiff < closestTimeDiff) {
+                        closestTimeDiff = timeDiff;
+                        closestNote = note;
+                    }
+                });
+
+                if (closestNote && closestTimeDiff < 500) { // 500ms hit window
+                    this.hitNote(closestNote, closestTimeDiff);
+                }
+            }
+
+            hitNote(note, timeDiff) {
+                let points = 0;
+                let accuracy = "MISS";
+
+                if (timeDiff <= 100) {
+                    points = 300;
+                    accuracy = "PERFECT!";
+                } else if (timeDiff <= 200) {
+                    points = 200;
+                    accuracy = "GREAT!";
+                } else if (timeDiff <= 300) {
+                    points = 100;
+                    accuracy = "GOOD";
+                } else if (timeDiff <= 500) {
+                    points = 50;
+                    accuracy = "OK";
+                }
+
+                if (points > 0) {
+                    this.streak++;
+                    this.bestStreak = Math.max(this.bestStreak, this.streak);
+                    this.score += points * (1 + this.streak * 0.1);
+                    
+                    // Play themed hit sound based on accuracy
+                    this.playHitSound(accuracy.replace('!', ''));
+                } else {
+                    this.streak = 0;
+                    // Play miss sound
+                    this.playMissSound();
+                }
+
+                this.showFeedback(accuracy, points);
+
+                // Remove the note
+                note.remove();
+                const index = this.notes.indexOf(note);
+                if (index > -1) {
+                    this.notes.splice(index, 1);
+                }
+
+                this.updateDisplay();
+            }
+
+            showFeedback(accuracy, points) {
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = `${accuracy} +${points}`;
+                
+                // Set color based on accuracy
+                if (accuracy === 'PERFECT!') {
+                    feedback.style.color = '#00ff00';
+                } else if (accuracy === 'GREAT!') {
+                    feedback.style.color = '#ffff00';
+                } else if (accuracy === 'GOOD') {
+                    feedback.style.color = '#ffa500';
+                } else {
+                    feedback.style.color = '#ffffff';
+                }
+                
+                feedback.classList.remove('show');
+                setTimeout(() => feedback.classList.add('show'), 10);
+            }
+
+            updateDisplay() {
+                document.getElementById('score').textContent = Math.floor(this.score);
+                document.getElementById('streak').textContent = this.streak;
+            }
+
+            endGame() {
+                this.gameRunning = false;
+                document.getElementById('finalScore').textContent = Math.floor(this.score);
+                document.getElementById('bestStreak').textContent = this.bestStreak;
+                document.getElementById('gameOver').style.display = 'block';
+                
+                // Clear remaining notes
+                this.notes.forEach(note => note.remove());
+                this.notes = [];
+            }
+
+            showSongSelect() {
+                document.getElementById('gameOver').style.display = 'none';
+                document.getElementById('songSelect').style.display = 'block';
+                this.gameRunning = false;
+                
+                // Clear theme when returning to menu
+                document.body.className = '';
+            }
+        }
+
+        // Global functions
+        function startSong(songName) {
+            if (window.game) {
+                window.game.startSong(songName);
+            }
+        }
+
+        function showSongSelect() {
+            if (window.game) {
+                window.game.showSongSelect();
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            window.game = new RockStarGame();
+            
+            // Mobile address bar hide fix - REQUIRED
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

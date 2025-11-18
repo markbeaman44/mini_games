@@ -80,7 +80,7 @@ This is a self-contained HTML5 mini-games collection targeting kids and families
     }
     .tablet-controls-left {
       left: 0;
-      width: 120px;
+      width: 150px;
       height: 100%;
       display: flex;
       flex-direction: row;

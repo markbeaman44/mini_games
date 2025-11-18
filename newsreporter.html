@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>News Reporter - Mini Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 50%, #2F4F4F 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #87CEEB 0%, #B0C4DE 50%, #D3D3D3 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #333;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        #backButton:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            border: 2px solid #fff;
+        }
+
+        .instructions-content h2 {
+            margin-bottom: 15px;
+            color: #fff;
+            font-size: 1.8rem;
+        }
+
+        .instructions-content p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+            color: #fff;
+        }
+
+        .close-instructions {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .close-instructions:hover {
+            background: #45a049;
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        .sky-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(180deg, #87CEEB 0%, #B0C4DE 100%);
+            overflow: hidden;
+        }
+
+        .ground-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(180deg, #D3D3D3 0%, #A9A9A9 100%);
+            overflow: hidden;
+        }
+
+        .helicopter {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            transition: all 0.1s ease;
+            z-index: 50;
+        }
+
+        .helicopter-body {
+            width: 40px;
+            height: 20px;
+            background: #FF6347;
+            border-radius: 10px;
+            position: relative;
+            margin: 10px auto;
+            border: 2px solid #333;
+        }
+
+        .helicopter-rotor {
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background: #333;
+            animation: spin 0.1s linear infinite;
+        }
+
+        .helicopter-tail {
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 8px;
+            background: #FF6347;
+            border-radius: 0 5px 5px 0;
+            border: 2px solid #333;
+        }
+
+        @keyframes spin {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg); }
+        }
+
+        .news-event {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 3px solid #fff;
+            background: rgba(255,255,255,0.9);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .news-event:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,255,255,0.8); }
+            50% { box-shadow: 0 0 20px rgba(255,255,255,1); }
+        }
+
+        .building {
+            position: absolute;
+            background: #696969;
+            border: 2px solid #333;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: monospace;
+            z-index: 40;
+        }
+
+        .fuel-bar, .time-bar {
+            width: 100px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #fff;
+        }
+
+        .fuel-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #FFC107 70%, #F44336 100%);
+            transition: width 0.3s ease;
+        }
+
+        .time-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2196F3 0%, #FFC107 70%, #F44336 100%);
+            transition: width 0.3s ease;
+        }
+
+        .story-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #fff;
+            display: none;
+            z-index: 60;
+            max-width: 300px;
+        }
+
+        .story-popup h3 {
+            margin-bottom: 10px;
+            color: #FFC107;
+        }
+
+        .story-popup button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 70;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #fff;
+        }
+
+        .game-over-content h2 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .game-over-content button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+
+        .tablet-controls-right {
+            right: 0;
+            width: 80px;
+            align-items: flex-start;
+            padding-right: 10px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0;
+        }
+
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
+        }
+
+        .clouds {
+            position: absolute;
+            width: 80px;
+            height: 30px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50px;
+            animation: drift 15s linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+
+        .station-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,0,0,0.9);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 2px solid white;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+
+    <!-- Tablet Controls -->
+    <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+        <button id="tabletLeft" class="tablet-btn">◀</button>
+        <button id="tabletRight" class="tablet-btn">▶</button>
+    </div>
+    <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+        <button id="tabletUp" class="tablet-btn">⬆</button>
+        <button id="tabletDown" class="tablet-btn">⬇</button>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>📺 News Reporter</h2>
+                    <p><strong>🚁 Mission:</strong> Fly your news helicopter around the city to cover breaking news stories!</p>
+                    <p><strong>🎯 Controls:</strong> Arrow keys to fly around the city</p>
+                    <p><strong>📰 Objective:</strong> Collect 5 news stories and return to the station before time runs out!</p>
+                    <p><strong>⚠️ Watch:</strong> Your fuel and time - both are limited!</p>
+                    <p><strong>🏢 Tip:</strong> Stories appear as pulsing icons around the city</p>
+                    <button class="close-instructions" id="closeInstructions">Start Reporting!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <!-- Sky Area -->
+                <div class="sky-area" id="skyArea">
+                    <!-- Clouds will be added here -->
+                </div>
+
+                <!-- Ground Area -->
+                <div class="ground-area" id="groundArea">
+                    <!-- Buildings will be added here -->
+                    <div class="station-indicator">📡 NEWS STATION</div>
+                </div>
+
+                <!-- Helicopter -->
+                <div class="helicopter" id="helicopter">
+                    <div class="helicopter-rotor"></div>
+                    <div class="helicopter-body"></div>
+                    <div class="helicopter-tail"></div>
+                </div>
+
+                <!-- HUD -->
+                <div class="hud">
+                    <div>
+                        <div>Stories: <span id="storiesCount">0</span>/5</div>
+                        <div>Score: <span id="score">0</span></div>
+                    </div>
+                    <div>
+                        <div>Fuel:</div>
+                        <div class="fuel-bar">
+                            <div class="fuel-fill" id="fuelFill"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div>Time:</div>
+                        <div class="time-bar">
+                            <div class="time-fill" id="timeFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Story Popup -->
+                <div class="story-popup" id="storyPopup">
+                    <h3 id="storyTitle">Breaking News!</h3>
+                    <p id="storyText">You discovered a news story!</p>
+                    <button id="collectStory">Collect Story (+100 pts)</button>
+                </div>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2 id="gameOverTitle">Mission Complete!</h2>
+                    <p id="gameOverText">Great reporting!</p>
+                    <p>Final Score: <span id="finalScore">0</span></p>
+                    <p>Best Score: <span id="bestScore">0</span></p>
+                    <button id="playAgain">Report Again</button>
+                    <button id="backToHub">Back to Hub</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class NewsReporterGame {
+            constructor() {
+                this.gameArea = document.getElementById('gameArea');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameOver = document.getElementById('gameOver');
+                this.helicopter = document.getElementById('helicopter');
+                this.skyArea = document.getElementById('skyArea');
+                this.groundArea = document.getElementById('groundArea');
+                this.storyPopup = document.getElementById('storyPopup');
+
+                // Game state
+                this.helicopterPos = { x: 100, y: 200 };
+                this.velocity = { x: 0, y: 0 };
+                this.fuel = 100;
+                this.timeLeft = 60; // 60 seconds
+                this.stories = [];
+                this.storiesCollected = 0;
+                this.score = 0;
+                this.gameRunning = false;
+                this.stationPos = { x: 450, y: 400 }; // Center bottom for station
+
+                // Controls
+                this.keys = {};
+
+                // News stories data
+                this.storyTypes = [
+                    { icon: '🔥', title: 'Building Fire', text: 'Emergency crews responding to downtown fire!', points: 100 },
+                    { icon: '🚗', title: 'Traffic Accident', text: 'Multi-car accident blocks highway!', points: 80 },
+                    { icon: '🏛️', title: 'City Hall News', text: 'Mayor announces new city initiative!', points: 120 },
+                    { icon: '🌟', title: 'Celebrity Sighting', text: 'Famous actor spotted at local restaurant!', points: 90 },
+                    { icon: '🎭', title: 'Festival Event', text: 'Annual arts festival draws huge crowds!', points: 110 },
+                    { icon: '🏪', title: 'Store Opening', text: 'New business opens in shopping district!', points: 85 },
+                    { icon: '🎪', title: 'Circus in Town', text: 'Traveling circus sets up for weekend shows!', points: 95 },
+                    { icon: '🌳', title: 'Park Event', text: 'Community tree planting event in progress!', points: 75 }
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.createCityscape();
+                this.createClouds();
+                this.showInstructions();
+            }
+
+            bindEvents() {
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => this.startGame());
+
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Game over buttons
+                document.getElementById('playAgain').addEventListener('click', () => this.restartGame());
+                document.getElementById('backToHub').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Story collection
+                document.getElementById('collectStory').addEventListener('click', () => {
+                    this.storyPopup.style.display = 'none';
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.startGame();
+                        return;
+                    }
+
+                    // Game controls during gameplay
+                    if (this.gameRunning) {
+                        this.keys[e.key] = true;
+                        e.preventDefault();
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
+                });
+
+                // Tablet controls
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+                const tabletUp = document.getElementById('tabletUp');
+                const tabletDown = document.getElementById('tabletDown');
+
+                tabletLeft.addEventListener('touchstart', e => { 
+                    this.keys.ArrowLeft = true; 
+                    e.preventDefault(); 
+                });
+                tabletLeft.addEventListener('touchend', e => { 
+                    this.keys.ArrowLeft = false; 
+                    e.preventDefault(); 
+                });
+
+                tabletRight.addEventListener('touchstart', e => { 
+                    this.keys.ArrowRight = true; 
+                    e.preventDefault(); 
+                });
+                tabletRight.addEventListener('touchend', e => { 
+                    this.keys.ArrowRight = false; 
+                    e.preventDefault(); 
+                });
+
+                tabletUp.addEventListener('touchstart', e => {
+                    this.keys.ArrowUp = true;
+                    e.preventDefault();
+                });
+                tabletUp.addEventListener('touchend', e => {
+                    this.keys.ArrowUp = false;
+                    e.preventDefault();
+                });
+
+                tabletDown.addEventListener('touchstart', e => { 
+                    this.keys.ArrowDown = true; 
+                    e.preventDefault(); 
+                });
+                tabletDown.addEventListener('touchend', e => { 
+                    this.keys.ArrowDown = false; 
+                    e.preventDefault(); 
+                });
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+                this.gameArea.style.display = 'none';
+            }
+
+            startGame() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.gameRunning = true;
+                this.resetGame();
+                this.spawnStories();
+                this.gameLoop();
+            }
+
+            resetGame() {
+                this.helicopterPos = { x: 100, y: 200 };
+                this.velocity = { x: 0, y: 0 };
+                this.fuel = 100;
+                this.timeLeft = 60;
+                this.storiesCollected = 0;
+                this.score = 0;
+                this.stories = [];
+                this.updateHUD();
+                this.updateHelicopterPosition();
+            }
+
+            createCityscape() {
+                // Clear existing buildings
+                const existingBuildings = this.groundArea.querySelectorAll('.building');
+                existingBuildings.forEach(building => building.remove());
+
+                // Create buildings
+                const buildingCount = 12;
+                const gameWidth = 870; // Approximate game container width
+                
+                for (let i = 0; i < buildingCount; i++) {
+                    const building = document.createElement('div');
+                    building.className = 'building';
+                    
+                    const width = 50 + Math.random() * 40;
+                    const height = 120 + Math.random() * 120; // Increased from 60-140 to 120-240
+                    const x = (gameWidth / buildingCount) * i + Math.random() * 20;
+                    
+                    building.style.width = width + 'px';
+                    building.style.height = height + 'px';
+                    building.style.left = x + 'px';
+                    building.style.bottom = '0px';
+                    
+                    // Add some window details
+                    const windows = Math.floor(Math.random() * 6) + 2;
+                    for (let w = 0; w < windows; w++) {
+                        const window = document.createElement('div');
+                        window.style.position = 'absolute';
+                        window.style.width = '8px';
+                        window.style.height = '8px';
+                        window.style.background = Math.random() > 0.7 ? '#FFFF99' : '#333';
+                        window.style.left = (10 + (w % 3) * 15) + 'px';
+                        window.style.top = (10 + Math.floor(w / 3) * 20) + 'px';
+                        window.style.border = '1px solid #555';
+                        building.appendChild(window);
+                    }
+                    
+                    this.groundArea.appendChild(building);
+                }
+            }
+
+            createClouds() {
+                // Create moving clouds
+                setInterval(() => {
+                    if (this.gameRunning && Math.random() < 0.3) {
+                        const cloud = document.createElement('div');
+                        cloud.className = 'clouds';
+                        cloud.style.top = (20 + Math.random() * 100) + 'px';
+                        cloud.style.opacity = 0.3 + Math.random() * 0.4;
+                        this.skyArea.appendChild(cloud);
+
+                        // Remove cloud after animation
+                        setTimeout(() => {
+                            if (cloud.parentNode) {
+                                cloud.parentNode.removeChild(cloud);
+                            }
+                        }, 15000);
+                    }
+                }, 3000);
+            }
+
+            spawnStories() {
+                // Clear existing stories
+                this.stories.forEach(story => {
+                    if (story.element.parentNode) {
+                        story.element.parentNode.removeChild(story.element);
+                    }
+                });
+                this.stories = [];
+
+                // Spawn 8 stories (player needs to collect 5)
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        this.spawnStory();
+                    }, i * 2000);
+                }
+            }
+
+            spawnStory() {
+                const storyType = this.storyTypes[Math.floor(Math.random() * this.storyTypes.length)];
+                const story = document.createElement('div');
+                story.className = 'news-event';
+                story.textContent = storyType.icon;
+
+                // Random position on ground area
+                const x = 50 + Math.random() * 770;
+                const y = 50 + Math.random() * 150;
+                
+                story.style.left = x + 'px';
+                story.style.top = y + 'px';
+
+                this.groundArea.appendChild(story);
+                
+                this.stories.push({
+                    element: story,
+                    type: storyType,
+                    x: x,
+                    y: y + 360 // Adjust for ground area offset (60% of 600px = 360px)
+                });
+            }
+
+            showStoryPopup(storyType, storyElement) {
+                if (!this.gameRunning) return;
+
+                // Find the story data to get its coordinates
+                const story = this.stories.find(s => s.element === storyElement);
+                if (!story) return;
+
+                // Check if helicopter is close enough using game coordinates
+                const distance = Math.sqrt(
+                    Math.pow(this.helicopterPos.x - story.x, 2) + 
+                    Math.pow(this.helicopterPos.y - story.y, 2)
+                );
+
+                if (distance > 80) {
+                    this.playSound(800, 100); // Error sound
+                    return;
+                }
+
+                document.getElementById('storyTitle').textContent = storyType.title;
+                document.getElementById('storyText').textContent = storyType.text;
+                document.getElementById('collectStory').textContent = `Collect Story (+${storyType.points} pts)`;
+                
+                this.currentStory = { type: storyType, element: storyElement };
+                this.storyPopup.style.display = 'block';
+            }
+
+            collectCurrentStory() {
+                if (!this.currentStory) return;
+
+                this.score += this.currentStory.type.points;
+                this.storiesCollected++;
+                
+                // Remove story from game
+                if (this.currentStory.element.parentNode) {
+                    this.currentStory.element.parentNode.removeChild(this.currentStory.element);
+                }
+                
+                // Remove from stories array
+                this.stories = this.stories.filter(s => s.element !== this.currentStory.element);
+
+                this.storyPopup.style.display = 'none';
+                this.currentStory = null;
+
+                this.updateHUD();
+                this.playSound(1200, 150); // Success sound
+
+                // Check win condition
+                if (this.storiesCollected >= 5) {
+                    // Need to return to station
+                    this.checkWinCondition();
+                }
+            }
+
+            checkStoryCollection() {
+                // Check if helicopter is close to any story
+                for (let i = this.stories.length - 1; i >= 0; i--) {
+                    const story = this.stories[i];
+                    const distance = Math.sqrt(
+                        Math.pow(this.helicopterPos.x - story.x, 2) + 
+                        Math.pow(this.helicopterPos.y - story.y, 2)
+                    );
+
+                    if (distance < 60) { // Close enough to collect
+                        this.collectStory(story);
+                        break; // Only collect one story per frame
+                    }
+                }
+            }
+
+            collectStory(story) {
+                this.score += story.type.points;
+                this.storiesCollected++;
+                
+                // Remove story from game
+                if (story.element.parentNode) {
+                    story.element.parentNode.removeChild(story.element);
+                }
+                
+                // Remove from stories array
+                this.stories = this.stories.filter(s => s !== story);
+
+                this.updateHUD();
+                this.playSound(1200, 150); // Success sound
+
+                // Show brief popup
+                this.showBriefStoryPopup(story.type);
+
+                // Check win condition
+                if (this.storiesCollected >= 5) {
+                    this.checkWinCondition();
+                }
+            }
+
+            showBriefStoryPopup(storyType) {
+                document.getElementById('storyTitle').textContent = storyType.title;
+                document.getElementById('storyText').textContent = storyType.text;
+                document.getElementById('collectStory').textContent = `Story Collected! (+${storyType.points} pts)`;
+                
+                this.storyPopup.style.display = 'block';
+                
+                // Auto-hide after 2 seconds
+                setTimeout(() => {
+                    if (this.storyPopup.style.display === 'block') {
+                        this.storyPopup.style.display = 'none';
+                    }
+                }, 2000);
+            }
+
+            checkWinCondition() {
+                if (this.storiesCollected >= 5) {
+                    // Check if helicopter is at station
+                    const stationDistance = Math.sqrt(
+                        Math.pow(this.helicopterPos.x - this.stationPos.x, 2) + 
+                        Math.pow(this.helicopterPos.y - this.stationPos.y, 2)
+                    );
+
+                    if (stationDistance < 60) {
+                        this.endGame(true);
+                    }
+                }
+            }
+
+            updateHelicopterPosition() {
+                this.helicopter.style.left = this.helicopterPos.x + 'px';
+                this.helicopter.style.top = this.helicopterPos.y + 'px';
+            }
+
+            updateHUD() {
+                document.getElementById('storiesCount').textContent = this.storiesCollected;
+                document.getElementById('score').textContent = this.score;
+                
+                const fuelPercentage = Math.max(0, this.fuel);
+                document.getElementById('fuelFill').style.width = fuelPercentage + '%';
+                
+                const timePercentage = Math.max(0, (this.timeLeft / 60) * 100);
+                document.getElementById('timeFill').style.width = timePercentage + '%';
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+
+                // Handle helicopter movement
+                const speed = 3;
+                const friction = 0.9;
+
+                if (this.keys.ArrowLeft || this.keys['a'] || this.keys['A']) {
+                    this.velocity.x = Math.max(this.velocity.x - 0.5, -speed);
+                }
+                if (this.keys.ArrowRight || this.keys['d'] || this.keys['D']) {
+                    this.velocity.x = Math.min(this.velocity.x + 0.5, speed);
+                }
+                if (this.keys.ArrowUp || this.keys['w'] || this.keys['W']) {
+                    this.velocity.y = Math.max(this.velocity.y - 0.5, -speed);
+                }
+                if (this.keys.ArrowDown || this.keys['s'] || this.keys['S']) {
+                    this.velocity.y = Math.min(this.velocity.y + 0.5, speed);
+                }
+
+                // Apply friction
+                this.velocity.x *= friction;
+                this.velocity.y *= friction;
+
+                // Update position
+                this.helicopterPos.x += this.velocity.x;
+                this.helicopterPos.y += this.velocity.y;
+
+                // Boundary checking
+                this.helicopterPos.x = Math.max(10, Math.min(830, this.helicopterPos.x));
+                this.helicopterPos.y = Math.max(10, Math.min(540, this.helicopterPos.y));
+
+                this.updateHelicopterPosition();
+
+                // Check for story collection
+                this.checkStoryCollection();
+
+                // Consume fuel when moving
+                if (Math.abs(this.velocity.x) > 0.1 || Math.abs(this.velocity.y) > 0.1) {
+                    this.fuel -= 0.08;
+                }
+
+                // Update time
+                this.timeLeft -= 1/60;
+
+                this.updateHUD();
+
+                // Check game end conditions
+                if (this.fuel <= 0 || this.timeLeft <= 0) {
+                    this.endGame(false);
+                    return;
+                }
+
+                // Check win condition
+                this.checkWinCondition();
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            endGame(won) {
+                this.gameRunning = false;
+                
+                // Hide story popup if open
+                this.storyPopup.style.display = 'none';
+
+                const gameOverTitle = document.getElementById('gameOverTitle');
+                const gameOverText = document.getElementById('gameOverText');
+                
+                if (won) {
+                    gameOverTitle.textContent = 'Mission Complete! 🎉';
+                    gameOverText.textContent = 'You successfully covered the breaking news!';
+                    this.score += Math.floor(this.timeLeft * 10); // Bonus for time left
+                    this.playSound(1500, 200);
+                } else if (this.fuel <= 0) {
+                    gameOverTitle.textContent = 'Out of Fuel! ⛽';
+                    gameOverText.textContent = 'Your helicopter ran out of fuel!';
+                    this.playSound(400, 300);
+                } else {
+                    gameOverTitle.textContent = 'Time\'s Up! ⏰';
+                    gameOverText.textContent = 'You ran out of time to report the news!';
+                    this.playSound(400, 300);
+                }
+
+                document.getElementById('finalScore').textContent = this.score;
+
+                // Update best score
+                const bestScore = parseInt(localStorage.getItem('newsReporterBest') || '0');
+                if (this.score > bestScore) {
+                    localStorage.setItem('newsReporterBest', this.score.toString());
+                    document.getElementById('bestScore').textContent = this.score + ' (NEW BEST!)';
+                } else {
+                    document.getElementById('bestScore').textContent = bestScore;
+                }
+
+                this.gameOver.style.display = 'flex';
+            }
+
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Silent fail for environments without audio support
+                }
+            }
+        }
+
+        // Start the game when page loads
+        const game = new NewsReporterGame();
+
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

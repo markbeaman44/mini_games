@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archer Champion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        #backButton:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            display: block;
+            border-radius: 20px;
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .instructions-content {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .instructions-content h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #FFD700;
+        }
+
+        .instructions-content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .close-instructions {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .close-instructions:hover {
+            background: #45a049;
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        #powerMeter {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid white;
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #powerBar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #00ff00, #ffff00, #ff0000);
+            transition: width 0.1s;
+        }
+
+        #targetIndicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+        }
+
+        .game-over-content {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .game-over-content h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #FFD700;
+        }
+
+        .restart-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .restart-button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+    
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup (shown first) -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🏹 Archer Champion 🏹</h2>
+                    <p>Hold down mouse/touch to charge your bow power.</p>
+                    <p>Aim and release to shoot at the correct target!</p>
+                    <p><strong>Hit the correct color target for points.</strong></p>
+                    <p><strong>Wrong targets lose points!</strong></p>
+                    <p><strong>Press SPACE to start or restart anytime!</strong></p>
+                    <button class="close-instructions" id="closeInstructions">Start Game!</button>
+                </div>
+            </div>
+            
+            <!-- Game Area (shown after instructions) -->
+            <div class="game-area" id="gameArea">
+                <canvas id="gameCanvas"></canvas>
+                
+                <div id="ui">
+                    <div>Score: <span id="score">0</span></div>
+                    <div>Arrows: <span id="arrows">10</span></div>
+                    <div>Level: <span id="level">1</span></div>
+                </div>
+
+                <div id="powerMeter">
+                    <div id="powerBar"></div>
+                </div>
+
+                <div id="targetIndicator">
+                    <div>Hit the:</div>
+                    <div id="targetColor" style="font-weight: bold; font-size: 18px;">RED</div>
+                    <div>target!</div>
+                </div>
+            </div>
+            
+            <!-- Game Over (overlay) -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>Game Over!</h2>
+                    <p>Final Score: <span id="finalScore">0</span></p>
+                    <p id="gameOverMessage"></p>
+                    <button class="restart-button" id="restartButton">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ArcherGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                this.score = 0;
+                this.arrows = 10;
+                this.level = 1;
+                this.bestScore = parseInt(localStorage.getItem('archerChampionBest') || '0');
+                this.isCharging = false;
+                this.power = 0;
+                this.maxPower = 100;
+                this.gameStarted = false;
+                this.gameEnded = false;
+                this.aimX = 0;
+                this.aimY = 0;
+                
+                // Initialize archer object first
+                this.archer = {
+                    x: 100,
+                    y: 400,
+                    width: 40,
+                    height: 60
+                };
+                
+                // Now resize canvas and update archer position
+                this.resizeCanvas();
+                
+                this.arrow = null;
+                this.targets = [];
+                this.particles = [];
+                this.currentTargetColor = 'red';
+                this.targetColors = ['red', 'blue', 'green', 'yellow'];
+                
+                this.setupEventListeners();
+                this.generateTargets(); // This now also chooses the target color
+                this.animate();
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement.parentElement; // Get game-container
+                const rect = container.getBoundingClientRect();
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                
+                // Update archer position based on canvas size (only if archer exists)
+                if (this.archer) {
+                    this.archer.x = this.canvas.width * 0.1; // 10% from left
+                    this.archer.y = this.canvas.height - 120;
+                }
+            }
+            
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+                
+                // Start/restart buttons
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.startGame();
+                });
+                
+                document.getElementById('restartButton').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display !== 'none') {
+                        e.preventDefault();
+                        this.startGame();
+                        return;
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                        return;
+                    }
+                });
+                
+                // Mouse/touch charging controls
+                const handleStart = (e) => {
+                    if (!this.gameStarted || this.gameEnded || this.instructionsPopup.style.display !== 'none') return;
+                    e.preventDefault();
+                    
+                    // Get click/touch position
+                    const rect = this.canvas.getBoundingClientRect();
+                    if (e.type === 'mousedown') {
+                        this.aimX = e.clientX - rect.left;
+                        this.aimY = e.clientY - rect.top;
+                    } else if (e.type === 'touchstart') {
+                        this.aimX = e.touches[0].clientX - rect.left;
+                        this.aimY = e.touches[0].clientY - rect.top;
+                    }
+                    
+                    this.startCharging();
+                };
+                
+                const handleEnd = (e) => {
+                    if (!this.gameStarted || this.gameEnded || this.instructionsPopup.style.display !== 'none') return;
+                    e.preventDefault();
+                    this.shoot();
+                };
+                
+                // Mouse move for aiming while charging
+                const handleMove = (e) => {
+                    if (!this.isCharging) return;
+                    e.preventDefault();
+                    
+                    const rect = this.canvas.getBoundingClientRect();
+                    if (e.type === 'mousemove') {
+                        this.aimX = e.clientX - rect.left;
+                        this.aimY = e.clientY - rect.top;
+                    } else if (e.type === 'touchmove') {
+                        this.aimX = e.touches[0].clientX - rect.left;
+                        this.aimY = e.touches[0].clientY - rect.top;
+                    }
+                };
+                
+                // Mouse events
+                this.canvas.addEventListener('mousedown', handleStart);
+                this.canvas.addEventListener('mouseup', handleEnd);
+                this.canvas.addEventListener('mousemove', handleMove);
+                
+                // Touch events
+                this.canvas.addEventListener('touchstart', handleStart);
+                this.canvas.addEventListener('touchend', handleEnd);
+                this.canvas.addEventListener('touchmove', handleMove);
+                
+                // Prevent context menu
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.resizeCanvas();
+                    this.generateTargets(); // Regenerate targets for new canvas size
+                });
+            }
+            
+            startGame() {
+                this.gameStarted = true;
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+            }
+            
+            restartGame() {
+                // Reset game state
+                this.score = 0;
+                this.arrows = 10;
+                this.level = 1;
+                this.isCharging = false;
+                this.power = 0;
+                this.gameStarted = true;
+                this.gameEnded = false;
+                this.arrow = null;
+                this.particles = [];
+                
+                // Update UI
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('arrows').textContent = this.arrows;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('powerMeter').style.display = 'none';
+                
+                // Hide game over, show game area
+                this.gameOver.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                
+                // Reset game elements
+                this.generateTargets(); // This now also chooses the target color
+            }
+            
+            chooseTargetColor() {
+                // This method is now called after targets are generated
+                // The color selection happens in generateTargets()
+            }
+            
+            updateTargetIndicator() {
+                const colors = {
+                    'red': 'RED',
+                    'blue': 'BLUE', 
+                    'green': 'GREEN',
+                    'yellow': 'YELLOW'
+                };
+                
+                const colorName = colors[this.currentTargetColor] || this.currentTargetColor.toUpperCase();
+                document.getElementById('targetColor').textContent = colorName;
+                document.getElementById('targetColor').style.color = this.currentTargetColor;
+            }
+            
+            generateTargets() {
+                this.targets = [];
+                const numTargets = 3 + this.level;
+                const maxAttempts = 50; // Prevent infinite loops
+                
+                // Generate all targets first with random colors
+                for (let i = 0; i < numTargets; i++) {
+                    let attempts = 0;
+                    let validPosition = false;
+                    let newTarget;
+                    
+                    while (!validPosition && attempts < maxAttempts) {
+                        const color = this.targetColors[Math.floor(Math.random() * this.targetColors.length)];
+                        const radius = 25 + Math.random() * 15;
+                        
+                        newTarget = {
+                            x: this.canvas.width * 0.6 + Math.random() * (this.canvas.width * 0.3), // Right side of canvas
+                            y: 50 + Math.random() * (this.canvas.height - 200), // Keep away from edges
+                            radius: radius,
+                            color: color,
+                            hit: false,
+                            wobble: Math.random() * Math.PI * 2
+                        };
+                        
+                        // Check if this target overlaps with existing targets
+                        validPosition = true;
+                        for (let j = 0; j < this.targets.length; j++) {
+                            const existingTarget = this.targets[j];
+                            const dx = newTarget.x - existingTarget.x;
+                            const dy = newTarget.y - existingTarget.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            const minDistance = newTarget.radius + existingTarget.radius + 20; // 20px buffer
+                            
+                            if (distance < minDistance) {
+                                validPosition = false;
+                                break;
+                            }
+                        }
+                        
+                        attempts++;
+                    }
+                    
+                    // If we found a valid position, add the target
+                    if (validPosition && newTarget) {
+                        this.targets.push(newTarget);
+                    }
+                }
+                
+                // Now choose the target color from the colors that actually exist on the screen
+                if (this.targets.length > 0) {
+                    const availableColors = [...new Set(this.targets.map(target => target.color))]; // Get unique colors
+                    this.currentTargetColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                    this.updateTargetIndicator();
+                }
+            }
+            
+            startCharging() {
+                if (this.arrows <= 0 || this.arrow) return;
+                
+                this.isCharging = true;
+                this.power = 0;
+                document.getElementById('powerMeter').style.display = 'block';
+                
+                this.chargeInterval = setInterval(() => {
+                    if (this.power < this.maxPower) {
+                        this.power += 2;
+                        document.getElementById('powerBar').style.width = (this.power / this.maxPower * 100) + '%';
+                    }
+                }, 50);
+            }
+            
+            shoot() {
+                if (!this.isCharging || this.arrows <= 0) return;
+                
+                this.isCharging = false;
+                clearInterval(this.chargeInterval);
+                document.getElementById('powerMeter').style.display = 'none';
+                
+                this.arrows--;
+                document.getElementById('arrows').textContent = this.arrows;
+                
+                // Calculate angle from archer to aim position
+                const archerCenterX = this.archer.x + 20;
+                const archerCenterY = this.archer.y + 30;
+                const dx = this.aimX - archerCenterX;
+                const dy = this.aimY - archerCenterY;
+                const angle = Math.atan2(dy, dx);
+                
+                // Create arrow with aimed direction
+                const velocity = (this.power / this.maxPower) * 15 + 5;
+                
+                this.arrow = {
+                    x: archerCenterX,
+                    y: archerCenterY,
+                    vx: Math.cos(angle) * velocity,
+                    vy: Math.sin(angle) * velocity,
+                    rotation: angle,
+                    trail: []
+                };
+                
+                this.power = 0;
+            }
+            
+            updateArrow() {
+                if (!this.arrow) return;
+                
+                // Add to trail
+                this.arrow.trail.push({ x: this.arrow.x, y: this.arrow.y });
+                if (this.arrow.trail.length > 10) {
+                    this.arrow.trail.shift();
+                }
+                
+                // Apply physics
+                this.arrow.vy += 0.1; // Gravity
+                this.arrow.x += this.arrow.vx;
+                this.arrow.y += this.arrow.vy;
+                this.arrow.rotation = Math.atan2(this.arrow.vy, this.arrow.vx);
+                
+                // Check target collisions
+                this.targets.forEach(target => {
+                    if (target.hit || !this.arrow) return; // Check if arrow still exists
+                    
+                    const dx = this.arrow.x - target.x;
+                    const dy = this.arrow.y - target.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < target.radius) {
+                        target.hit = true;
+                        this.hitTarget(target);
+                        this.arrow = null;
+                        return; // Exit the loop early
+                    }
+                });
+                
+                // Remove arrow if off screen (only if arrow still exists)
+                if (this.arrow && (this.arrow.x > this.canvas.width + 100 || 
+                    this.arrow.y > this.canvas.height + 100)) {
+                    this.arrow = null;
+                }
+            }
+            
+            hitTarget(target) {
+                // Create hit particles
+                for (let i = 0; i < 15; i++) {
+                    this.particles.push({
+                        x: target.x,
+                        y: target.y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        life: 30,
+                        color: target.color
+                    });
+                }
+                
+                // Check if correct target
+                if (target.color === this.currentTargetColor) {
+                    this.score += 100 * this.level;
+                    this.createFloatingText(target.x, target.y, '+' + (100 * this.level), 'green');
+                } else {
+                    this.score = Math.max(0, this.score - 50);
+                    this.createFloatingText(target.x, target.y, '-50', 'red');
+                }
+                
+                document.getElementById('score').textContent = this.score;
+                
+                // Update best score
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('archerChampionBest', this.bestScore.toString());
+                }
+                
+                // Check if all correct targets hit
+                const correctTargets = this.targets.filter(t => t.color === this.currentTargetColor);
+                const hitCorrectTargets = correctTargets.filter(t => t.hit);
+                
+                if (hitCorrectTargets.length === correctTargets.length) {
+                    this.nextLevel();
+                }
+                
+                // Check game over
+                if (this.arrows <= 0) {
+                    setTimeout(() => this.endGame(), 1000);
+                }
+            }
+            
+            createFloatingText(x, y, text, color) {
+                this.particles.push({
+                    x: x,
+                    y: y,
+                    vx: 0,
+                    vy: -2,
+                    life: 60,
+                    text: text,
+                    color: color,
+                    isText: true
+                });
+            }
+            
+            nextLevel() {
+                this.level++;
+                document.getElementById('level').textContent = this.level;
+                this.arrows += 5;
+                document.getElementById('arrows').textContent = this.arrows;
+                
+                setTimeout(() => {
+                    this.generateTargets(); // This now also chooses the target color
+                }, 1000);
+            }
+            
+            endGame() {
+                this.gameEnded = true;
+                document.getElementById('finalScore').textContent = this.score;
+                
+                let message = '';
+                if (this.score >= 1000) {
+                    message = '🏆 Master Archer! Incredible shooting!';
+                } else if (this.score >= 500) {
+                    message = '🎯 Great job! You\'re a skilled archer!';
+                } else if (this.score >= 200) {
+                    message = '👍 Not bad! Keep practicing!';
+                } else {
+                    message = '🎯 Keep practicing to become an archer champion!';
+                }
+                
+                if (this.score === this.bestScore && this.score > 0) {
+                    message += ' 🆕 NEW BEST SCORE!';
+                }
+                
+                document.getElementById('gameOverMessage').textContent = message;
+                this.gameArea.style.display = 'none';
+                this.gameOver.style.display = 'flex';
+            }
+            
+            updateParticles() {
+                this.particles = this.particles.filter(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    if (!particle.isText) {
+                        particle.vx *= 0.98;
+                        particle.vy *= 0.98;
+                    }
+                    
+                    return particle.life > 0;
+                });
+            }
+            
+            draw() {
+                // Clear canvas with gradient background
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#98FB98');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw mountains
+                this.ctx.fillStyle = '#654321';
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.canvas.height);
+                this.ctx.lineTo(this.canvas.width * 0.3, this.canvas.height - 60);
+                this.ctx.lineTo(this.canvas.width * 0.6, this.canvas.height - 30);
+                this.ctx.lineTo(this.canvas.width, this.canvas.height - 20);
+                this.ctx.lineTo(this.canvas.width, this.canvas.height);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                // Draw archer
+                this.drawArcher();
+                
+                // Draw aiming line while charging
+                if (this.isCharging && this.gameStarted) {
+                    const archerCenterX = this.archer.x + 20;
+                    const archerCenterY = this.archer.y + 30;
+                    
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.setLineDash([10, 5]);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(archerCenterX, archerCenterY);
+                    this.ctx.lineTo(this.aimX, this.aimY);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]); // Reset line dash
+                }
+                
+                // Draw targets
+                this.targets.forEach(target => {
+                    if (!target.hit) {
+                        target.wobble += 0.05;
+                        const wobbleOffset = Math.sin(target.wobble) * 2;
+                        
+                        this.ctx.fillStyle = target.color;
+                        this.ctx.beginPath();
+                        this.ctx.arc(target.x, target.y + wobbleOffset, target.radius, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        
+                        // Draw target rings
+                        this.ctx.strokeStyle = 'white';
+                        this.ctx.lineWidth = 3;
+                        this.ctx.beginPath();
+                        this.ctx.arc(target.x, target.y + wobbleOffset, target.radius * 0.7, 0, Math.PI * 2);
+                        this.ctx.stroke();
+                        
+                        this.ctx.beginPath();
+                        this.ctx.arc(target.x, target.y + wobbleOffset, target.radius * 0.4, 0, Math.PI * 2);
+                        this.ctx.stroke();
+                    }
+                });
+                
+                // Draw arrow
+                if (this.arrow) {
+                    // Draw trail
+                    this.ctx.strokeStyle = 'rgba(139, 69, 19, 0.6)';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.arrow.trail.forEach((point, index) => {
+                        if (index === 0) {
+                            this.ctx.moveTo(point.x, point.y);
+                        } else {
+                            this.ctx.lineTo(point.x, point.y);
+                        }
+                    });
+                    this.ctx.stroke();
+                    
+                    // Draw arrow
+                    this.ctx.save();
+                    this.ctx.translate(this.arrow.x, this.arrow.y);
+                    this.ctx.rotate(this.arrow.rotation);
+                    
+                    this.ctx.fillStyle = '#8B4513';
+                    this.ctx.fillRect(-15, -2, 30, 4);
+                    
+                    this.ctx.fillStyle = '#C0C0C0';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(15, 0);
+                    this.ctx.lineTo(25, -5);
+                    this.ctx.lineTo(25, 5);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                }
+                
+                // Draw particles
+                this.particles.forEach(particle => {
+                    if (particle.isText) {
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.font = 'bold 20px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText(particle.text, particle.x, particle.y);
+                    } else {
+                        const alpha = particle.life / 30;
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.globalAlpha = alpha;
+                        this.ctx.beginPath();
+                        this.ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.globalAlpha = 1;
+                    }
+                });
+            }
+            
+            drawArcher() {
+                const archer = this.archer;
+                
+                // Body
+                this.ctx.fillStyle = '#8B4513';
+                this.ctx.fillRect(archer.x, archer.y + 20, 20, 40);
+                
+                // Head
+                this.ctx.fillStyle = '#FFDBAC';
+                this.ctx.beginPath();
+                this.ctx.arc(archer.x + 10, archer.y + 10, 10, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Bow
+                if (this.isCharging) {
+                    // Charged bow
+                    this.ctx.strokeStyle = '#654321';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    this.ctx.arc(archer.x + 30, archer.y + 25, 15, -Math.PI/3, Math.PI/3, false);
+                    this.ctx.stroke();
+                    
+                    // String
+                    this.ctx.strokeStyle = '#D2B48C';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(archer.x + 20, archer.y + 15);
+                    this.ctx.lineTo(archer.x + 20, archer.y + 35);
+                    this.ctx.stroke();
+                } else {
+                    // Regular bow
+                    this.ctx.strokeStyle = '#654321';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.beginPath();
+                    this.ctx.arc(archer.x + 35, archer.y + 25, 20, -Math.PI/4, Math.PI/4, false);
+                    this.ctx.stroke();
+                    
+                    // String
+                    this.ctx.strokeStyle = '#D2B48C';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(archer.x + 25, archer.y + 15);
+                    this.ctx.lineTo(archer.x + 25, archer.y + 35);
+                    this.ctx.stroke();
+                }
+            }
+            
+            animate() {
+                if (this.gameStarted && !this.gameEnded && this.gameArea.style.display === 'block') {
+                    this.updateArrow();
+                    this.updateParticles();
+                }
+                
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new ArcherGame();
+            // Mobile address bar hide fix - REQUIRED
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

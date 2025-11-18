@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basketball Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(135deg, #ff6f00 0%, #ff8f00 50%, #ffa726 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            background: rgba(255,255,255,0.95);
+            color: #1a237e;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        #backButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #ff6f00, #ff8f00);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions-content p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .close-instructions {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background: white;
+            color: #ff6f00;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+            cursor: none; /* Hide default cursor */
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: none; /* Hide cursor on canvas */
+        }
+
+        .hand-cursor {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            pointer-events: none;
+            z-index: 20;
+            font-size: 50px;
+            transform: translate(-50%, -50%);
+            transition: transform 0.05s ease;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 30px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.95);
+            color: #ff6f00;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #d32f2f, #f44336);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-width: 400px;
+        }
+
+        .game-over-content h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .final-stats {
+            font-size: 24px;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        .restart-btn {
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background: white;
+            color: #d32f2f;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 719px) {
+            .stat {
+                padding: 8px 12px;
+                font-size: 16px;
+                min-width: 100px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .hud {
+                padding: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+    
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🏀 Basketball Pro</h2>
+                    <p><strong>How to Play:</strong></p>
+                    <p>Move your mouse over the basketball to keep it bouncing!</p>
+                    <p>The ball bounces away from your cursor.</p>
+                    <p>Don't let the ball stop moving or it's game over!</p>
+                    <p>Keep it bouncing around the court!</p>
+                    <button class="close-instructions" id="closeInstructions">Start Game!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="hand-cursor" id="handCursor">👋</div>
+                <div class="hud">
+                    <div class="stat">
+                        <span class="stat-label">Bounces</span>
+                        <span id="bounceCount">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Best</span>
+                        <span id="bestScore">0</span>
+                    </div>
+                </div>
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>Game Over!</h2>
+                    <div class="final-stats">
+                        <div>Bounces: <strong id="finalBounces">0</strong></div>
+                        <div>Best: <strong id="finalBest">0</strong></div>
+                    </div>
+                    <button class="restart-btn" id="restartBtn">Play Again</button>
+                    <p style="margin-top: 15px; font-size: 14px; opacity: 0.8;">Press SPACE to restart</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BasketballGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                this.bounceCountEl = document.getElementById('bounceCount');
+                this.bestScoreEl = document.getElementById('bestScore');
+                this.finalBouncesEl = document.getElementById('finalBounces');
+                this.finalBestEl = document.getElementById('finalBest');
+                this.handCursor = document.getElementById('handCursor');
+                
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+                
+                this.ball = {
+                    x: 0,
+                    y: 0,
+                    radius: 30,
+                    velocityX: 0,
+                    velocityY: 0,
+                    gravity: 0.4,
+                    bounceDamping: 0.92,
+                    wallBounce: 0.8,
+                    minBounceVelocity: 0.5,
+                    onGround: false
+                };
+                
+                this.mouseX = 0;
+                this.mouseY = 0;
+                this.lastHitTime = 0;
+                
+                this.bounceCount = 0;
+                this.bestScore = parseInt(localStorage.getItem('basketballProBest') || '0');
+                this.gameRunning = false;
+                this.animationId = null;
+                
+                this.setupEventListeners();
+                this.updateBestScore();
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+                
+                // Reposition ball if game is running
+                if (this.gameRunning) {
+                    // Keep ball in bounds
+                    if (this.ball.x > this.canvas.width - this.ball.radius) {
+                        this.ball.x = this.canvas.width - this.ball.radius;
+                    }
+                    if (this.ball.y > this.canvas.height - this.ball.radius - 40) {
+                        this.ball.y = this.canvas.height - this.ball.radius - 40;
+                    }
+                }
+            }
+            
+            setupEventListeners() {
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+                
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+                
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Track mouse movement
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                    this.mouseY = e.clientY - rect.top;
+                    this.updateHandCursor();
+                    this.checkBallHover();
+                });
+                
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouseX = touch.clientX - rect.left;
+                    this.mouseY = touch.clientY - rect.top;
+                    this.updateHandCursor();
+                    this.checkBallHover();
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+                    
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+            }
+            
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                // Force canvas resize before starting game
+                setTimeout(() => {
+                    this.resizeCanvas();
+                    this.startGame();
+                }, 0);
+            }
+            
+            startGame() {
+                this.gameRunning = true;
+                this.bounceCount = 0;
+                this.updateBounceCount();
+                this.lastHitTime = 0;
+                
+                // Initialize ball position with random horizontal velocity
+                this.ball.x = this.canvas.width / 2;
+                this.ball.y = this.canvas.height / 3;
+                this.ball.velocityY = 12; // Initial downward velocity
+                this.ball.velocityX = (Math.random() - 0.5) * 8; // Random horizontal movement
+                this.ball.onGround = false;
+                
+                this.gameLoop();
+            }
+            
+            updateHandCursor() {
+                this.handCursor.style.left = this.mouseX + 'px';
+                this.handCursor.style.top = this.mouseY + 'px';
+            }
+            
+            checkBallHover() {
+                if (!this.gameRunning) return;
+                
+                const dx = this.mouseX - this.ball.x;
+                const dy = this.mouseY - this.ball.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Check if mouse is over the ball
+                if (distance <= this.ball.radius) {
+                    const currentTime = Date.now();
+                    // Prevent multiple hits too quickly (debounce 200ms)
+                    if (currentTime - this.lastHitTime > 200) {
+                        this.hitBall();
+                        this.lastHitTime = currentTime;
+                    }
+                }
+            }
+            
+            hitBall() {
+                // Calculate direction away from mouse
+                const dx = this.ball.x - this.mouseX;
+                const dy = this.ball.y - this.mouseY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    // Normalize and apply force
+                    const normalizedX = dx / distance;
+                    const normalizedY = dy / distance;
+                    
+                    const force = 12;
+                    this.ball.velocityX = normalizedX * force;
+                    this.ball.velocityY = normalizedY * force;
+                } else {
+                    // Default bounce if mouse is exactly on center
+                    this.ball.velocityY = -15;
+                    this.ball.velocityX = (Math.random() - 0.5) * 10;
+                }
+                
+                this.playBounceSound();
+            }
+            
+            updateBounceCount() {
+                this.bounceCountEl.textContent = this.bounceCount;
+            }
+            
+            updateBestScore() {
+                this.bestScoreEl.textContent = this.bestScore;
+            }
+            
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.update();
+                this.draw();
+                
+                this.animationId = requestAnimationFrame(() => this.gameLoop());
+            }
+            
+            update() {
+                // Apply gravity
+                this.ball.velocityY += this.ball.gravity;
+                
+                // Update position
+                this.ball.x += this.ball.velocityX;
+                this.ball.y += this.ball.velocityY;
+                
+                // Check floor collision
+                if (this.ball.y >= this.canvas.height - this.ball.radius - 40) {
+                    this.ball.y = this.canvas.height - this.ball.radius - 40;
+                    this.ball.velocityY *= -this.ball.bounceDamping;
+                    this.ball.velocityX *= 0.98; // Slight friction
+                    
+                    // Count bounce if ball wasn't already on ground
+                    if (!this.ball.onGround) {
+                        this.ball.onGround = true;
+                        this.bounceCount++;
+                        this.updateBounceCount();
+                        
+                        // Update best score
+                        if (this.bounceCount > this.bestScore) {
+                            this.bestScore = this.bounceCount;
+                            localStorage.setItem('basketballProBest', this.bestScore.toString());
+                            this.updateBestScore();
+                        }
+                    }
+                    
+                    // Check if bounce is too weak (ball has stopped)
+                    if (Math.abs(this.ball.velocityY) < this.ball.minBounceVelocity && 
+                        Math.abs(this.ball.velocityX) < this.ball.minBounceVelocity) {
+                        this.ball.velocityY = 0;
+                        this.ball.velocityX = 0;
+                        this.endGame();
+                    }
+                } else {
+                    // Ball is in the air
+                    this.ball.onGround = false;
+                }
+                
+                // Check ceiling collision
+                if (this.ball.y <= this.ball.radius) {
+                    this.ball.y = this.ball.radius;
+                    this.ball.velocityY *= -this.ball.wallBounce;
+                }
+                
+                // Check left wall collision
+                if (this.ball.x <= this.ball.radius) {
+                    this.ball.x = this.ball.radius;
+                    this.ball.velocityX *= -this.ball.wallBounce;
+                }
+                
+                // Check right wall collision
+                if (this.ball.x >= this.canvas.width - this.ball.radius) {
+                    this.ball.x = this.canvas.width - this.ball.radius;
+                    this.ball.velocityX *= -this.ball.wallBounce;
+                }
+            }
+            
+            draw() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw court floor
+                this.ctx.fillStyle = '#8B4513';
+                this.ctx.fillRect(0, this.canvas.height - 40, this.canvas.width, 40);
+                
+                // Draw court lines
+                this.ctx.strokeStyle = 'white';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.canvas.height - 40);
+                this.ctx.lineTo(this.canvas.width, this.canvas.height - 40);
+                this.ctx.stroke();
+                
+                // Draw basketball
+                this.drawBasketball(this.ball.x, this.ball.y, this.ball.radius);
+            }
+            
+            drawBasketball(x, y, radius) {
+                // Orange ball
+                this.ctx.fillStyle = '#FF6B35';
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Black lines
+                this.ctx.strokeStyle = '#000';
+                this.ctx.lineWidth = 2;
+                
+                // Vertical line
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, y - radius);
+                this.ctx.lineTo(x, y + radius);
+                this.ctx.stroke();
+                
+                // Horizontal line
+                this.ctx.beginPath();
+                this.ctx.moveTo(x - radius, y);
+                this.ctx.lineTo(x + radius, y);
+                this.ctx.stroke();
+                
+                // Curved lines
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, -Math.PI/4, Math.PI/4);
+                this.ctx.stroke();
+                
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, Math.PI*3/4, Math.PI*5/4);
+                this.ctx.stroke();
+                
+                // Highlight
+                this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                this.ctx.beginPath();
+                this.ctx.arc(x - radius/3, y - radius/3, radius/4, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+            
+            playBounceSound() {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 150;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }
+            
+            endGame() {
+                this.gameRunning = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+                
+                this.finalBouncesEl.textContent = this.bounceCount;
+                this.finalBestEl.textContent = this.bestScore;
+                this.gameOver.style.display = 'flex';
+            }
+            
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+        }
+        
+        // Initialize game
+        const game = new BasketballGame();
+        
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

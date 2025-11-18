@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Ship Adventure - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #4a90e2 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #87ceeb 0%, #4682b4 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.95);
+            color: #1e3c72;
+            border: 2px solid #1e3c72;
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .back-btn:hover {
+            background: #1e3c72;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Instructions popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid #4a90e2;
+        }
+
+        .instructions-content h2 {
+            color: #ffd700;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .close-instructions {
+            background: #ffd700;
+            color: #1e3c72;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .close-instructions:hover {
+            background: #ffed4a;
+            transform: translateY(-2px);
+        }
+
+        /* Game area */
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .score-display {
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+        }
+
+        .compass {
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffd700;
+            transition: transform 0.3s ease;
+        }
+
+        .map-progress {
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+        }
+
+        /* Game canvas */
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: radial-gradient(circle at 30% 30%, #4a90e2 0%, #1e3c72 70%);
+        }
+
+        /* Game over screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid #4a90e2;
+        }
+
+        .game-over-content h2 {
+            color: #ffd700;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        .game-over-content p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .restart-btn {
+            background: #ffd700;
+            color: #1e3c72;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .restart-btn:hover {
+            background: #ffed4a;
+            transform: translateY(-2px);
+        }
+
+        /* Victory screen */
+        .victory-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .victory-content {
+            background: linear-gradient(135deg, #ffd700, #ffed4a);
+            color: #1e3c72;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(255,215,0,0.5);
+            border: 3px solid #1e3c72;
+        }
+
+        .victory-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Tablet Controls Styles */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+        
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+        
+        .tablet-controls-right {
+            right: 0;
+            width: 80px;
+            align-items: flex-start;
+            padding-right: 10px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0;
+            color: #1e3c72;
+        }
+
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" id="backButton">← Back to Games</button>
+    
+    <!-- Tablet Controls -->
+    <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+        <button id="tabletLeft" class="tablet-btn">◀</button>
+        <button id="tabletRight" class="tablet-btn">▶</button>
+    </div>
+    <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+        <button id="tabletUp" class="tablet-btn">⬆</button>
+        <button id="tabletDown" class="tablet-btn">⬇</button>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🚢⚓ Pirate Treasure Map! ⚓🚢</h2>
+                    <p><strong>🗺️ Mission:</strong> Collect all treasure map pieces in order (1, 2, 3...) to complete the map!</p>
+                    <p><strong>⛵ Controls:</strong> Use arrow keys or WASD to sail your ship in any direction.</p>
+                    <p><strong>🏝️ Strategy:</strong> Dock at islands to collect map pieces. Light blue = shallow (slow), dark blue = deep (fast but dangerous).</p>
+                    <p><strong>🐙 Dangers:</strong> Avoid sea monsters (emerge from deep water) and rival pirate ships!</p>
+                    <p><strong>🧭 Navigation:</strong> Your compass points toward the next map piece you need!</p>
+                    <button class="close-instructions" id="closeInstructions">Set Sail! ⚓</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="hud">
+                    <div class="score-display">
+                        Score: <span id="scoreValue">0</span>
+                    </div>
+                    <div class="compass" id="compass">🧭</div>
+                    <div class="map-progress">
+                        Map: <span id="mapPieces">0</span>/5
+                    </div>
+                </div>
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>💀 Ship Destroyed! ⚔️</h2>
+                    <p>Your pirate adventure has ended!</p>
+                    <p>Map pieces collected: <span id="finalMapPieces">0</span>/5</p>
+                    <p>Final score: <span id="finalScore">0</span></p>
+                    <button class="restart-btn" id="restartButton">Try Again! 🚢</button>
+                </div>
+            </div>
+
+            <!-- Victory Screen -->
+            <div class="victory-screen" id="victoryScreen">
+                <div class="victory-content">
+                    <h2>🏆 Treasure Map Complete! 🗺️</h2>
+                    <p>🎉 Congratulations, Captain! 🎉</p>
+                    <p>You've successfully assembled the complete treasure map!</p>
+                    <p>Final score: <span id="victoryScore">0</span></p>
+                    <button class="restart-btn" id="playAgainButton">Sail Again! ⚓</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PirateShipGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.victoryScreen = document.getElementById('victoryScreen');
+                
+                // Game state
+                this.gameRunning = false;
+                this.score = 0;
+                this.mapPiecesCollected = 0;
+                this.totalMapPieces = 5;
+                this.nextPieceNumber = 1;
+                
+                // Keyboard state
+                this.keys = {};
+                
+                // Game objects - Initialize before calling initGame()
+                this.player = {
+                    x: 400,
+                    y: 300,
+                    size: 20,
+                    speed: 3,
+                    angle: 0
+                };
+                
+                this.islands = [];
+                this.monsters = [];
+                this.rivalShips = [];
+                this.mapPieces = [];
+                
+                // Timers
+                this.monsterSpawnTimer = 0;
+                this.rivalSpawnTimer = 0;
+                
+                this.gameLoop = this.gameLoop.bind(this);
+                
+                this.setupCanvas();
+                this.initGame();
+                this.bindEvents();
+                this.generateWorld();
+            }
+            
+            setupCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth || 800;
+                this.canvas.height = container.clientHeight || 600;
+                
+                // Ensure minimum size
+                if (this.canvas.width < 400) this.canvas.width = 800;
+                if (this.canvas.height < 300) this.canvas.height = 600;
+            }
+            
+            initGame() {
+                this.player.x = this.canvas.width / 2;
+                this.player.y = this.canvas.height / 2;
+                this.score = 0;
+                this.mapPiecesCollected = 0;
+                this.nextPieceNumber = 1;
+                this.monsters = [];
+                this.rivalShips = [];
+                this.monsterSpawnTimer = 0;
+                this.rivalSpawnTimer = 0;
+                this.generateWorld();
+                this.updateHUD();
+            }
+            
+            generateWorld() {
+                this.islands = [];
+                this.mapPieces = [];
+                
+                // Generate islands with map pieces
+                const positions = [
+                    {x: 150, y: 100},
+                    {x: 650, y: 150},
+                    {x: 100, y: 400},
+                    {x: 700, y: 450},
+                    {x: 400, y: 100}
+                ];
+                
+                for (let i = 0; i < this.totalMapPieces; i++) {
+                    const pos = positions[i];
+                    const island = {
+                        x: pos.x,
+                        y: pos.y,
+                        size: 40 + Math.random() * 20,
+                        type: Math.random() > 0.5 ? 'tropical' : 'rocky'
+                    };
+                    
+                    const mapPiece = {
+                        x: pos.x,
+                        y: pos.y,
+                        number: i + 1,
+                        collected: false,
+                        island: island
+                    };
+                    
+                    this.islands.push(island);
+                    this.mapPieces.push(mapPiece);
+                }
+            }
+            
+            bindEvents() {
+                // Instructions close
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+                
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+                
+                // Restart buttons
+                document.getElementById('restartButton').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                document.getElementById('playAgainButton').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Keyboard events
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Game controls during gameplay
+                    if (this.gameRunning) {
+                        this.keys[e.key.toLowerCase()] = true;
+                        this.keys[e.code] = true;
+                    }
+
+                    // Handle spacebar for game over/victory
+                    if (e.key === ' ') {
+                        if (this.gameOver.style.display === 'flex') {
+                            e.preventDefault();
+                            this.restartGame();
+                        } else if (this.victoryScreen.style.display === 'flex') {
+                            e.preventDefault();
+                            this.restartGame();
+                        }
+                    }
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                    this.keys[e.code] = false;
+                });
+                
+                // Tablet controls event listeners
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+                const tabletUp = document.getElementById('tabletUp');
+                const tabletDown = document.getElementById('tabletDown');
+
+                tabletLeft.addEventListener('touchstart', e => { 
+                    this.keys.arrowleft = true; 
+                    this.keys.a = true;
+                    e.preventDefault(); 
+                });
+                tabletLeft.addEventListener('touchend', e => { 
+                    this.keys.arrowleft = false; 
+                    this.keys.a = false;
+                    e.preventDefault(); 
+                });
+                tabletRight.addEventListener('touchstart', e => { 
+                    this.keys.arrowright = true; 
+                    this.keys.d = true;
+                    e.preventDefault(); 
+                });
+                tabletRight.addEventListener('touchend', e => { 
+                    this.keys.arrowright = false; 
+                    this.keys.d = false;
+                    e.preventDefault(); 
+                });
+                tabletUp.addEventListener('touchstart', e => {
+                    this.keys.arrowup = true;
+                    this.keys.w = true;
+                    e.preventDefault();
+                });
+                tabletUp.addEventListener('touchend', e => {
+                    this.keys.arrowup = false;
+                    this.keys.w = false;
+                    e.preventDefault();
+                });
+                tabletDown.addEventListener('touchstart', e => { 
+                    this.keys.arrowdown = true; 
+                    this.keys.s = true;
+                    e.preventDefault(); 
+                });
+                tabletDown.addEventListener('touchend', e => { 
+                    this.keys.arrowdown = false; 
+                    this.keys.s = false;
+                    e.preventDefault(); 
+                });
+            }
+            
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                
+                // Ensure canvas is properly sized after showing game area
+                setTimeout(() => {
+                    this.resizeCanvas();
+                    this.startGame();
+                }, 50);
+            }
+            
+            startGame() {
+                // Ensure canvas is ready
+                if (this.canvas.width === 0 || this.canvas.height === 0) {
+                    this.resizeCanvas();
+                }
+                
+                this.gameRunning = true;
+                this.initGame();
+                this.gameLoop();
+            }
+            
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.victoryScreen.style.display = 'none';
+                this.startGame();
+            }
+            
+            updateGame() {
+                if (!this.gameRunning) return;
+                
+                // Player movement
+                let dx = 0, dy = 0;
+                
+                if (this.keys.arrowleft || this.keys.a) dx -= 1;
+                if (this.keys.arrowright || this.keys.d) dx += 1;
+                if (this.keys.arrowup || this.keys.w) dy -= 1;
+                if (this.keys.arrowdown || this.keys.s) dy += 1;
+                
+                // Normalize diagonal movement
+                if (dx !== 0 && dy !== 0) {
+                    dx *= 0.707;
+                    dy *= 0.707;
+                }
+                
+                // Check water depth for speed modification
+                let speedMultiplier = this.getSpeedMultiplier(this.player.x + dx * this.player.speed, this.player.y + dy * this.player.speed);
+                
+                this.player.x += dx * this.player.speed * speedMultiplier;
+                this.player.y += dy * this.player.speed * speedMultiplier;
+                
+                // Keep player in bounds
+                this.player.x = Math.max(this.player.size, Math.min(this.canvas.width - this.player.size, this.player.x));
+                this.player.y = Math.max(this.player.size, Math.min(this.canvas.height - this.player.size, this.player.y));
+                
+                // Update player angle for sprite rotation
+                if (dx !== 0 || dy !== 0) {
+                    this.player.angle = Math.atan2(dy, dx);
+                }
+                
+                // Spawn monsters periodically
+                this.monsterSpawnTimer++;
+                if (this.monsterSpawnTimer > 180) { // 3 seconds at 60fps
+                    this.spawnMonster();
+                    this.monsterSpawnTimer = 0;
+                }
+                
+                // Spawn rival ships periodically
+                this.rivalSpawnTimer++;
+                if (this.rivalSpawnTimer > 300) { // 5 seconds at 60fps
+                    this.spawnRivalShip();
+                    this.rivalSpawnTimer = 0;
+                }
+                
+                // Update monsters
+                this.updateMonsters();
+                
+                // Update rival ships
+                this.updateRivalShips();
+                
+                // Check collisions
+                this.checkCollisions();
+                
+                // Update compass
+                this.updateCompass();
+            }
+            
+            getSpeedMultiplier(x, y) {
+                // Check if in deep water (away from islands)
+                let nearIsland = false;
+                for (let island of this.islands) {
+                    let dist = Math.sqrt((x - island.x) ** 2 + (y - island.y) ** 2);
+                    if (dist < island.size + 60) {
+                        nearIsland = true;
+                        break;
+                    }
+                }
+                
+                // Deep water = fast but dangerous, shallow water = slow but safer
+                return nearIsland ? 0.6 : 1.2; // Shallow: 60% speed, Deep: 120% speed
+            }
+            
+            spawnMonster() {
+                // Only spawn in deep water (away from islands)
+                let validSpawn = false;
+                let attempts = 0;
+                let x, y;
+                
+                while (!validSpawn && attempts < 10) {
+                    x = Math.random() * this.canvas.width;
+                    y = Math.random() * this.canvas.height;
+                    
+                    let nearIsland = false;
+                    for (let island of this.islands) {
+                        let dist = Math.sqrt((x - island.x) ** 2 + (y - island.y) ** 2);
+                        if (dist < island.size + 100) {
+                            nearIsland = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!nearIsland) validSpawn = true;
+                    attempts++;
+                }
+                
+                if (validSpawn) {
+                    this.monsters.push({
+                        x: x,
+                        y: y,
+                        size: 15,
+                        speed: 1 + Math.random(),
+                        angle: 0,
+                        chaseTimer: 0
+                    });
+                }
+            }
+            
+            spawnRivalShip() {
+                // Spawn at edge of screen
+                let x, y;
+                let side = Math.floor(Math.random() * 4);
+                
+                switch(side) {
+                    case 0: x = 0; y = Math.random() * this.canvas.height; break;
+                    case 1: x = this.canvas.width; y = Math.random() * this.canvas.height; break;
+                    case 2: x = Math.random() * this.canvas.width; y = 0; break;
+                    case 3: x = Math.random() * this.canvas.width; y = this.canvas.height; break;
+                }
+                
+                this.rivalShips.push({
+                    x: x,
+                    y: y,
+                    size: 18,
+                    speed: 1.5,
+                    angle: 0,
+                    patrolTimer: 0,
+                    cannonballs: []
+                });
+            }
+            
+            updateMonsters() {
+                for (let i = this.monsters.length - 1; i >= 0; i--) {
+                    let monster = this.monsters[i];
+                    
+                    // Chase player
+                    let dx = this.player.x - monster.x;
+                    let dy = this.player.y - monster.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > 0 && dist < 200) { // Chase range
+                        monster.x += (dx / dist) * monster.speed;
+                        monster.y += (dy / dist) * monster.speed;
+                        monster.angle = Math.atan2(dy, dx);
+                    }
+                    
+                    // Remove if too far from player
+                    if (dist > 400) {
+                        this.monsters.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateRivalShips() {
+                for (let i = this.rivalShips.length - 1; i >= 0; i--) {
+                    let ship = this.rivalShips[i];
+                    
+                    // Move toward player general area
+                    let dx = this.player.x - ship.x;
+                    let dy = this.player.y - ship.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > 0) {
+                        ship.x += (dx / dist) * ship.speed;
+                        ship.y += (dy / dist) * ship.speed;
+                        ship.angle = Math.atan2(dy, dx);
+                    }
+                    
+                    // Remove if off screen and far
+                    if (dist > 500) {
+                        this.rivalShips.splice(i, 1);
+                    }
+                }
+            }
+            
+            checkCollisions() {
+                // Check monster collisions
+                for (let monster of this.monsters) {
+                    let dist = Math.sqrt((this.player.x - monster.x) ** 2 + (this.player.y - monster.y) ** 2);
+                    if (dist < this.player.size + monster.size) {
+                        this.endGame(false); // Player loses
+                        return;
+                    }
+                }
+                
+                // Check rival ship collisions
+                for (let ship of this.rivalShips) {
+                    let dist = Math.sqrt((this.player.x - ship.x) ** 2 + (this.player.y - ship.y) ** 2);
+                    if (dist < this.player.size + ship.size) {
+                        this.endGame(false); // Player loses
+                        return;
+                    }
+                }
+                
+                // Check map piece collection
+                for (let piece of this.mapPieces) {
+                    if (!piece.collected) {
+                        let dist = Math.sqrt((this.player.x - piece.x) ** 2 + (this.player.y - piece.y) ** 2);
+                        if (dist < this.player.size + piece.island.size) {
+                            // Only collect if it's the next piece in sequence
+                            if (piece.number === this.nextPieceNumber) {
+                                piece.collected = true;
+                                this.mapPiecesCollected++;
+                                this.nextPieceNumber++;
+                                this.score += 100;
+                                this.playSound(800, 300, 'sine'); // Success sound
+                                
+                                if (this.mapPiecesCollected >= this.totalMapPieces) {
+                                    this.endGame(true); // Player wins!
+                                    return;
+                                }
+                            } else {
+                                this.playSound(200, 200, 'sawtooth'); // Wrong piece sound
+                            }
+                        }
+                    }
+                }
+                
+                this.updateHUD();
+            }
+            
+            updateCompass() {
+                // Find the next map piece to collect
+                let targetPiece = this.mapPieces.find(piece => piece.number === this.nextPieceNumber);
+                if (targetPiece) {
+                    let dx = targetPiece.x - this.player.x;
+                    let dy = targetPiece.y - this.player.y;
+                    let angle = Math.atan2(dy, dx);
+                    
+                    const compass = document.getElementById('compass');
+                    compass.style.transform = `rotate(${angle + Math.PI/2}rad)`;
+                }
+            }
+            
+            updateHUD() {
+                document.getElementById('scoreValue').textContent = this.score;
+                document.getElementById('mapPieces').textContent = this.mapPiecesCollected;
+            }
+            
+            drawGame() {
+                // Clear canvas with ocean background
+                this.ctx.fillStyle = '#1e3c72';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw water depth visualization
+                this.drawWaterDepth();
+                
+                // Draw islands and map pieces
+                this.drawIslands();
+                
+                // Draw monsters
+                this.drawMonsters();
+                
+                // Draw rival ships
+                this.drawRivalShips();
+                
+                // Draw player ship
+                this.drawPlayerShip();
+            }
+            
+            drawWaterDepth() {
+                // Draw depth zones around islands
+                for (let island of this.islands) {
+                    // Shallow water (light blue)
+                    this.ctx.fillStyle = 'rgba(135, 206, 235, 0.3)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(island.x, island.y, island.size + 60, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+            
+            drawIslands() {
+                for (let island of this.islands) {
+                    // Find corresponding map piece
+                    let piece = this.mapPieces.find(p => p.island === island);
+                    
+                    // Draw island
+                    this.ctx.fillStyle = island.type === 'tropical' ? '#228B22' : '#8B4513';
+                    this.ctx.beginPath();
+                    this.ctx.arc(island.x, island.y, island.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Draw palm trees or rocks
+                    this.ctx.fillStyle = island.type === 'tropical' ? '#006400' : '#654321';
+                    for (let i = 0; i < 3; i++) {
+                        let treeX = island.x + (Math.cos(i * Math.PI * 2/3) * island.size * 0.6);
+                        let treeY = island.y + (Math.sin(i * Math.PI * 2/3) * island.size * 0.6);
+                        this.ctx.beginPath();
+                        this.ctx.arc(treeX, treeY, 4, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                    
+                    // Draw map piece if not collected
+                    if (piece && !piece.collected) {
+                        let glowIntensity = piece.number === this.nextPieceNumber ? 1 : 0.3;
+                        
+                        // Glow effect for next piece
+                        if (piece.number === this.nextPieceNumber) {
+                            this.ctx.shadowColor = '#FFD700';
+                            this.ctx.shadowBlur = 20;
+                        }
+                        
+                        this.ctx.fillStyle = `rgba(255, 215, 0, ${glowIntensity})`;
+                        this.ctx.beginPath();
+                        this.ctx.arc(island.x, island.y, 8, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        
+                        this.ctx.shadowBlur = 0;
+                        
+                        // Draw number
+                        this.ctx.fillStyle = '#8B4513';
+                        this.ctx.font = 'bold 12px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText(piece.number.toString(), island.x, island.y + 4);
+                    }
+                }
+            }
+            
+            drawMonsters() {
+                for (let monster of this.monsters) {
+                    this.ctx.save();
+                    this.ctx.translate(monster.x, monster.y);
+                    this.ctx.rotate(monster.angle);
+                    
+                    // Draw sea monster (octopus-like)
+                    this.ctx.fillStyle = '#4B0082';
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, monster.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Tentacles
+                    this.ctx.strokeStyle = '#4B0082';
+                    this.ctx.lineWidth = 3;
+                    for (let i = 0; i < 8; i++) {
+                        let angle = (Math.PI * 2 / 8) * i;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(Math.cos(angle) * monster.size, Math.sin(angle) * monster.size);
+                        this.ctx.lineTo(Math.cos(angle) * (monster.size + 10), Math.sin(angle) * (monster.size + 10));
+                        this.ctx.stroke();
+                    }
+                    
+                    // Eyes
+                    this.ctx.fillStyle = '#FF0000';
+                    this.ctx.beginPath();
+                    this.ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.beginPath();
+                    this.ctx.arc(5, -5, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                }
+            }
+            
+            drawRivalShips() {
+                for (let ship of this.rivalShips) {
+                    this.ctx.save();
+                    this.ctx.translate(ship.x, ship.y);
+                    this.ctx.rotate(ship.angle);
+                    
+                    // Draw enemy ship (red)
+                    this.ctx.fillStyle = '#8B0000';
+                    this.ctx.fillRect(-ship.size, -ship.size/2, ship.size * 2, ship.size);
+                    
+                    // Mast
+                    this.ctx.fillStyle = '#654321';
+                    this.ctx.fillRect(-2, -ship.size * 1.5, 4, ship.size);
+                    
+                    // Sail
+                    this.ctx.fillStyle = '#FF4500';
+                    this.ctx.fillRect(-ship.size * 0.8, -ship.size * 1.5, ship.size * 1.6, ship.size * 0.8);
+                    
+                    // Skull flag
+                    this.ctx.fillStyle = '#000000';
+                    this.ctx.fillRect(-8, -ship.size * 1.5, 16, 10);
+                    this.ctx.fillStyle = '#FFFFFF';
+                    this.ctx.font = '8px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('☠', 0, -ship.size * 1.5 + 7);
+                    
+                    this.ctx.restore();
+                }
+            }
+            
+            drawPlayerShip() {
+                this.ctx.save();
+                this.ctx.translate(this.player.x, this.player.y);
+                this.ctx.rotate(this.player.angle);
+                
+                // Draw player ship (brown/yellow)
+                this.ctx.fillStyle = '#8B4513';
+                this.ctx.fillRect(-this.player.size, -this.player.size/2, this.player.size * 2, this.player.size);
+                
+                // Mast
+                this.ctx.fillStyle = '#654321';
+                this.ctx.fillRect(-2, -this.player.size * 1.5, 4, this.player.size);
+                
+                // Sail
+                this.ctx.fillStyle = '#F5F5DC';
+                this.ctx.fillRect(-this.player.size * 0.8, -this.player.size * 1.5, this.player.size * 1.6, this.player.size * 0.8);
+                
+                // Player flag
+                this.ctx.fillStyle = '#FFD700';
+                this.ctx.fillRect(-8, -this.player.size * 1.5, 16, 10);
+                this.ctx.fillStyle = '#8B4513';
+                this.ctx.font = '8px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('⚓', 0, -this.player.size * 1.5 + 7);
+                
+                this.ctx.restore();
+            }
+            
+            endGame(victory) {
+                this.gameRunning = false;
+                
+                if (victory) {
+                    // Victory!
+                    document.getElementById('victoryScore').textContent = this.score;
+                    this.victoryScreen.style.display = 'flex';
+                    this.playSound(1000, 1000, 'sine'); // Victory fanfare
+                } else {
+                    // Game over
+                    document.getElementById('finalMapPieces').textContent = this.mapPiecesCollected;
+                    document.getElementById('finalScore').textContent = this.score;
+                    this.gameOver.style.display = 'flex';
+                    this.playSound(200, 500, 'sawtooth'); // Defeat sound
+                }
+            }
+            
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported, silently fail
+                }
+            }
+            
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.updateGame();
+                this.drawGame();
+                requestAnimationFrame(this.gameLoop);
+            }
+        }
+        
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new PirateShipGame();
+        });
+        
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
