@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        #backButton:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions-content h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .instructions-content p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .instructions-content ul {
+            text-align: left;
+            margin: 20px auto;
+            max-width: 400px;
+        }
+
+        .instructions-content li {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .close-instructions {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+        }
+
+        .game-area.active {
+            display: flex;
+        }
+
+        .game-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .time-display {
+            font-size: 20px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .game-over.active {
+            display: flex;
+        }
+
+        .game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .game-over p {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .restart-button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .ammo-display {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-size: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                border-radius: 0;
+            }
+
+            .instructions-content {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .instructions-content h2 {
+                font-size: 24px;
+            }
+
+            .instructions-content p {
+                font-size: 16px;
+            }
+
+            .game-header {
+                padding: 15px;
+            }
+
+            .score-display {
+                font-size: 18px;
+            }
+
+            .time-display {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🎯 Bubble Shooter</h2>
+                    <p>Pop colorful balloons before time runs out!</p>
+                    <ul>
+                        <li>🎈 <strong>Small balloons</strong> = 100 points</li>
+                        <li>🎈 <strong>Medium balloons</strong> = 50 points</li>
+                        <li>🎈 <strong>Large balloons</strong> = 25 points</li>
+                        <li>🎯 Click to shoot</li>
+                        <li>⏱️ You have 60 seconds!</li>
+                        <li>🔫 Limited ammo - make every shot count!</li>
+                    </ul>
+                    <button class="close-instructions" id="closeInstructions">Start Game!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="game-header">
+                    <div class="score-display">Score: <span id="score">0</span></div>
+                    <div class="time-display">Time: <span id="timer">60</span>s</div>
+                </div>
+                <div class="ammo-display">Ammo: <span id="ammo">30</span></div>
+                <div class="canvas-container">
+                    <canvas id="gameCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <h2>Game Over!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Best Score: <span id="bestScore">0</span></p>
+                <button class="restart-button" id="restartButton">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BubbleShooter {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                this.score = 0;
+                this.timeLeft = 60;
+                this.ammo = 30;
+                this.balloons = [];
+                this.shots = [];
+                this.isRunning = false;
+                this.gameTimer = null;
+                this.spawnTimer = null;
+                this.bestScore = parseInt(localStorage.getItem('bubbleShooterBest') || '0');
+                
+                this.colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94', '#C7CEEA', '#FFDAC1'];
+                
+                this.setupEventListeners();
+            }
+
+            setupCanvas() {
+                const container = this.canvas.parentElement;
+                
+                // Set canvas to fill container
+                this.canvas.style.width = '100%';
+                this.canvas.style.height = '100%';
+                
+                // Get actual size
+                const rect = container.getBoundingClientRect();
+                const width = rect.width;
+                const height = rect.height;
+                
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = width * dpr;
+                this.canvas.height = height * dpr;
+                this.ctx.scale(dpr, dpr);
+                
+                this.canvasWidth = width;
+                this.canvasHeight = height;
+            }
+
+            setupEventListeners() {
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                document.getElementById('restartButton').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                this.canvas.addEventListener('click', (e) => {
+                    if (this.isRunning && this.ammo > 0) {
+                        this.shoot(e);
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && !this.gameArea.classList.contains('active')) {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    if (e.key === ' ' && this.gameOver.classList.contains('active')) {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                window.addEventListener('resize', () => {
+                    if (this.gameArea.classList.contains('active')) {
+                        this.setupCanvas();
+                    }
+                });
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.classList.add('active');
+                
+                // Setup canvas after game area is visible
+                setTimeout(() => {
+                    this.setupCanvas();
+                    this.startGame();
+                }, 50);
+            }
+
+            startGame() {
+                this.score = 0;
+                this.timeLeft = 60;
+                this.ammo = 30;
+                this.balloons = [];
+                this.shots = [];
+                this.isRunning = true;
+                
+                console.log('Game started! Canvas size:', this.canvasWidth, 'x', this.canvasHeight);
+                
+                this.updateDisplay();
+                
+                // Start game timer
+                this.gameTimer = setInterval(() => {
+                    this.timeLeft--;
+                    if (this.timeLeft <= 0 || this.ammo <= 0) {
+                        this.endGame();
+                    }
+                    this.updateDisplay();
+                }, 1000);
+
+                // Spawn balloons
+                this.spawnTimer = setInterval(() => {
+                    this.spawnBalloon();
+                }, 800);
+
+                // Initial balloons
+                for (let i = 0; i < 5; i++) {
+                    this.spawnBalloon();
+                }
+                
+                console.log('Initial balloons spawned:', this.balloons.length);
+
+                this.gameLoop();
+            }
+
+            spawnBalloon() {
+                const sizeType = Math.random();
+                let radius, points, speed;
+                
+                if (sizeType < 0.3) {
+                    // Small balloon - most points
+                    radius = 15 + Math.random() * 10;
+                    points = 100;
+                    speed = 1.5 + Math.random() * 1;
+                } else if (sizeType < 0.7) {
+                    // Medium balloon
+                    radius = 25 + Math.random() * 15;
+                    points = 50;
+                    speed = 1 + Math.random() * 0.5;
+                } else {
+                    // Large balloon - least points
+                    radius = 40 + Math.random() * 20;
+                    points = 25;
+                    speed = 0.5 + Math.random() * 0.5;
+                }
+
+                const balloon = {
+                    x: Math.random() * (this.canvasWidth - radius * 2) + radius,
+                    y: -radius,
+                    radius: radius,
+                    color: this.colors[Math.floor(Math.random() * this.colors.length)],
+                    speed: speed,
+                    points: points,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.05 + Math.random() * 0.05
+                };
+
+                this.balloons.push(balloon);
+            }
+
+            shoot(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                this.shots.push({ x, y, radius: 5, alpha: 1 });
+                this.ammo--;
+                this.updateDisplay();
+
+                // Check for hits
+                let hit = false;
+                for (let i = this.balloons.length - 1; i >= 0; i--) {
+                    const balloon = this.balloons[i];
+                    const dx = balloon.x - x;
+                    const dy = balloon.y - y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < balloon.radius) {
+                        this.score += balloon.points;
+                        this.balloons.splice(i, 1);
+                        this.playPopSound(balloon.radius);
+                        hit = true;
+                        
+                        // Create pop effect
+                        this.createPopEffect(balloon.x, balloon.y, balloon.color);
+                        break;
+                    }
+                }
+
+                if (!hit) {
+                    this.playMissSound();
+                }
+
+                this.updateDisplay();
+            }
+
+            createPopEffect(x, y, color) {
+                for (let i = 0; i < 8; i++) {
+                    const angle = (Math.PI * 2 * i) / 8;
+                    const speed = 2 + Math.random() * 2;
+                    this.shots.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        radius: 3,
+                        alpha: 1,
+                        color: color
+                    });
+                }
+            }
+
+            gameLoop() {
+                if (!this.isRunning) return;
+
+                this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+                // Update and draw balloons
+                for (let i = this.balloons.length - 1; i >= 0; i--) {
+                    const balloon = this.balloons[i];
+                    balloon.y += balloon.speed;
+                    balloon.wobble += balloon.wobbleSpeed;
+                    balloon.x += Math.sin(balloon.wobble) * 0.5;
+
+                    // Remove if off screen
+                    if (balloon.y - balloon.radius > this.canvasHeight) {
+                        this.balloons.splice(i, 1);
+                        continue;
+                    }
+
+                    this.drawBalloon(balloon);
+                }
+
+                // Update and draw shot effects
+                for (let i = this.shots.length - 1; i >= 0; i--) {
+                    const shot = this.shots[i];
+                    shot.alpha -= 0.02;
+                    
+                    if (shot.vx !== undefined) {
+                        shot.x += shot.vx;
+                        shot.y += shot.vy;
+                    }
+
+                    if (shot.alpha <= 0) {
+                        this.shots.splice(i, 1);
+                        continue;
+                    }
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
+                    this.ctx.fillStyle = shot.color || `rgba(255, 255, 255, ${shot.alpha})`;
+                    this.ctx.fill();
+                }
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            drawBalloon(balloon) {
+                // Balloon body
+                this.ctx.beginPath();
+                this.ctx.ellipse(
+                    balloon.x, 
+                    balloon.y, 
+                    balloon.radius, 
+                    balloon.radius * 1.2, 
+                    0, 
+                    0, 
+                    Math.PI * 2
+                );
+                
+                // Gradient
+                const gradient = this.ctx.createRadialGradient(
+                    balloon.x - balloon.radius * 0.3,
+                    balloon.y - balloon.radius * 0.3,
+                    0,
+                    balloon.x,
+                    balloon.y,
+                    balloon.radius * 1.2
+                );
+                gradient.addColorStop(0, this.lightenColor(balloon.color, 40));
+                gradient.addColorStop(1, balloon.color);
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+                
+                // Shine
+                this.ctx.beginPath();
+                this.ctx.ellipse(
+                    balloon.x - balloon.radius * 0.3,
+                    balloon.y - balloon.radius * 0.4,
+                    balloon.radius * 0.3,
+                    balloon.radius * 0.2,
+                    -0.3,
+                    0,
+                    Math.PI * 2
+                );
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                this.ctx.fill();
+
+                // String
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                this.ctx.lineWidth = 1;
+                this.ctx.beginPath();
+                this.ctx.moveTo(balloon.x, balloon.y + balloon.radius * 1.2);
+                this.ctx.lineTo(balloon.x, balloon.y + balloon.radius * 1.2 + 15);
+                this.ctx.stroke();
+            }
+
+            lightenColor(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = Math.min(255, (num >> 16) + amt);
+                const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+                const B = Math.min(255, (num & 0x0000FF) + amt);
+                return `rgb(${R}, ${G}, ${B})`;
+            }
+
+            playPopSound(radius) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Higher pitch for smaller balloons
+                oscillator.frequency.value = 800 - (radius * 5);
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }
+
+            playMissSound() {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 150;
+                oscillator.type = 'square';
+
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }
+
+            updateDisplay() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('timer').textContent = this.timeLeft;
+                document.getElementById('ammo').textContent = this.ammo;
+            }
+
+            endGame() {
+                this.isRunning = false;
+                clearInterval(this.gameTimer);
+                clearInterval(this.spawnTimer);
+
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('bubbleShooterBest', this.bestScore);
+                }
+
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('bestScore').textContent = this.bestScore;
+                this.gameOver.classList.add('active');
+            }
+
+            restartGame() {
+                this.gameOver.classList.remove('active');
+                this.startGame();
+            }
+        }
+
+        // Initialize game
+        const game = new BubbleShooter();
+
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

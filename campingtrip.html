@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camping Trip - Setup Your Camp!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #7FBC8C 100%);
+      color: #333;
+    }
+    
+    .game-wrapper {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    
+    .game-container {
+      width: min(1000px, 95vw);
+      height: min(700px, 90vh);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    #backButton {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    #backButton:hover {
+      background: #ff5252;
+      transform: translateY(-2px);
+    }
+    
+    #backButton:active {
+      transform: translateY(0);
+    }
+    
+    /* Header */
+    .game-header {
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .game-header h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+    
+    .score-display {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    /* Instructions Popup */
+    .instructions-popup {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    
+    .instructions-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 500px;
+      color: white;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .instructions-content h2 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    
+    .instructions-content p {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .instructions-content ul {
+      text-align: left;
+      margin: 15px 0;
+      padding-left: 20px;
+    }
+    
+    .instructions-content li {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    
+    .close-instructions {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .close-instructions:hover {
+      background: #ff5252;
+      transform: scale(1.05);
+    }
+    
+    /* Game Area */
+    .game-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    /* Scene Area (Drop Zone) */
+    .scene-area {
+      flex: 1;
+      background: linear-gradient(to bottom, 
+        #87CEEB 0%, 
+        #98D8E8 40%, 
+        #B8E6B8 60%, 
+        #7FBC8C 100%);
+      position: relative;
+      overflow: hidden;
+      margin: 10px;
+      border-radius: 15px;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Ground */
+    .ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: linear-gradient(to bottom, #8B7355 0%, #654321 100%);
+      border-top: 3px solid #5a3a1a;
+    }
+    
+    /* Grass overlay */
+    .grass {
+      position: absolute;
+      bottom: 30%;
+      left: 0;
+      right: 0;
+      height: 15px;
+      background: repeating-linear-gradient(
+        90deg,
+        #228B22,
+        #228B22 5px,
+        #32CD32 5px,
+        #32CD32 10px
+      );
+    }
+    
+    /* Sun */
+    .sun {
+      position: absolute;
+      top: 30px;
+      right: 50px;
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle, #FFD700 0%, #FFA500 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+    }
+    
+    /* Trees */
+    .tree {
+      position: absolute;
+      width: 80px;
+      height: 120px;
+    }
+    
+    .tree-trunk {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 15px;
+      height: 40px;
+      background: #8B4513;
+      border-radius: 3px;
+    }
+    
+    .tree-leaves {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 80px solid #228B22;
+    }
+    
+    .tree1 {
+      bottom: 30%;
+      left: 5%;
+    }
+    
+    .tree2 {
+      bottom: 30%;
+      right: 8%;
+    }
+    
+    /* Item Inventory (Bottom Panel) */
+    .item-inventory {
+      background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+      padding: 15px;
+      border-top: 3px solid #1a202c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      min-height: 140px;
+      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .inventory-item {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      cursor: grab;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    
+    .inventory-item:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    }
+    
+    .inventory-item.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+    
+    .inventory-item.placed {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    /* Placed Items in Scene */
+    .scene-item {
+      position: absolute;
+      font-size: 64px;
+      cursor: move;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: transform 0.1s ease;
+      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+      touch-action: none;
+    }
+    
+    .scene-item:hover {
+      transform: scale(1.05);
+    }
+    
+    .scene-item.dragging {
+      opacity: 0.8;
+      z-index: 100;
+    }
+    
+    /* Game Over Screen */
+    .game-over {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 998;
+    }
+    
+    .game-over-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .game-over-content h2 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+    
+    .game-over-content p {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    
+    .restart-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .restart-btn:hover {
+      background: #ff5252;
+      transform: scale(1.05);
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .game-header h1 {
+        font-size: 22px;
+      }
+      
+      .score-display {
+        font-size: 16px;
+      }
+      
+      .inventory-item {
+        width: 60px;
+        height: 60px;
+        font-size: 36px;
+      }
+      
+      .scene-item {
+        font-size: 48px;
+      }
+      
+      .item-inventory {
+        gap: 10px;
+        padding: 10px;
+        min-height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="backButton">← Back</button>
+  
+  <div class="game-wrapper">
+    <div class="game-container">
+      <!-- Instructions Popup -->
+      <div class="instructions-popup" id="instructionsPopup">
+        <div class="instructions-content">
+          <h2>🏕️ Camping Trip!</h2>
+          <p>Help set up the perfect camping site!</p>
+          <ul>
+            <li>Drag items from the bottom panel to the scene</li>
+            <li>Place all camping items to complete your campsite</li>
+            <li>You can rearrange items by dragging them around</li>
+            <li>Have fun creating your perfect camp! 🎪</li>
+          </ul>
+          <button class="close-instructions" id="closeInstructions">Start Camping!</button>
+        </div>
+      </div>
+      
+      <!-- Game Area -->
+      <div class="game-area" id="gameArea" style="display: none;">
+        <!-- Header -->
+        <div class="game-header">
+          <h1>🏕️ Camping Trip</h1>
+          <div class="score-display">Items Placed: <span id="itemsPlaced">0</span> / <span id="totalItems">0</span></div>
+        </div>
+        
+        <!-- Scene Area (Drop Zone) -->
+        <div class="scene-area" id="sceneArea">
+          <!-- Sun -->
+          <div class="sun"></div>
+          
+          <!-- Trees -->
+          <div class="tree tree1">
+            <div class="tree-leaves"></div>
+            <div class="tree-trunk"></div>
+          </div>
+          <div class="tree tree2">
+            <div class="tree-leaves"></div>
+            <div class="tree-trunk"></div>
+          </div>
+          
+          <!-- Grass -->
+          <div class="grass"></div>
+          
+          <!-- Ground -->
+          <div class="ground"></div>
+        </div>
+        
+        <!-- Item Inventory -->
+        <div class="item-inventory" id="itemInventory">
+          <!-- Items will be generated here -->
+        </div>
+      </div>
+      
+      <!-- Game Over Screen -->
+      <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+          <h2>🎉 Camp Complete!</h2>
+          <p>You've set up an amazing campsite!</p>
+          <p>All items placed successfully!</p>
+          <button class="restart-btn" id="restartBtn">Setup Another Camp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Game State
+    const campingItems = [
+      { emoji: '⛺', name: 'tent' },
+      { emoji: '🔥', name: 'campfire' },
+      { emoji: '🪵', name: 'logs' },
+      { emoji: '🏮', name: 'lantern' },
+      { emoji: '🎒', name: 'backpack' },
+      { emoji: '🪑', name: 'chair' },
+      { emoji: '🍖', name: 'food' },
+      { emoji: '🎣', name: 'fishing' }
+    ];
+    
+    let placedItemsCount = 0;
+    let draggedElement = null;
+    let offsetX = 0;
+    let offsetY = 0;
+    let isDraggingFromInventory = false;
+    
+    // DOM Elements
+    const instructionsPopup = document.getElementById('instructionsPopup');
+    const closeInstructions = document.getElementById('closeInstructions');
+    const gameArea = document.getElementById('gameArea');
+    const sceneArea = document.getElementById('sceneArea');
+    const itemInventory = document.getElementById('itemInventory');
+    const itemsPlacedSpan = document.getElementById('itemsPlaced');
+    const totalItemsSpan = document.getElementById('totalItems');
+    const gameOver = document.getElementById('gameOver');
+    const restartBtn = document.getElementById('restartBtn');
+    const backButton = document.getElementById('backButton');
+    
+    // Initialize Game
+    function init() {
+      totalItemsSpan.textContent = campingItems.length;
+      createInventoryItems();
+      
+      // Event listeners
+      closeInstructions.addEventListener('click', startGame);
+      restartBtn.addEventListener('click', restartGame);
+      backButton.addEventListener('click', () => {
+        window.location.href = 'home.html';
+      });
+      
+      // Keyboard controls
+      document.addEventListener('keydown', handleKeyPress);
+    }
+    
+    function startGame() {
+      instructionsPopup.style.display = 'none';
+      gameArea.style.display = 'flex';
+    }
+    
+    function handleKeyPress(e) {
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (instructionsPopup.style.display === 'flex') {
+          startGame();
+        } else if (gameOver.style.display === 'flex') {
+          restartGame();
+        }
+      }
+    }
+    
+    function createInventoryItems() {
+      itemInventory.innerHTML = '';
+      campingItems.forEach((item, index) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'inventory-item';
+        itemEl.textContent = item.emoji;
+        itemEl.dataset.itemName = item.name;
+        itemEl.dataset.itemIndex = index;
+        
+        // Mouse events
+        itemEl.addEventListener('mousedown', startDragFromInventory);
+        
+        // Touch events
+        itemEl.addEventListener('touchstart', startDragFromInventory, { passive: false });
+        
+        itemInventory.appendChild(itemEl);
+      });
+    }
+    
+    function startDragFromInventory(e) {
+      e.preventDefault();
+      
+      if (e.target.classList.contains('placed')) {
+        return;
+      }
+      
+      const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+      
+      // Create a clone for dragging
+      const original = e.target;
+      const clone = original.cloneNode(true);
+      clone.className = 'scene-item dragging';
+      clone.dataset.itemName = original.dataset.itemName;
+      
+      const rect = original.getBoundingClientRect();
+      offsetX = clientX - rect.left;
+      offsetY = clientY - rect.top;
+      
+      clone.style.left = `${clientX - offsetX}px`;
+      clone.style.top = `${clientY - offsetY}px`;
+      clone.style.position = 'fixed';
+      clone.style.pointerEvents = 'none';
+      
+      document.body.appendChild(clone);
+      draggedElement = clone;
+      isDraggingFromInventory = true;
+      original.classList.add('dragging');
+      
+      // Add move and end listeners
+      if (e.type === 'touchstart') {
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', endDrag);
+      } else {
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+      }
+    }
+    
+    function startDragFromScene(e) {
+      e.preventDefault();
+      
+      const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+      
+      draggedElement = e.target;
+      const rect = draggedElement.getBoundingClientRect();
+      offsetX = clientX - rect.left;
+      offsetY = clientY - rect.top;
+      
+      draggedElement.classList.add('dragging');
+      isDraggingFromInventory = false;
+      
+      // Add move and end listeners
+      if (e.type === 'touchstart') {
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', endDrag);
+      } else {
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+      }
+    }
+    
+    function drag(e) {
+      if (!draggedElement) return;
+      
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+      
+      if (isDraggingFromInventory) {
+        draggedElement.style.left = `${clientX - offsetX}px`;
+        draggedElement.style.top = `${clientY - offsetY}px`;
+      } else {
+        const sceneRect = sceneArea.getBoundingClientRect();
+        const x = clientX - sceneRect.left - offsetX;
+        const y = clientY - sceneRect.top - offsetY;
+        
+        draggedElement.style.left = `${x}px`;
+        draggedElement.style.top = `${y}px`;
+      }
+    }
+    
+    function endDrag(e) {
+      if (!draggedElement) return;
+      
+      const clientX = e.type === 'touchend' ? e.changedTouches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchend' ? e.changedTouches[0].clientY : e.clientY;
+      
+      const sceneRect = sceneArea.getBoundingClientRect();
+      const isOverScene = (
+        clientX >= sceneRect.left &&
+        clientX <= sceneRect.right &&
+        clientY >= sceneRect.top &&
+        clientY <= sceneRect.bottom
+      );
+      
+      if (isDraggingFromInventory) {
+        if (isOverScene) {
+          // Place item in scene
+          const x = clientX - sceneRect.left - offsetX;
+          const y = clientY - sceneRect.top - offsetY;
+          
+          draggedElement.style.position = 'absolute';
+          draggedElement.style.left = `${x}px`;
+          draggedElement.style.top = `${y}px`;
+          draggedElement.classList.remove('dragging');
+          
+          sceneArea.appendChild(draggedElement);
+          
+          // Add scene drag listeners
+          draggedElement.addEventListener('mousedown', startDragFromScene);
+          draggedElement.addEventListener('touchstart', startDragFromScene, { passive: false });
+          
+          // Mark inventory item as placed
+          const itemName = draggedElement.dataset.itemName;
+          const inventoryItems = itemInventory.querySelectorAll('.inventory-item');
+          inventoryItems.forEach(item => {
+            if (item.dataset.itemName === itemName && !item.classList.contains('placed')) {
+              item.classList.add('placed');
+              placedItemsCount++;
+              itemsPlacedSpan.textContent = placedItemsCount;
+              
+              // Check for completion
+              if (placedItemsCount === campingItems.length) {
+                setTimeout(showGameOver, 500);
+              }
+            }
+          });
+        } else {
+          // Remove the clone if not dropped on scene
+          draggedElement.remove();
+          // Remove dragging class from original
+          const inventoryItems = itemInventory.querySelectorAll('.inventory-item.dragging');
+          inventoryItems.forEach(item => item.classList.remove('dragging'));
+        }
+      } else {
+        // Moving existing item in scene
+        draggedElement.classList.remove('dragging');
+        
+        if (!isOverScene) {
+          // Remove from scene if dragged out
+          const itemName = draggedElement.dataset.itemName;
+          draggedElement.remove();
+          
+          // Restore inventory item
+          const inventoryItems = itemInventory.querySelectorAll('.inventory-item');
+          inventoryItems.forEach(item => {
+            if (item.dataset.itemName === itemName && item.classList.contains('placed')) {
+              item.classList.remove('placed');
+              placedItemsCount--;
+              itemsPlacedSpan.textContent = placedItemsCount;
+            }
+          });
+        }
+      }
+      
+      // Cleanup
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('mouseup', endDrag);
+      document.removeEventListener('touchmove', drag);
+      document.removeEventListener('touchend', endDrag);
+      
+      draggedElement = null;
+      isDraggingFromInventory = false;
+    }
+    
+    function showGameOver() {
+      gameOver.style.display = 'flex';
+      playSuccessSound();
+    }
+    
+    function restartGame() {
+      // Clear scene items
+      const sceneItems = sceneArea.querySelectorAll('.scene-item');
+      sceneItems.forEach(item => item.remove());
+      
+      // Reset inventory
+      placedItemsCount = 0;
+      itemsPlacedSpan.textContent = '0';
+      createInventoryItems();
+      
+      // Hide game over
+      gameOver.style.display = 'none';
+    }
+    
+    function playSuccessSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 587.33, 659.25, 783.99];
+        
+        notes.forEach((freq, i) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = freq;
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + i * 0.1);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+          
+          oscillator.start(audioContext.currentTime + i * 0.1);
+          oscillator.stop(audioContext.currentTime + i * 0.1 + 0.3);
+        });
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+    
+    // Mobile address bar hide fix
+    window.addEventListener("load", function() {
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+      }, 100);
+    });
+    
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Game Developer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(1200px, 95vw);
+            height: min(700px, 85vh);
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            color: #2c3e50;
+        }
+
+        #backButton:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            border-radius: 20px;
+        }
+
+        .instructions-content {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .instructions-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #ecf0f1;
+        }
+
+        .close-instructions {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: row;
+        }
+
+        .code-panel {
+            width: 40%;
+            background: #2c3e50;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 3px solid #34495e;
+        }
+
+        .code-panel h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .code-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .code-block {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: grab;
+            user-select: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .code-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .code-block.move { background: #e74c3c; }
+        .code-block.loop { background: #f39c12; }
+        .code-block.condition { background: #9b59b6; }
+        .code-block.action { background: #27ae60; }
+
+        .program-area {
+            background: #34495e;
+            border-radius: 10px;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px dashed #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .program-area.drag-over {
+            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .program-block {
+            background: rgba(255,255,255,0.1);
+            margin-bottom: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .program-block:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .remove-block {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #2ecc71;
+            transform: translateY(-2px);
+        }
+
+        .btn.stop {
+            background: #e74c3c;
+        }
+
+        .btn.stop:hover {
+            background: #c0392b;
+        }
+
+        .btn.clear {
+            background: #f39c12;
+        }
+
+        .btn.clear:hover {
+            background: #e67e22;
+        }
+
+        .game-world {
+            width: 60%;
+            background: #ecf0f1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .world-header {
+            background: #34495e;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .world-canvas {
+            flex: 1;
+            position: relative;
+            background: #2ecc71;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px);
+            background-size: 100px 100px;
+            overflow: hidden;
+        }
+
+        .character {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #3498db;
+            border-radius: 50%;
+            border: 6px solid #2980b9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            transition: all 0.5s ease;
+            z-index: 10;
+        }
+
+        .character::before {
+            content: '🤖';
+        }
+
+        .treasure {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: #f1c40f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border: 4px solid #f39c12;
+            animation: sparkle 2s infinite;
+        }
+
+        .treasure::before {
+            content: '💎';
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #e74c3c;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            border: 4px solid #c0392b;
+        }
+
+        .obstacle::before {
+            content: '🚫';
+        }
+
+        .status {
+            background: #34495e;
+            padding: 10px 15px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score {
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .message {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            text-align: center;
+            display: none;
+        }
+
+        .level-complete {
+            background: rgba(46, 204, 113, 0.95);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            text-align: center;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+
+
+        @media (max-width: 900px) {
+            .game-container {
+                flex-direction: column;
+                width: 95vw;
+                height: 95vh;
+            }
+            
+            .code-panel {
+                width: 100%;
+                height: 40%;
+                border-right: none;
+                border-bottom: 3px solid #34495e;
+            }
+            
+            .game-world {
+                width: 100%;
+                height: 60%;
+            }
+            
+            .code-blocks {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .code-block {
+                flex: 1;
+                min-width: calc(50% - 4px);
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🎮 Game Developer</h2>
+                    <p>Drag code blocks from the left panel into the program area to make your robot move!</p>
+                    <p><strong>Goal:</strong> Collect all diamonds 💎 while avoiding obstacles 🚫</p>
+                    <p><strong>Blocks:</strong><br>
+                    🔴 Move commands<br>
+                    🟡 Repeat loops</p>
+                    <p>Press <strong>Run</strong> to execute your program!</p>
+                    <button class="close-instructions" id="closeInstructions">Start Coding!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <!-- Code Panel -->
+                <div class="code-panel">
+                    <h3>📦 Code Blocks</h3>
+                    <div class="code-blocks">
+                        <div class="code-block move" draggable="true" data-command="move_up">Move Up ↑</div>
+                        <div class="code-block move" draggable="true" data-command="move_down">Move Down ↓</div>
+                        <div class="code-block move" draggable="true" data-command="move_left">Move Left ←</div>
+                        <div class="code-block move" draggable="true" data-command="move_right">Move Right →</div>
+                        <div class="code-block loop" draggable="true" data-command="repeat_3">Repeat 3 times 🔄</div>
+                        <div class="code-block loop" draggable="true" data-command="repeat_5">Repeat 5 times 🔄</div>
+                    </div>
+
+                    <h3>🔧 Your Program</h3>
+                    <div class="program-area" id="programArea">
+                        <p style="color: #bdc3c7; text-align: center; margin-top: 60px;">Drag blocks here to build your program!</p>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn" id="runBtn">▶ Run</button>
+                        <button class="btn stop" id="stopBtn">⏹ Stop</button>
+                        <button class="btn clear" id="clearBtn">🗑 Clear</button>
+                    </div>
+                </div>
+
+                <!-- Game World -->
+                <div class="game-world">
+                    <div class="world-header">
+                        <span>Level <span id="currentLevel">1</span> - Visual Programming Challenge</span>
+                    </div>
+                    <div class="world-canvas" id="worldCanvas">
+                        <div class="character" id="character"></div>
+                    </div>
+                    <div class="status">
+                        <div class="score">Score: <span id="score">0</span></div>
+                        <div>Treasures: <span id="treasuresLeft">3</span> left</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message" id="message"></div>
+            <div class="level-complete" id="levelComplete">
+                <h2>🎉 Level Complete!</h2>
+                <p>Amazing programming skills!</p>
+                <button class="btn" id="nextLevelBtn">Next Level</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class GameDeveloper {
+            constructor() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.programArea = document.getElementById('programArea');
+                this.character = document.getElementById('character');
+                this.worldCanvas = document.getElementById('worldCanvas');
+                this.message = document.getElementById('message');
+                this.levelComplete = document.getElementById('levelComplete');
+                
+                this.currentLevel = 1;
+                this.score = 0;
+                this.program = [];
+                this.isRunning = false;
+                this.characterPos = { x: 1, y: 1 };
+                this.originalPos = { x: 1, y: 1 }; // Store original position
+                this.treasures = [];
+                this.obstacles = [];
+                this.gridSize = 100; // Increased from 60 to 100 for 5x5 grid
+                this.originalTreasures = []; // Store original treasure positions
+                
+                this.initializeEvents();
+                this.setupLevel(1);
+            }
+
+            initializeEvents() {
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => this.hideInstructions());
+                
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Controls
+                document.getElementById('runBtn').addEventListener('click', () => this.runProgram());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stopProgram());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearProgram());
+                document.getElementById('nextLevelBtn').addEventListener('click', () => this.nextLevel());
+
+                // Drag and drop
+                this.setupDragAndDrop();
+
+                // Keyboard events
+                document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+            }
+
+            setupDragAndDrop() {
+                const codeBlocks = document.querySelectorAll('.code-block');
+                
+                codeBlocks.forEach(block => {
+                    block.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', block.dataset.command);
+                    });
+                    
+                    // Touch support for mobile
+                    block.addEventListener('click', () => {
+                        this.addBlockToProgram(block.dataset.command);
+                    });
+                });
+
+                this.programArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    this.programArea.classList.add('drag-over');
+                });
+
+                this.programArea.addEventListener('dragleave', () => {
+                    this.programArea.classList.remove('drag-over');
+                });
+
+                this.programArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.programArea.classList.remove('drag-over');
+                    const command = e.dataTransfer.getData('text/plain');
+                    this.addBlockToProgram(command);
+                });
+            }
+
+            addBlockToProgram(command) {
+                if (this.isRunning) return;
+
+                this.program.push(command);
+                this.updateProgramDisplay();
+                this.playSound(800, 100);
+            }
+
+            updateProgramDisplay() {
+                const commands = {
+                    'move_up': 'Move Up ↑',
+                    'move_down': 'Move Down ↓',
+                    'move_left': 'Move Left ←',
+                    'move_right': 'Move Right →',
+                    'repeat_3': 'Repeat 3 times 🔄',
+                    'repeat_5': 'Repeat 5 times 🔄'
+                };
+
+                if (this.program.length === 0) {
+                    this.programArea.innerHTML = '<p style="color: #bdc3c7; text-align: center; margin-top: 60px;">Drag blocks here to build your program!</p>';
+                } else {
+                    this.programArea.innerHTML = this.program.map((cmd, index) => 
+                        `<div class="program-block" data-index="${index}">
+                            ${index + 1}. ${commands[cmd] || cmd}
+                            <button class="remove-block" onclick="game.removeBlock(${index})">×</button>
+                        </div>`
+                    ).join('');
+                }
+            }
+
+            removeBlock(index) {
+                if (this.isRunning) return;
+                this.program.splice(index, 1);
+                this.updateProgramDisplay();
+                this.playSound(400, 100);
+            }
+
+            clearProgram() {
+                if (this.isRunning) return;
+                this.program = [];
+                this.updateProgramDisplay();
+                this.playSound(600, 100);
+                this.resetRobotAndTreasures();
+            }
+
+            async runProgram() {
+                if (this.isRunning || this.program.length === 0) return;
+                
+                // Reset robot and treasures to original positions
+                this.resetRobotAndTreasures();
+                
+                this.isRunning = true;
+                document.getElementById('runBtn').style.opacity = '0.5';
+                this.playSound(1000, 200);
+
+                // 1 second delay before robot starts moving
+                await this.delay(1000);
+
+                try {
+                    await this.executeProgram();
+                } catch (error) {
+                    this.showMessage("Program crashed! 💥", 2000);
+                }
+
+                this.isRunning = false;
+                document.getElementById('runBtn').style.opacity = '1';
+            }
+
+            async executeProgram() {
+                let i = 0;
+                while (i < this.program.length && this.isRunning) {
+                    const command = this.program[i];
+                    
+                    if (command === 'repeat_3' || command === 'repeat_5') {
+                        const repeatCount = command === 'repeat_3' ? 3 : 5;
+                        
+                        // Get the command immediately before this repeat block
+                        if (i > 0) {
+                            const commandToRepeat = this.program[i - 1];
+                            
+                            // Execute the previous command the specified number of times
+                            for (let r = 0; r < repeatCount && this.isRunning; r++) {
+                                await this.executeCommand(commandToRepeat);
+                                await this.delay(300);
+                            }
+                        }
+                    } else {
+                        await this.executeCommand(command);
+                        await this.delay(300);
+                    }
+                    i++;
+                }
+                
+                this.checkLevelComplete();
+            }
+
+            async executeCommand(command) {
+                switch (command) {
+                    case 'move_up':
+                        await this.moveCharacter(0, -1);
+                        break;
+                    case 'move_down':
+                        await this.moveCharacter(0, 1);
+                        break;
+                    case 'move_left':
+                        await this.moveCharacter(-1, 0);
+                        break;
+                    case 'move_right':
+                        await this.moveCharacter(1, 0);
+                        break;
+                    // repeat commands are handled in executeProgram
+                }
+            }
+
+            async moveCharacter(dx, dy) {
+                const newX = Math.max(0, Math.min(4, this.characterPos.x + dx)); // 5x5 grid (0-4)
+                const newY = Math.max(0, Math.min(4, this.characterPos.y + dy)); // 5x5 grid (0-4)
+                
+                // Check for obstacles
+                if (this.isObstacle(newX, newY)) {
+                    this.showMessage("Blocked by obstacle! 🚫", 1000);
+                    this.playSound(200, 300);
+                    return;
+                }
+                
+                this.characterPos.x = newX;
+                this.characterPos.y = newY;
+                
+                this.character.style.left = (this.characterPos.x * this.gridSize + 10) + 'px';
+                this.character.style.top = (this.characterPos.y * this.gridSize + 10) + 'px';
+                
+                this.playSound(600, 100);
+                
+                // Auto-collect treasures
+                this.collectTreasure();
+            }
+
+            isObstacle(x, y) {
+                return this.obstacles.some(obs => obs.x === x && obs.y === y);
+            }
+
+            collectTreasure() {
+                const treasureIndex = this.treasures.findIndex(t => 
+                    t.x === this.characterPos.x && t.y === this.characterPos.y
+                );
+                
+                if (treasureIndex !== -1) {
+                    const treasure = this.treasures[treasureIndex];
+                    this.treasures.splice(treasureIndex, 1);
+                    
+                    // Remove treasure from DOM
+                    const treasureElement = document.querySelector(`[data-treasure="${treasureIndex}"]`);
+                    if (treasureElement) {
+                        treasureElement.remove();
+                    }
+                    
+                    this.score += 100;
+                    this.updateScore();
+                    this.playSound(1200, 200);
+                    this.showMessage("Treasure collected! 💎 +100", 1000);
+                }
+            }
+
+            resetTreasures() {
+                // Clear existing treasures from DOM
+                this.worldCanvas.querySelectorAll('.treasure').forEach(el => el.remove());
+                
+                // Reset treasures array to original positions
+                this.treasures = [...this.originalTreasures];
+                
+                // Re-add treasure elements to DOM
+                this.treasures.forEach((treasure, index) => {
+                    const treasureEl = document.createElement('div');
+                    treasureEl.className = 'treasure';
+                    treasureEl.style.left = (treasure.x * this.gridSize + 15) + 'px';
+                    treasureEl.style.top = (treasure.y * this.gridSize + 15) + 'px';
+                    treasureEl.setAttribute('data-treasure', index);
+                    this.worldCanvas.appendChild(treasureEl);
+                });
+                
+                this.updateScore();
+            }
+
+            resetRobotAndTreasures() {
+                // Reset character to original position
+                this.characterPos = { ...this.originalPos };
+                this.character.style.left = (this.characterPos.x * this.gridSize + 10) + 'px';
+                this.character.style.top = (this.characterPos.y * this.gridSize + 10) + 'px';
+                
+                // Reset treasures to original positions
+                this.resetTreasures();
+            }
+
+            setupLevel(level) {
+                this.currentLevel = level;
+                document.getElementById('currentLevel').textContent = level;
+                
+                // Clear existing objects
+                this.worldCanvas.querySelectorAll('.treasure, .obstacle').forEach(el => el.remove());
+                
+                // Reset character position
+                this.characterPos = { x: 1, y: 1 };
+                this.originalPos = { x: 1, y: 1 };
+                this.character.style.left = (this.characterPos.x * this.gridSize + 10) + 'px';
+                this.character.style.top = (this.characterPos.y * this.gridSize + 10) + 'px';
+                
+                // Setup level-specific layout
+                this.treasures = [];
+                this.obstacles = [];
+                this.originalTreasures = []; // Reset original treasures
+                
+                switch (level) {
+                    case 1:
+                        this.addTreasure(4, 2);
+                        this.addObstacle(1, 3);
+                        this.addObstacle(2, 1);
+                        this.addObstacle(3, 1);
+                        break;
+                    case 2:
+                        this.addTreasure(1, 4);
+                        this.addTreasure(4, 3);
+                        this.addObstacle(3, 1);
+                        this.addObstacle(3, 2);
+                        this.addObstacle(3, 3);
+                        break;
+                    case 3:
+                        this.addTreasure(0, 2);
+                        this.addTreasure(3, 3);
+                        this.addTreasure(4, 1);
+                        this.addObstacle(1, 2);
+                        this.addObstacle(3, 1);
+                        this.addObstacle(2, 3);
+                        this.addObstacle(4, 0);
+                        break;
+                }
+                
+                // Store original treasure positions after setup
+                this.originalTreasures = [...this.treasures];
+                
+                this.updateScore();
+            }
+
+            addTreasure(x, y) {
+                this.treasures.push({ x, y });
+                const treasureEl = document.createElement('div');
+                treasureEl.className = 'treasure';
+                treasureEl.style.left = (x * this.gridSize + 15) + 'px';
+                treasureEl.style.top = (y * this.gridSize + 15) + 'px';
+                treasureEl.setAttribute('data-treasure', this.treasures.length - 1);
+                this.worldCanvas.appendChild(treasureEl);
+            }
+
+            addObstacle(x, y) {
+                this.obstacles.push({ x, y });
+                const obstacleEl = document.createElement('div');
+                obstacleEl.className = 'obstacle';
+                obstacleEl.style.left = (x * this.gridSize + 10) + 'px';
+                obstacleEl.style.top = (y * this.gridSize + 10) + 'px';
+                this.worldCanvas.appendChild(obstacleEl);
+            }
+
+            updateScore() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('treasuresLeft').textContent = this.treasures.length;
+            }
+
+            checkLevelComplete() {
+                if (this.treasures.length === 0) {
+                    this.playSound(1500, 500);
+                    this.levelComplete.style.display = 'block';
+                }
+            }
+
+            nextLevel() {
+                this.levelComplete.style.display = 'none';
+                this.currentLevel++;
+                if (this.currentLevel > 3) {
+                    this.showMessage("🏆 Congratulations! You've mastered visual programming!", 3000);
+                    this.currentLevel = 1;
+                }
+                this.setupLevel(this.currentLevel);
+                this.clearProgram();
+            }
+
+            stopProgram() {
+                this.isRunning = false;
+                document.getElementById('runBtn').style.opacity = '1';
+                this.playSound(400, 200);
+                this.resetRobotAndTreasures();
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'flex';
+                this.playSound(1000, 200);
+            }
+
+            handleKeyboard(e) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    if (this.instructionsPopup.style.display !== 'none') {
+                        this.hideInstructions();
+                    } else if (this.levelComplete.style.display === 'block') {
+                        this.nextLevel();
+                    } else if (!this.isRunning) {
+                        this.runProgram();
+                    }
+                }
+            }
+
+            showMessage(text, duration) {
+                this.message.textContent = text;
+                this.message.style.display = 'block';
+                setTimeout(() => {
+                    this.message.style.display = 'none';
+                }, duration);
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            playSound(frequency, duration) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported
+                }
+            }
+        }
+
+        // Global reference for removing blocks
+        let game;
+
+        // Initialize game
+        window.addEventListener('load', () => {
+            game = new GameDeveloper();
+            
+            // Mobile address bar hide fix
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

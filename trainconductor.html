@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Conductor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        #backButton:hover {
+            background: rgba(0,0,0,0.9);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .instructions-content {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .instructions-content h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #FFD700;
+        }
+
+        .instructions-content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .close-instructions {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .close-instructions:hover {
+            background: #45a049;
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        #gameGrid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .grid-cell {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .grid-cell:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .grid-cell.start {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .grid-cell.end {
+            background: #f44336;
+            color: white;
+            font-weight: bold;
+        }
+
+        .grid-cell.track {
+            background: #8B4513;
+            color: #FFD700;
+        }
+
+        .grid-cell.train {
+            background: #2196F3;
+            color: white;
+            font-size: 32px;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-btn:hover {
+            background: white;
+        }
+
+        .control-btn:disabled {
+            background: rgba(255,255,255,0.3);
+            cursor: not-allowed;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+        }
+
+        .game-over-content {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .game-over-content h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #FFD700;
+        }
+
+        .restart-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .restart-button:hover {
+            background: #45a049;
+        }
+
+        .track-horizontal {
+            background: #8B4513 !important;
+        }
+
+        .track-horizontal::after {
+            content: '━';
+            color: #FFD700;
+            font-size: 24px;
+        }
+
+        .track-vertical {
+            background: #8B4513 !important;
+        }
+
+        .track-vertical::after {
+            content: '┃';
+            color: #FFD700;
+            font-size: 24px;
+        }
+
+        .track-corner-ne {
+            background: #8B4513 !important;
+        }
+
+        .track-corner-ne::after {
+            content: '┗';
+            color: #FFD700;
+            font-size: 24px;
+        }
+
+        .track-corner-nw {
+            background: #8B4513 !important;
+        }
+
+        .track-corner-nw::after {
+            content: '┛';
+            color: #FFD700;
+            font-size: 24px;
+        }
+
+        .track-corner-se {
+            background: #8B4513 !important;
+        }
+
+        .track-corner-se::after {
+            content: '┏';
+            color: #FFD700;
+            font-size: 24px;
+        }
+
+        .track-corner-sw {
+            background: #8B4513 !important;
+        }
+
+        .track-corner-sw::after {
+            content: '┓';
+            color: #FFD700;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+    
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🚂 Train Conductor 🚂</h2>
+                    <p>Connect point A to point B by laying train tracks!</p>
+                    <p><strong>Click empty cells</strong> to place track pieces</p>
+                    <p><strong>Click "Start Train"</strong> to send the train</p>
+                    <p><strong>Complete the path</strong> to advance to the next level</p>
+                    <p><strong>Press SPACE</strong> to start or restart anytime!</p>
+                    <button class="close-instructions" id="closeInstructions">Start Building!</button>
+                </div>
+            </div>
+            
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div id="ui">
+                    <div>Level: <span id="level">1</span></div>
+                    <div>Score: <span id="score">0</span></div>
+                </div>
+
+                <div id="gameGrid"></div>
+
+                <div id="controls">
+                    <button class="control-btn" id="clearBtn">Clear Tracks</button>
+                    <button class="control-btn" id="startTrainBtn">Start Train</button>
+                    <button class="control-btn" id="nextLevelBtn" style="display: none;">Next Level</button>
+                </div>
+            </div>
+            
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>Train Derailed!</h2>
+                    <p>The tracks weren't connected properly!</p>
+                    <p>Try building a complete path from A to B.</p>
+                    <button class="restart-button" id="restartButton">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TrainConductor {
+            constructor() {
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.grid = document.getElementById('gameGrid');
+                
+                this.level = 1;
+                this.score = 0;
+                this.bestScore = parseInt(localStorage.getItem('trainConductorBest') || '0');
+                this.gameStarted = false;
+                this.trainMoving = false;
+                
+                this.gridWidth = 8;
+                this.gridHeight = 8;
+                this.cells = [];
+                this.startPos = null;
+                this.endPos = null;
+                this.trainPos = null;
+                this.path = [];
+                this.currentTrackType = 'horizontal';
+                
+                this.setupEventListeners();
+                this.initializeLevel();
+            }
+            
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+                
+                // Start/restart buttons
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.startGame();
+                });
+                
+                document.getElementById('restartButton').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Control buttons
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.clearTracks();
+                });
+                
+                document.getElementById('startTrainBtn').addEventListener('click', () => {
+                    this.startTrain();
+                });
+                
+                document.getElementById('nextLevelBtn').addEventListener('click', () => {
+                    this.nextLevel();
+                });
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' && this.instructionsPopup.style.display !== 'none') {
+                        e.preventDefault();
+                        this.startGame();
+                        return;
+                    }
+
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                        return;
+                    }
+                });
+            }
+            
+            startGame() {
+                this.gameStarted = true;
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+            }
+            
+            restartGame() {
+                this.trainMoving = false;
+                this.gameOver.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.initializeLevel();
+            }
+            
+            initializeLevel() {
+                this.createGrid();
+                this.generateLevel();
+                this.updateUI();
+            }
+            
+            createGrid() {
+                this.grid.innerHTML = '';
+                this.cells = [];
+                
+                for (let row = 0; row < this.gridHeight; row++) {
+                    this.cells[row] = [];
+                    for (let col = 0; col < this.gridWidth; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        cell.addEventListener('click', () => {
+                            this.handleCellClick(row, col);
+                        });
+                        
+                        this.grid.appendChild(cell);
+                        this.cells[row][col] = {
+                            element: cell,
+                            type: 'empty',
+                            trackType: null
+                        };
+                    }
+                }
+            }
+            
+            generateLevel() {
+                // Clear previous level
+                for (let row = 0; row < this.gridHeight; row++) {
+                    for (let col = 0; col < this.gridWidth; col++) {
+                        this.cells[row][col].type = 'empty';
+                        this.cells[row][col].trackType = null;
+                        this.cells[row][col].element.className = 'grid-cell';
+                        this.cells[row][col].element.textContent = '';
+                    }
+                }
+                
+                // Generate start and end positions
+                this.generateStartEnd();
+                
+                // Place start and end markers
+                this.cells[this.startPos.row][this.startPos.col].type = 'start';
+                this.cells[this.startPos.row][this.startPos.col].element.className = 'grid-cell start';
+                this.cells[this.startPos.row][this.startPos.col].element.textContent = 'A';
+                
+                this.cells[this.endPos.row][this.endPos.col].type = 'end';
+                this.cells[this.endPos.row][this.endPos.col].element.className = 'grid-cell end';
+                this.cells[this.endPos.row][this.endPos.col].element.textContent = 'B';
+                
+                // Reset train position
+                this.trainPos = { ...this.startPos };
+                this.path = [];
+                
+                // Reset buttons
+                document.getElementById('startTrainBtn').disabled = false;
+                document.getElementById('nextLevelBtn').style.display = 'none';
+            }
+            
+            generateStartEnd() {
+                // Start position on left side
+                this.startPos = {
+                    row: Math.floor(Math.random() * this.gridHeight),
+                    col: 0
+                };
+                
+                // End position on right side, but not same row as start
+                let endRow;
+                do {
+                    endRow = Math.floor(Math.random() * this.gridHeight);
+                } while (endRow === this.startPos.row && this.gridWidth < 6);
+                
+                this.endPos = {
+                    row: endRow,
+                    col: this.gridWidth - 1
+                };
+            }
+            
+            handleCellClick(row, col) {
+                if (!this.gameStarted || this.trainMoving) return;
+                
+                const cell = this.cells[row][col];
+                
+                // Can't place tracks on start/end positions
+                if (cell.type === 'start' || cell.type === 'end') return;
+                
+                // Toggle track
+                if (cell.type === 'empty') {
+                    // Determine track type based on position and neighbors
+                    const trackType = this.determineTrackType(row, col);
+                    cell.type = 'track';
+                    cell.trackType = trackType;
+                    cell.element.className = `grid-cell track-${trackType}`;
+                } else if (cell.type === 'track') {
+                    // Cycle through track types
+                    const types = ['horizontal', 'vertical', 'corner-ne', 'corner-nw', 'corner-se', 'corner-sw'];
+                    const currentIndex = types.indexOf(cell.trackType);
+                    const nextIndex = (currentIndex + 1) % types.length;
+                    cell.trackType = types[nextIndex];
+                    cell.element.className = `grid-cell track-${cell.trackType}`;
+                }
+            }
+            
+            determineTrackType(row, col) {
+                // Simple logic: default to horizontal, but can be changed by clicking
+                return 'horizontal';
+            }
+            
+            clearTracks() {
+                if (this.trainMoving) return;
+                
+                for (let row = 0; row < this.gridHeight; row++) {
+                    for (let col = 0; col < this.gridWidth; col++) {
+                        const cell = this.cells[row][col];
+                        if (cell.type === 'track') {
+                            cell.type = 'empty';
+                            cell.trackType = null;
+                            cell.element.className = 'grid-cell';
+                            cell.element.textContent = '';
+                        }
+                    }
+                }
+            }
+            
+            startTrain() {
+                if (this.trainMoving) return;
+                
+                this.trainMoving = true;
+                document.getElementById('startTrainBtn').disabled = true;
+                
+                // Reset train position
+                this.trainPos = { ...this.startPos };
+                this.path = [{ ...this.startPos }];
+                
+                // Start train animation
+                this.moveTrain();
+            }
+            
+            moveTrain() {
+                // Show train on current position
+                this.updateTrainDisplay();
+                
+                setTimeout(() => {
+                    // Find next position
+                    const nextPos = this.findNextPosition();
+                    
+                    if (!nextPos) {
+                        // Train derailed - no valid track
+                        this.trainFailed();
+                        return;
+                    }
+                    
+                    // Check if reached destination
+                    if (nextPos.row === this.endPos.row && nextPos.col === this.endPos.col) {
+                        this.trainPos = nextPos;
+                        this.updateTrainDisplay();
+                        this.levelComplete();
+                        return;
+                    }
+                    
+                    // Move train to next position
+                    this.trainPos = nextPos;
+                    this.path.push({ ...nextPos });
+                    
+                    // Continue moving
+                    this.moveTrain();
+                }, 500);
+            }
+            
+            findNextPosition() {
+                const current = this.trainPos;
+                const directions = [
+                    { row: -1, col: 0, name: 'north' },
+                    { row: 1, col: 0, name: 'south' },
+                    { row: 0, col: -1, name: 'west' },
+                    { row: 0, col: 1, name: 'east' }
+                ];
+                
+                // If we're at the start, find the first connected track
+                if (current.row === this.startPos.row && current.col === this.startPos.col) {
+                    for (const dir of directions) {
+                        const nextRow = current.row + dir.row;
+                        const nextCol = current.col + dir.col;
+                        
+                        if (this.isValidPosition(nextRow, nextCol)) {
+                            const nextCell = this.cells[nextRow][nextCol];
+                            if (nextCell.type === 'track' && this.trackConnects(nextRow, nextCol, dir.name)) {
+                                return { row: nextRow, col: nextCol };
+                            }
+                        }
+                    }
+                    return null;
+                }
+                
+                // Find connected track from current position
+                const currentCell = this.cells[current.row][current.col];
+                
+                for (const dir of directions) {
+                    const nextRow = current.row + dir.row;
+                    const nextCol = current.col + dir.col;
+                    
+                    if (this.isValidPosition(nextRow, nextCol)) {
+                        const nextCell = this.cells[nextRow][nextCol];
+                        
+                        // Check if we can reach the end
+                        if (nextRow === this.endPos.row && nextCol === this.endPos.col) {
+                            if (this.trackConnectsFromCurrent(current.row, current.col, dir.name)) {
+                                return { row: nextRow, col: nextCol };
+                            }
+                        }
+                        
+                        // Check if next cell has track and we haven't been there
+                        if (nextCell.type === 'track' && !this.hasVisited(nextRow, nextCol)) {
+                            if (this.trackConnectsFromCurrent(current.row, current.col, dir.name) &&
+                                this.trackConnects(nextRow, nextCol, this.oppositeDirection(dir.name))) {
+                                return { row: nextRow, col: nextCol };
+                            }
+                        }
+                    }
+                }
+                
+                return null;
+            }
+            
+            isValidPosition(row, col) {
+                return row >= 0 && row < this.gridHeight && col >= 0 && col < this.gridWidth;
+            }
+            
+            hasVisited(row, col) {
+                return this.path.some(pos => pos.row === row && pos.col === col);
+            }
+            
+            trackConnects(row, col, fromDirection) {
+                const cell = this.cells[row][col];
+                if (cell.type !== 'track') return false;
+                
+                const trackType = cell.trackType;
+                const connections = {
+                    'horizontal': ['east', 'west'],
+                    'vertical': ['north', 'south'],
+                    'corner-ne': ['north', 'east'],
+                    'corner-nw': ['north', 'west'],
+                    'corner-se': ['south', 'east'],
+                    'corner-sw': ['south', 'west']
+                };
+                
+                return connections[trackType]?.includes(fromDirection) || false;
+            }
+            
+            trackConnectsFromCurrent(row, col, toDirection) {
+                const cell = this.cells[row][col];
+                
+                // If current position is start, can connect in any direction
+                if (row === this.startPos.row && col === this.startPos.col) {
+                    return true;
+                }
+                
+                if (cell.type !== 'track') return false;
+                
+                const trackType = cell.trackType;
+                const connections = {
+                    'horizontal': ['east', 'west'],
+                    'vertical': ['north', 'south'],
+                    'corner-ne': ['north', 'east'],
+                    'corner-nw': ['north', 'west'],
+                    'corner-se': ['south', 'east'],
+                    'corner-sw': ['south', 'west']
+                };
+                
+                return connections[trackType]?.includes(toDirection) || false;
+            }
+            
+            oppositeDirection(direction) {
+                const opposites = {
+                    'north': 'south',
+                    'south': 'north',
+                    'east': 'west',
+                    'west': 'east'
+                };
+                return opposites[direction];
+            }
+            
+            updateTrainDisplay() {
+                // Clear previous train display
+                for (let row = 0; row < this.gridHeight; row++) {
+                    for (let col = 0; col < this.gridWidth; col++) {
+                        const cell = this.cells[row][col];
+                        if (cell.element.classList.contains('train')) {
+                            cell.element.classList.remove('train');
+                            if (cell.type === 'start') {
+                                cell.element.textContent = 'A';
+                            } else if (cell.type === 'end') {
+                                cell.element.textContent = 'B';
+                            } else {
+                                cell.element.textContent = '';
+                            }
+                        }
+                    }
+                }
+                
+                // Show train at current position
+                const trainCell = this.cells[this.trainPos.row][this.trainPos.col];
+                trainCell.element.classList.add('train');
+                trainCell.element.textContent = '🚂';
+            }
+            
+            trainFailed() {
+                this.trainMoving = false;
+                document.getElementById('startTrainBtn').disabled = false;
+                
+                // Clear train display
+                for (let row = 0; row < this.gridHeight; row++) {
+                    for (let col = 0; col < this.gridWidth; col++) {
+                        const cell = this.cells[row][col];
+                        if (cell.element.classList.contains('train')) {
+                            cell.element.classList.remove('train');
+                            if (cell.type === 'start') {
+                                cell.element.textContent = 'A';
+                            } else if (cell.type === 'end') {
+                                cell.element.textContent = 'B';
+                            } else {
+                                cell.element.textContent = '';
+                            }
+                        }
+                    }
+                }
+                
+                this.gameArea.style.display = 'none';
+                this.gameOver.style.display = 'flex';
+            }
+            
+            levelComplete() {
+                this.trainMoving = false;
+                this.score += 100 * this.level;
+                
+                // Update best score
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('trainConductorBest', this.bestScore.toString());
+                }
+                
+                this.updateUI();
+                
+                // Show next level button
+                document.getElementById('nextLevelBtn').style.display = 'block';
+            }
+            
+            nextLevel() {
+                this.level++;
+                document.getElementById('nextLevelBtn').style.display = 'none';
+                this.initializeLevel();
+            }
+            
+            updateUI() {
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('score').textContent = this.score;
+            }
+        }
+        
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new TrainConductor();
+            // Mobile address bar hide fix - REQUIRED
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

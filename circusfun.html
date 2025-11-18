@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Circus Fun - Juggling Master</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #87ceeb 0%, #f0e68c 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 4px solid #8b4513;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        /* Back Button */
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        #backButton:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        /* Instructions Popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .instructions-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions-content p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .close-instructions {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .close-instructions:hover {
+            background: #ff3742;
+            transform: scale(1.05);
+        }
+
+        /* Game Area */
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        /* Game Canvas */
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: transparent;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            z-index: 50;
+        }
+
+        .hud-item {
+            color: #333;
+        }
+
+        /* Performance Indicator */
+        .performance-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757 0%, #ffa502 50%, #2ed573 100%);
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Game Over Screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        .game-over-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #ff3742;
+            transform: scale(1.05);
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.9);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.7);
+        }
+
+        /* Tablet Controls */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .mobile-controls {
+                display: flex;
+            }
+            .hud {
+                font-size: 1rem;
+                gap: 20px;
+                padding: 10px 20px;
+            }
+        }
+
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
+        }
+
+        /* Circus Tent Effect */
+        .circus-tent {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: repeating-linear-gradient(
+                90deg,
+                #ff4757 0px,
+                #ff4757 30px,
+                #ffa502 30px,
+                #ffa502 60px
+            );
+            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%);
+        }
+
+        /* Crowd Effect */
+        .crowd {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(180deg, transparent 0%, rgba(139, 69, 19, 0.6) 100%);
+            z-index: 5;
+        }
+
+        /* Spotlight Effect */
+        .spotlight {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+
+    <!-- Tablet Controls -->
+    <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+        <button id="tabletLeft" class="tablet-btn">◀</button>
+        <button id="tabletRight" class="tablet-btn">▶</button>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Circus Atmosphere -->
+            <div class="circus-tent"></div>
+            <div class="spotlight"></div>
+            <div class="crowd"></div>
+
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🎪 Welcome to Circus Fun! 🎪</h2>
+                    <p>🎯 <strong>Goal:</strong> Keep all balls bouncing by catching them before they hit the ground!</p>
+                    <p>⬅️➡️ <strong>Move:</strong> Use arrow keys or A/D to move left and right</p>
+                    <p>⚡ <strong>Auto-Bounce:</strong> Balls bounce high when they hit you - plenty of time to catch others!</p>
+                    <p>🎪 <strong>5 Acts:</strong> Act 2=100pts, Act 3=200pts, Act 4=300pts, Act 5=400pts</p>
+                    <p>❌ <strong>Game Over:</strong> Only when ALL balls have fallen to the ground!</p>
+                    <button class="close-instructions" id="closeInstructions">Start the Show!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <canvas class="game-canvas" id="gameCanvas" width="900" height="600"></canvas>
+                
+                <!-- HUD -->
+                <div class="hud">
+                    <div class="hud-item">Act: <span id="currentAct">1</span></div>
+                    <div class="hud-item">Score: <span id="score">0</span></div>
+                    <div class="hud-item">Objects: <span id="objectCount">0</span></div>
+                </div>
+
+                <!-- Performance Bar -->
+                <div class="performance-bar">
+                    <div class="performance-fill" id="performanceFill"></div>
+                </div>
+
+                <!-- Mobile Controls -->
+                <div class="mobile-controls" id="mobileControls">
+                    <button class="control-btn" id="moveLeftBtn">◀</button>
+                    <button class="control-btn" id="catchBtn">🤹</button>
+                    <button class="control-btn" id="moveRightBtn">▶</button>
+                </div>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>🎭 Show's Over! 🎭</h2>
+                    <p id="finalMessage">The audience loved your performance!</p>
+                    <p>Final Score: <span id="finalScore">0</span></p>
+                    <p>Best Score: <span id="bestScore">0</span></p>
+                    <button class="restart-btn" id="restartBtn">Encore Performance!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CircusFun {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                
+                // Game state
+                this.isPlaying = false;
+                this.currentAct = 1;
+                this.score = 0;
+                this.bestScore = parseInt(localStorage.getItem('circusFunBest') || '0');
+                this.performance = 100; // Performance meter (0-100)
+                
+                // Player (juggler)
+                this.player = {
+                    x: this.canvas.width / 2,
+                    y: this.canvas.height - 100,
+                    width: 60,
+                    height: 80,
+                    speed: 5
+                };
+                
+                // Juggling objects
+                this.objects = [];
+                this.objectTypes = [
+                    { emoji: '🔴', color: '#ff4757', points: 10 },
+                    { emoji: '🟡', color: '#ffa502', points: 15 },
+                    { emoji: '🟢', color: '#2ed573', points: 20 },
+                    { emoji: '🔵', color: '#3742fa', points: 25 },
+                    { emoji: '🟣', color: '#9c88ff', points: 30 }
+                ];
+                
+                // Controls
+                this.keys = {};
+                this.lastCatchTime = 0;
+                this.comboCount = 0;
+                this.comboTimer = 0;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateDisplay();
+                document.getElementById('bestScore').textContent = this.bestScore;
+                
+                // Show instructions on start
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Restart button
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    if (this.gameArea.style.display === 'block') {
+                        this.keys[e.key.toLowerCase()] = true;
+                        if (e.key === ' ' || e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            this.attemptCatch();
+                        }
+                    }
+
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+
+                // Mobile controls
+                const moveLeftBtn = document.getElementById('moveLeftBtn');
+                const moveRightBtn = document.getElementById('moveRightBtn');
+                const catchBtn = document.getElementById('catchBtn');
+
+                moveLeftBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keys['arrowleft'] = true;
+                });
+                moveLeftBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keys['arrowleft'] = false;
+                });
+
+                moveRightBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.keys['arrowright'] = true;
+                });
+                moveRightBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.keys['arrowright'] = false;
+                });
+
+                catchBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.attemptCatch();
+                });
+
+                // Tablet controls
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+
+                tabletLeft.addEventListener('touchstart', (e) => {
+                    this.keys['arrowleft'] = true;
+                    e.preventDefault();
+                });
+                tabletLeft.addEventListener('touchend', (e) => {
+                    this.keys['arrowleft'] = false;
+                    e.preventDefault();
+                });
+
+                tabletRight.addEventListener('touchstart', (e) => {
+                    this.keys['arrowright'] = true;
+                    e.preventDefault();
+                });
+                tabletRight.addEventListener('touchend', (e) => {
+                    this.keys['arrowright'] = false;
+                    e.preventDefault();
+                });
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            startGame() {
+                this.isPlaying = true;
+                this.currentAct = 1;
+                this.score = 0;
+                this.performance = 100;
+                this.objects = [];
+                this.comboCount = 0;
+                this.comboTimer = 0;
+                this.gameStartTime = Date.now(); // Track when game started
+                
+                // Start with 2 balls for Act 1
+                this.spawnInitialObjects();
+                this.updateDisplay();
+                this.gameLoop();
+            }
+
+            spawnInitialObjects() {
+                const objectsToSpawn = Math.min(2 + this.currentAct - 1, 5); // 2, 3, 4 objects for acts 1, 2, 3
+                
+                for (let i = 0; i < objectsToSpawn; i++) {
+                    const typeIndex = Math.min(i, this.objectTypes.length - 1);
+                    this.spawnObject(typeIndex, i * 0.5); // Stagger spawning
+                }
+            }
+
+            spawnObject(typeIndex = 0, delay = 0) {
+                setTimeout(() => {
+                    const objectType = this.objectTypes[typeIndex];
+                    const object = {
+                        x: this.player.x + Math.random() * 60 - 30,
+                        y: this.player.y - 50,
+                        vx: (Math.random() - 0.5) * 1, // Half speed: was 2, now 1
+                        vy: -7.5 - Math.random() * 2.5, // Half speed: was -15 to -20, now -7.5 to -10
+                        gravity: 0.15, // Half speed: was 0.3, now 0.15
+                        type: objectType,
+                        radius: 15,
+                        rotation: 0,
+                        rotationSpeed: Math.random() * 0.1 + 0.025, // Half speed rotation
+                        caught: false,
+                        airTime: 0
+                    };
+                    this.objects.push(object);
+                }, delay * 1000);
+            }
+
+            gameLoop() {
+                if (!this.isPlaying) return;
+
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update() {
+                // Update player movement
+                if (this.keys['arrowleft'] || this.keys['a']) {
+                    this.player.x = Math.max(30, this.player.x - this.player.speed);
+                }
+                if (this.keys['arrowright'] || this.keys['d']) {
+                    this.player.x = Math.min(this.canvas.width - 30, this.player.x + this.player.speed);
+                }
+
+                // Update objects
+                this.objects.forEach((obj, index) => {
+                    obj.x += obj.vx;
+                    obj.y += obj.vy;
+                    obj.vy += obj.gravity;
+                    obj.rotation += obj.rotationSpeed;
+                    obj.airTime++;
+
+                    // Auto-catch when ball touches player - bounce up high
+                    const distance = Math.sqrt(
+                        Math.pow(obj.x - this.player.x, 2) + 
+                        Math.pow(obj.y - (this.player.y - 20), 2)
+                    );
+                    
+                    if (distance <= 40 && obj.vy > 0) { // Auto-catch falling objects near player
+                        // Bounce the ball up high instead of using processCatch
+                        obj.x = this.player.x + (Math.random() - 0.5) * 20; // Keep close to player
+                        obj.vx = (Math.random() - 0.5) * 1; // Gentle horizontal movement
+                        obj.vy = -10 - Math.random() * 3; // High bounce up
+                        obj.airTime = 0;
+                        
+                        // Add score and performance boost
+                        this.score += obj.type.points;
+                        this.performance = Math.min(100, this.performance + 2);
+                        this.playCatchSound();
+                        this.showScoreEffect(obj.type.points, false);
+                        return; // Skip other collision checks for this object
+                    }
+
+                    // Check if object fell too low
+                    if (obj.y > this.canvas.height + 50) {
+                        this.objects.splice(index, 1);
+                        this.performance = Math.max(0, this.performance - 10); // Less penalty
+                        this.playMissSound();
+                        
+                        // Don't respawn - let the ball count decrease naturally
+                    }
+                });
+
+                // Update combo timer
+                if (this.comboTimer > 0) {
+                    this.comboTimer--;
+                    if (this.comboTimer === 0) {
+                        this.comboCount = 0;
+                    }
+                }
+
+                // Check performance and act progression
+                this.updatePerformance();
+                this.checkActProgression();
+
+                // Game over check - only when all balls are gone AND game has been running for at least 3 seconds
+                const gameRunningTime = Date.now() - this.gameStartTime;
+                if (this.objects.length === 0 && this.isPlaying && gameRunningTime > 3000) {
+                    this.endGame();
+                }
+
+                this.updateDisplay();
+            }
+
+            attemptCatch() {
+                const currentTime = Date.now();
+                if (currentTime - this.lastCatchTime < 200) return; // Prevent spam clicking
+                
+                const catchRadius = 50;
+                let caughtObjects = [];
+                
+                this.objects.forEach((obj, index) => {
+                    const distance = Math.sqrt(
+                        Math.pow(obj.x - this.player.x, 2) + 
+                        Math.pow(obj.y - (this.player.y - 20), 2)
+                    );
+                    
+                    if (distance <= catchRadius && obj.vy > 0) { // Only catch falling objects
+                        caughtObjects.push({obj, index});
+                    }
+                });
+                
+                if (caughtObjects.length > 0) {
+                    this.processCatch(caughtObjects);
+                } else {
+                    // Missed catch
+                    this.performance = Math.max(0, this.performance - 5);
+                    this.playMissSound();
+                }
+                
+                this.lastCatchTime = currentTime;
+            }
+
+            processCatch(caughtObjects) {
+                let totalPoints = 0;
+                let perfectCatches = 0;
+                
+                caughtObjects.forEach(({obj, index}) => {
+                    // Calculate perfect catch bonus based on timing
+                    const perfectZone = Math.abs(obj.vy) < 3; // Sweet spot when object is at peak
+                    const airTimeBonus = Math.min(obj.airTime / 60, 2); // Bonus for keeping object in air longer
+                    
+                    let points = obj.type.points;
+                    if (perfectZone) {
+                        points *= 2;
+                        perfectCatches++;
+                        this.performance = Math.min(100, this.performance + 5);
+                    }
+                    points += Math.floor(points * airTimeBonus);
+                    
+                    totalPoints += points;
+                    
+                    // Relaunch object with gentler physics for kids
+                    obj.x = this.player.x + (Math.random() - 0.5) * 40;
+                    obj.y = this.player.y - 30;
+                    obj.vx = (Math.random() - 0.5) * 1.5; // Half speed: was 3, now 1.5
+                    obj.vy = -6 - Math.random() * 2 - (this.currentAct * 0.5); // Half speed: was -12 to -16, now -6 to -8
+                    obj.airTime = 0;
+                });
+                
+                // Combo system
+                if (caughtObjects.length > 1) {
+                    this.comboCount++;
+                    this.comboTimer = 120; // 2 seconds at 60fps
+                    totalPoints *= (1 + this.comboCount * 0.5);
+                    this.showComboEffect(caughtObjects.length);
+                }
+                
+                this.score += Math.floor(totalPoints);
+                this.performance = Math.min(100, this.performance + caughtObjects.length * 2);
+                
+                // Play appropriate sound
+                if (perfectCatches > 0) {
+                    this.playPerfectSound();
+                } else {
+                    this.playCatchSound();
+                }
+                
+                this.showScoreEffect(totalPoints, perfectCatches > 0);
+            }
+
+            updatePerformance() {
+                // Keep performance stable - only changes when balls are missed or caught
+                const performanceFill = document.getElementById('performanceFill');
+                performanceFill.style.width = this.performance + '%';
+            }
+
+            checkActProgression() {
+                // Advance to next act based on score and performance
+                const actThresholds = [0, 100, 200, 300, 400]; // Act 1=0, Act 2=100, Act 3=200, Act 4=300, Act 5=400
+                const nextActScore = actThresholds[this.currentAct];
+                
+                if (this.score >= nextActScore && this.performance > 70 && this.currentAct < 5) {
+                    this.currentAct++;
+                    this.performance = Math.min(100, this.performance + 20);
+                    this.showActTransition();
+                    
+                    // Add more balls with variety for each act
+                    this.addActBalls();
+                }
+            }
+
+            addActBalls() {
+                // Add different types and amounts of balls for each act
+                switch (this.currentAct) {
+                    case 2: // Act 2: Add 2 yellow and green balls
+                        this.spawnObject(1, 0.5); // Yellow ball
+                        this.spawnObject(2, 1.0); // Green ball
+                        break;
+                    case 3: // Act 3: Add 2 blue and purple balls
+                        this.spawnObject(3, 0.5); // Blue ball
+                        this.spawnObject(4, 1.0); // Purple ball
+                        break;
+                    case 4: // Act 4: Add 3 mixed high-value balls
+                        this.spawnObject(2, 0.5); // Green ball
+                        this.spawnObject(3, 1.0); // Blue ball
+                        this.spawnObject(4, 1.5); // Purple ball
+                        break;
+                    case 5: // Act 5: Add 4 premium balls for ultimate challenge
+                        this.spawnObject(1, 0.5); // Yellow ball
+                        this.spawnObject(2, 1.0); // Green ball
+                        this.spawnObject(3, 1.5); // Blue ball
+                        this.spawnObject(4, 2.0); // Purple ball
+                        break;
+                }
+            }
+
+            draw() {
+                // Clear canvas
+                this.ctx.fillStyle = 'rgba(135, 206, 235, 0.3)'; // Light blue with transparency
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw juggling objects
+                this.objects.forEach(obj => {
+                    this.ctx.save();
+                    this.ctx.translate(obj.x, obj.y);
+                    this.ctx.rotate(obj.rotation);
+                    
+                    // Draw shadow
+                    this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(2, 2, obj.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Draw object
+                    this.ctx.fillStyle = obj.type.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(0, 0, obj.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Add highlight
+                    this.ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(-5, -5, obj.radius * 0.3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.restore();
+                    
+                    // Draw emoji
+                    this.ctx.font = '24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(obj.type.emoji, obj.x, obj.y + 8);
+                });
+
+                // Draw player (juggler)
+                this.drawPlayer();
+
+                // Draw catch indicator
+                this.drawCatchIndicator();
+                
+                // Draw combo effect
+                if (this.comboTimer > 0) {
+                    this.drawComboEffect();
+                }
+            }
+
+            drawPlayer() {
+                const ctx = this.ctx;
+                const x = this.player.x;
+                const y = this.player.y;
+                
+                // Body
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(x - 15, y - 40, 30, 50);
+                
+                // Head
+                ctx.fillStyle = '#ffa502';
+                ctx.beginPath();
+                ctx.arc(x, y - 55, 20, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(x - 7, y - 60, 3, 0, Math.PI * 2); // Left eye
+                ctx.arc(x + 7, y - 60, 3, 0, Math.PI * 2); // Right eye
+                ctx.fill();
+                
+                // Eye highlights
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(x - 6, y - 61, 1, 0, Math.PI * 2); // Left eye highlight
+                ctx.arc(x + 8, y - 61, 1, 0, Math.PI * 2); // Right eye highlight
+                ctx.fill();
+                
+                // Mouth (happy smile)
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x, y - 50, 8, 0, Math.PI); // Smile arc
+                ctx.stroke();
+                
+                // Arms
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(x - 25, y - 35, 10, 30);
+                ctx.fillRect(x + 15, y - 35, 10, 30);
+                
+                // Hands
+                ctx.fillStyle = '#ffa502';
+                ctx.beginPath();
+                ctx.arc(x - 20, y - 5, 8, 0, Math.PI * 2);
+                ctx.arc(x + 20, y - 5, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Feet
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x - 15, y, 12, 8);
+                ctx.fillRect(x + 3, y, 12, 8);
+            }
+
+            drawCatchIndicator() {
+                // Draw catch zone
+                this.ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.beginPath();
+                this.ctx.arc(this.player.x, this.player.y - 20, 50, 0, Math.PI * 2);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+            }
+
+            drawComboEffect() {
+                if (this.comboCount > 0) {
+                    this.ctx.font = 'bold 24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillStyle = '#ff4757';
+                    this.ctx.strokeStyle = '#fff';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.strokeText(`COMBO x${this.comboCount}!`, this.canvas.width / 2, 100);
+                    this.ctx.fillText(`COMBO x${this.comboCount}!`, this.canvas.width / 2, 100);
+                }
+            }
+
+            showScoreEffect(points, isPerfect) {
+                // Create floating score text effect (simplified)
+                setTimeout(() => {
+                    this.ctx.font = 'bold 20px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillStyle = isPerfect ? '#2ed573' : '#ffa502';
+                    this.ctx.fillText(`+${Math.floor(points)}${isPerfect ? ' PERFECT!' : ''}`, this.player.x, this.player.y - 80);
+                }, 0);
+            }
+
+            showComboEffect(objectCount) {
+                // Visual combo effect
+                this.ctx.font = 'bold 18px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillStyle = '#ff4757';
+                this.ctx.fillText(`${objectCount} OBJECTS!`, this.player.x, this.player.y - 100);
+            }
+
+            showActTransition() {
+                // Show act transition message
+                setTimeout(() => {
+                    this.ctx.font = 'bold 36px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.strokeStyle = '#333';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.strokeText(`ACT ${this.currentAct}!`, this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.fillText(`ACT ${this.currentAct}!`, this.canvas.width / 2, this.canvas.height / 2);
+                }, 0);
+                
+                this.playActSound();
+            }
+
+            updateDisplay() {
+                document.getElementById('currentAct').textContent = this.currentAct;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('objectCount').textContent = this.objects.length;
+            }
+
+            endGame() {
+                this.isPlaying = false;
+                
+                // Update best score
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('circusFunBest', this.bestScore.toString());
+                }
+                
+                // Show game over screen
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('bestScore').textContent = this.bestScore;
+                
+                let message = "The audience loved your performance!";
+                if (this.score >= 3000) {
+                    message = "🌟 LEGENDARY PERFORMANCE! The crowd goes wild! 🌟";
+                } else if (this.score >= 1500) {
+                    message = "⭐ AMAZING SHOW! Standing ovation! ⭐";
+                } else if (this.score >= 500) {
+                    message = "👏 Great juggling! The audience is pleased! 👏";
+                } else {
+                    message = "Keep practicing! Every great juggler started somewhere! 💪";
+                }
+                
+                document.getElementById('finalMessage').textContent = message;
+                this.gameOver.style.display = 'flex';
+            }
+
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+
+            // Sound effects
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Ignore audio errors
+                }
+            }
+
+            playCatchSound() {
+                this.playSound(660, 0.2, 'triangle');
+            }
+
+            playPerfectSound() {
+                this.playSound(880, 0.3, 'sine');
+                setTimeout(() => this.playSound(1100, 0.2, 'sine'), 100);
+            }
+
+            playMissSound() {
+                this.playSound(220, 0.4, 'sawtooth');
+            }
+
+            playActSound() {
+                this.playSound(1000, 0.3, 'sine');
+                setTimeout(() => this.playSound(1200, 0.3, 'sine'), 200);
+                setTimeout(() => this.playSound(1400, 0.4, 'sine'), 400);
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new CircusFun();
+            
+            // Mobile address bar hide fix
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

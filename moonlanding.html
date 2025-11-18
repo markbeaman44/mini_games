@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Moon Landing - Side Scroller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #000011 0%, #001122 50%, #112233 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(1000px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #000033 0%, #000066 50%, #444466 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #666699;
+        }
+
+        #backButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            color: #333;
+        }
+
+        #backButton:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+
+        .instructions-content {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            border: 2px solid #666699;
+        }
+
+        .instructions-content h2 {
+            color: #87ceeb;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .instructions-content p {
+            margin-bottom: 15px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .close-instructions {
+            background: linear-gradient(145deg, #4169e1, #6495ed);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .close-instructions:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(65, 105, 225, 0.3);
+        }
+
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+
+        .game-viewport {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.1s ease;
+        }
+
+        .moon-surface {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 3000px;
+            height: 100px;
+            background: linear-gradient(180deg, #999999 0%, #777777 100%);
+            border-radius: 50px 50px 0 0;
+        }
+
+        .crater {
+            position: absolute;
+            background: #555555;
+            border-radius: 50%;
+            border: 2px solid #666666;
+        }
+
+        .moon-stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3000px;
+            height: 60%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            color: white;
+            font-size: 8px;
+        }
+
+        .astronaut {
+            position: absolute;
+            width: 40px;
+            height: 50px;
+            bottom: 100px;
+            left: 100px;
+            background: linear-gradient(145deg, #e6e6fa, #d3d3d3);
+            border-radius: 20px 20px 10px 10px;
+            transition: none;
+            z-index: 10;
+        }
+
+        .astronaut::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(145deg, #4169e1, #1e90ff);
+            border-radius: 50%;
+            border: 2px solid #87ceeb;
+        }
+
+        .astronaut::after {
+            content: '👨‍🚀';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+        }
+
+        .obstacle {
+            position: absolute;
+            background: #666666;
+            border-radius: 10px;
+            border: 2px solid #888888;
+        }
+
+        .rock {
+            background: linear-gradient(145deg, #666666, #444444);
+            border-radius: 50%;
+        }
+
+        .spaceship {
+            position: absolute;
+            bottom: 100px;
+            right: 50px;
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(145deg, #c0c0c0, #d3d3d3);
+            border-radius: 40px 40px 0 0;
+            z-index: 5;
+        }
+
+        .spaceship::before {
+            content: '🚀';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+        }
+
+        .ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+        }
+
+        .game-over-content {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #666699;
+        }
+
+        .game-over h2 {
+            color: #87ceeb;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(145deg, #4169e1, #6495ed);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(65, 105, 225, 0.3);
+        }
+
+        /* Tablet Controls */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+
+        .tablet-controls-right {
+            right: 0;
+            width: 80px;
+            align-items: flex-start;
+            padding-right: 10px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0;
+        }
+
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                border-radius: 10px;
+            }
+            
+            .instructions-content {
+                margin: 20px;
+                padding: 20px;
+            }
+            
+            .ui {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="backButton">← Back</button>
+    
+    <!-- Tablet Controls -->
+    <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+        <button id="tabletLeft" class="tablet-btn">◀</button>
+        <button id="tabletRight" class="tablet-btn">▶</button>
+    </div>
+    <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+        <button id="tabletUp" class="tablet-btn">⬆</button>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🌙 Moon Landing Mission</h2>
+                    <p><strong>Mission:</strong> Navigate your astronaut across the lunar surface to reach the spaceship!</p>
+                    <p><strong>Controls:</strong></p>
+                    <p>← → Arrow keys to move left/right</p>
+                    <p>↑ Arrow key or SPACE to jump (moon gravity!)</p>
+                    <p><strong>Objective:</strong> Use rocks and obstacles as platforms to jump higher and navigate the lunar terrain. Experience the low gravity of the moon!</p>
+                    <button class="close-instructions" id="closeInstructions">Start Mission!</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="game-viewport" id="gameViewport">
+                    <!-- Stars -->
+                    <div class="moon-stars" id="moonStars"></div>
+                    
+                    <!-- Moon Surface -->
+                    <div class="moon-surface" id="moonSurface"></div>
+                    
+                    <!-- Astronaut -->
+                    <div class="astronaut" id="astronaut"></div>
+                    
+                    <!-- Spaceship (goal) -->
+                    <div class="spaceship" id="spaceship"></div>
+                </div>
+                
+                <!-- UI -->
+                <div class="ui" id="gameUI">
+                    <div>Distance: <span id="distance">0</span>m</div>
+                    <div>Mission: Reach the spaceship!</div>
+                </div>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2 id="gameOverTitle">Mission Complete!</h2>
+                    <p id="gameOverMessage">You successfully reached the spaceship!</p>
+                    <p>Distance traveled: <span id="finalDistance">0</span>m</p>
+                    <button class="restart-btn" id="restartBtn">New Mission</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MoonLandingGame {
+            constructor() {
+                this.gameArea = document.getElementById('gameArea');
+                this.gameViewport = document.getElementById('gameViewport');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameOver = document.getElementById('gameOver');
+                this.astronaut = document.getElementById('astronaut');
+                this.spaceship = document.getElementById('spaceship');
+                this.moonSurface = document.getElementById('moonSurface');
+                this.moonStars = document.getElementById('moonStars');
+                this.distanceDisplay = document.getElementById('distance');
+                this.finalDistanceDisplay = document.getElementById('finalDistance');
+                this.gameOverTitle = document.getElementById('gameOverTitle');
+                this.gameOverMessage = document.getElementById('gameOverMessage');
+
+                this.player = {
+                    x: 100,
+                    y: 400, // Start on the moon surface
+                    velocityX: 0,
+                    velocityY: 0,
+                    speed: 3,
+                    jumpPower: 12,
+                    onGround: true,
+                    width: 40,
+                    height: 50
+                };
+
+                this.camera = {
+                    x: 0,
+                    targetX: 0
+                };
+
+                this.keys = {};
+                this.obstacles = [];
+                this.gameRunning = false;
+                this.gameWon = false;
+                this.gravity = 0.2; // Moon gravity (even lighter for slower falling)
+                this.groundY = 450; // Ground level (moon surface level)
+                this.worldWidth = 3000;
+                this.spaceshipX = 2800;
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.generateStars();
+                this.generateObstacles();
+                this.generateCraters();
+                this.positionSpaceship();
+                this.showInstructions();
+            }
+
+            setupEventListeners() {
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+
+                // Instructions
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+
+                // Restart
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restartGame();
+                });
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Game controls during gameplay
+                    if (this.gameRunning) {
+                        this.keys[e.key] = true;
+                        
+                        // Jump on spacebar or up arrow
+                        if ((e.key === ' ' || e.key === 'ArrowUp') && this.player.onGround) {
+                            e.preventDefault();
+                            this.jump();
+                        }
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
+                });
+
+                // Tablet controls
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+                const tabletUp = document.getElementById('tabletUp');
+
+                tabletLeft.addEventListener('touchstart', e => { 
+                    this.keys.ArrowLeft = true; 
+                    e.preventDefault(); 
+                });
+                tabletLeft.addEventListener('touchend', e => { 
+                    this.keys.ArrowLeft = false; 
+                    e.preventDefault(); 
+                });
+
+                tabletRight.addEventListener('touchstart', e => { 
+                    this.keys.ArrowRight = true; 
+                    e.preventDefault(); 
+                });
+                tabletRight.addEventListener('touchend', e => { 
+                    this.keys.ArrowRight = false; 
+                    e.preventDefault(); 
+                });
+
+                tabletUp.addEventListener('touchstart', e => {
+                    if (this.player.onGround) {
+                        this.jump();
+                    }
+                    e.preventDefault();
+                });
+            }
+
+            generateStars() {
+                for (let i = 0; i < 300; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.textContent = '✦';
+                    star.style.left = Math.random() * this.worldWidth + 'px';
+                    star.style.top = Math.random() * 60 + '%';
+                    star.style.animationDelay = Math.random() * 3 + 's';
+                    star.style.opacity = Math.random() * 0.8 + 0.2;
+                    this.moonStars.appendChild(star);
+                }
+            }
+
+            generateObstacles() {
+                // Clear existing obstacles
+                this.obstacles.forEach(obstacle => {
+                    if (obstacle.element && obstacle.element.parentNode) {
+                        obstacle.element.parentNode.removeChild(obstacle.element);
+                    }
+                });
+                this.obstacles = [];
+
+                // Generate rocks and obstacles of varying heights
+                const numObstacles = 15 + Math.floor(Math.random() * 10); // 15-24 obstacles
+                for (let i = 0; i < numObstacles; i++) {
+                    const obstacle = document.createElement('div');
+                    obstacle.className = 'obstacle rock';
+                    
+                    // Create obstacles of different heights - some small, some tall for platforming
+                    const isShort = Math.random() < 0.6;
+                    const width = isShort ? (20 + Math.random() * 30) : (30 + Math.random() * 40);
+                    const height = isShort ? (20 + Math.random() * 30) : (40 + Math.random() * 80);
+                    
+                    // Random position along the level, avoiding start and end areas
+                    const xPosition = 200 + Math.random() * 2400;
+                    
+                    obstacle.style.width = width + 'px';
+                    obstacle.style.height = height + 'px';
+                    obstacle.style.left = xPosition + 'px';
+                    obstacle.style.bottom = '100px';
+                    
+                    this.gameViewport.appendChild(obstacle);
+                    
+                    this.obstacles.push({
+                        element: obstacle,
+                        x: xPosition,
+                        y: this.groundY - height,
+                        width: width,
+                        height: height
+                    });
+                }
+            }
+
+            generateCraters() {
+                // Clear existing craters
+                const existingCraters = this.moonSurface.querySelectorAll('.crater');
+                existingCraters.forEach(crater => crater.remove());
+
+                // Generate craters on moon surface
+                const numCraters = 6 + Math.floor(Math.random() * 6); // 6-11 craters
+                for (let i = 0; i < numCraters; i++) {
+                    const crater = document.createElement('div');
+                    crater.className = 'crater';
+                    
+                    const width = 40 + Math.random() * 60;
+                    const height = width * 0.3;
+                    const xPosition = 300 + Math.random() * 2200;
+                    
+                    crater.style.width = width + 'px';
+                    crater.style.height = height + 'px';
+                    crater.style.left = xPosition + 'px';
+                    crater.style.bottom = '80px';
+                    
+                    this.moonSurface.appendChild(crater);
+                }
+            }
+
+            positionSpaceship() {
+                this.spaceship.style.left = this.spaceshipX + 'px';
+            }
+
+            showInstructions() {
+                this.instructionsPopup.style.display = 'flex';
+            }
+
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                this.startGame();
+            }
+
+            startGame() {
+                this.gameRunning = true;
+                this.gameLoop();
+            }
+
+            jump() {
+                if (this.player.onGround) {
+                    this.player.velocityY = -this.player.jumpPower;
+                    this.player.onGround = false;
+                    this.playSound(220, 200); // Jump sound
+                }
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+
+                this.updatePlayer();
+                this.updateCamera();
+                this.checkWinCondition();
+                this.updateUI();
+                this.render();
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            updatePlayer() {
+                // Horizontal movement
+                if (this.keys.ArrowLeft) {
+                    this.player.velocityX = Math.max(this.player.velocityX - 0.5, -this.player.speed);
+                } else if (this.keys.ArrowRight) {
+                    this.player.velocityX = Math.min(this.player.velocityX + 0.5, this.player.speed);
+                } else {
+                    this.player.velocityX *= 0.85; // Friction
+                }
+
+                // Apply gravity (moon gravity is lighter)
+                this.player.velocityY += this.gravity;
+
+                // Update horizontal position
+                this.player.x += this.player.velocityX;
+
+                // Update vertical position
+                this.player.y += this.player.velocityY;
+
+                // Check for ground or obstacle collision
+                this.handleCollisions();
+
+                // World boundaries
+                if (this.player.x < 0) {
+                    this.player.x = 0;
+                    this.player.velocityX = 0;
+                }
+                if (this.player.x > this.worldWidth - this.player.width) {
+                    this.player.x = this.worldWidth - this.player.width;
+                    this.player.velocityX = 0;
+                }
+            }
+
+            updateCamera() {
+                // Camera follows player smoothly
+                this.camera.targetX = this.player.x - 200;
+                
+                // Smooth camera movement
+                this.camera.x += (this.camera.targetX - this.camera.x) * 0.1;
+                
+                // Camera boundaries
+                if (this.camera.x < 0) this.camera.x = 0;
+                if (this.camera.x > this.worldWidth - 1000) {
+                    this.camera.x = this.worldWidth - 1000;
+                }
+            }
+
+            handleCollisions() {
+                this.player.onGround = false;
+                let groundLevel = this.groundY;
+
+                // Check if player should be on the ground
+                const playerBottom = this.player.y + this.player.height;
+                if (playerBottom >= groundLevel) {
+                    this.player.y = groundLevel - this.player.height;
+                    this.player.velocityY = 0;
+                    this.player.onGround = true;
+                }
+
+                // Check collisions with obstacles
+                for (let obstacle of this.obstacles) {
+                    const playerLeft = this.player.x;
+                    const playerRight = this.player.x + this.player.width;
+                    const playerTop = this.player.y;
+                    const playerBottomPos = this.player.y + this.player.height;
+
+                    const obstacleLeft = obstacle.x;
+                    const obstacleRight = obstacle.x + obstacle.width;
+                    const obstacleTop = obstacle.y;
+                    const obstacleBottom = obstacle.y + obstacle.height;
+
+                    // Check if player overlaps horizontally with obstacle
+                    const horizontalOverlap = playerRight > obstacleLeft + 5 && playerLeft < obstacleRight - 5;
+
+                    if (horizontalOverlap) {
+                        // Check if player is landing on top of obstacle
+                        if (playerBottomPos >= obstacleTop && playerTop < obstacleTop && this.player.velocityY >= 0) {
+                            // Player is on top of obstacle
+                            this.player.y = obstacleTop - this.player.height;
+                            this.player.velocityY = 0;
+                            this.player.onGround = true;
+                        }
+                    }
+                }
+            }
+
+            isPlayerOnObstacle(playerRect, obstacle) {
+                // Check if player is horizontally aligned with obstacle
+                const horizontalOverlap = playerRect.x < obstacle.x + obstacle.width && 
+                                        playerRect.x + playerRect.width > obstacle.x;
+                
+                // Check if player is just above the obstacle (within landing range)
+                const verticalOverlap = playerRect.y + playerRect.height >= obstacle.y - 5 && 
+                                      playerRect.y + playerRect.height <= obstacle.y + 20;
+                
+                return horizontalOverlap && verticalOverlap;
+            }
+
+            checkCollisions() {
+                // This method is now just for checking win condition
+                // Collision handling moved to handleCollisions()
+            }
+
+            checkWinCondition() {
+                if (this.player.x >= this.spaceshipX - 50 && !this.gameWon) {
+                    this.gameWon = true;
+                    this.gameRunning = false;
+                    this.showGameOver(true);
+                }
+            }
+
+            updateUI() {
+                const distance = Math.floor(this.player.x / 10);
+                this.distanceDisplay.textContent = distance;
+            }
+
+            render() {
+                // Update astronaut position
+                this.astronaut.style.left = this.player.x + 'px';
+                // Convert game coordinate to CSS bottom position
+                // Game Y=0 is top, but we want player at Y=400 to be on the moon surface
+                const cssBottom = (this.groundY - this.player.y - this.player.height + 100) + 'px';
+                this.astronaut.style.bottom = cssBottom;
+
+                // Update camera position
+                this.gameViewport.style.transform = `translateX(-${this.camera.x}px)`;
+            }
+
+            showGameOver(won) {
+                const distance = Math.floor(this.player.x / 10);
+                this.finalDistanceDisplay.textContent = distance;
+                
+                if (won) {
+                    this.gameOverTitle.textContent = '🎉 Mission Accomplished!';
+                    this.gameOverMessage.textContent = 'You successfully reached the spaceship and completed your lunar mission!';
+                    this.playSound(440, 500); // Victory sound
+                } else {
+                    this.gameOverTitle.textContent = '💥 Mission Failed';
+                    this.gameOverMessage.textContent = 'You hit an obstacle! Try again.';
+                }
+                
+                this.gameOver.style.display = 'flex';
+            }
+
+            restartGame() {
+                // Reset game state
+                this.gameRunning = false;
+                this.gameWon = false;
+                this.player.x = 100;
+                this.player.y = 400; // Start on moon surface
+                this.player.velocityX = 0;
+                this.player.velocityY = 0;
+                this.player.onGround = true;
+                this.camera.x = 0;
+                this.camera.targetX = 0;
+                
+                // Regenerate obstacles and craters for new layout
+                this.generateObstacles();
+                this.generateCraters();
+                
+                // Hide game over screen
+                this.gameOver.style.display = 'none';
+                
+                // Start game again
+                this.startGame();
+            }
+
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = type;
+
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported, continue silently
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        let game;
+        window.addEventListener('load', () => {
+            game = new MoonLandingGame();
+            
+            // Mobile address bar hide fix
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

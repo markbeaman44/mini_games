@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Chef Escape - Mini Games Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFE5B4 0%, #FFCCCB 50%, #FFA07A 100%);
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            color: #333;
+        }
+
+        .game-wrapper {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            width: min(900px, 95vw);
+            height: min(600px, 85vh);
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Back button */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.95);
+            color: #FF6347;
+            border: 2px solid #FF6347;
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .back-btn:hover {
+            background: #FF6347;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Instructions popup */
+        .instructions-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .instructions-content {
+            background: linear-gradient(135deg, #FFE5B4, #FFCCCB);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .instructions-content h2 {
+            color: #FF6347;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .instructions-content p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .close-instructions {
+            background: #FF6347;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .close-instructions:hover {
+            background: #E5533D;
+            transform: translateY(-2px);
+        }
+
+        /* Game area */
+        .game-area {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: none;
+        }
+
+        /* Score display */
+        .score-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FF6347;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Game canvas */
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Game over screen */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .game-over-content {
+            background: linear-gradient(135deg, #FFE5B4, #FFCCCB);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .game-over-content h2 {
+            color: #FF6347;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        .game-over-content p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .restart-btn {
+            background: #FF6347;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .restart-btn:hover {
+            background: #E5533D;
+            transform: translateY(-2px);
+        }
+
+        /* Tablet Controls Styles */
+        .tablet-controls {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: none;
+            z-index: 999;
+            pointer-events: none;
+        }
+        
+        .tablet-controls-left {
+            left: 0;
+            width: 150px;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            padding-left: 30px;
+        }
+        
+        .tablet-controls-right {
+            right: 0;
+            width: 80px;
+            align-items: flex-start;
+            padding-right: 10px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .tablet-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            font-size: 28px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+            margin: 0;
+            color: #FF6347;
+        }
+
+        @media (min-width: 720px) and (max-width: 1285px) {
+            .tablet-controls {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 719px), (min-width: 1286px) {
+            .tablet-controls {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" id="backButton">← Back to Games</button>
+    
+    <!-- Tablet Controls -->
+    <div id="tabletControlsLeft" class="tablet-controls tablet-controls-left">
+        <button id="tabletLeft" class="tablet-btn">◀</button>
+        <button id="tabletRight" class="tablet-btn">▶</button>
+    </div>
+    <div id="tabletControlsRight" class="tablet-controls tablet-controls-right">
+        <button id="tabletUp" class="tablet-btn">⬆</button>
+        <button id="tabletDown" class="tablet-btn">⬇</button>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Instructions Popup -->
+            <div class="instructions-popup" id="instructionsPopup">
+                <div class="instructions-content">
+                    <h2>🍕 Pizza Chef Escape! 🏃‍♂️</h2>
+                    <p><strong>Oh no!</strong> You're a slice of pizza that came to life, and the angry chef is chasing you with a knife!</p>
+                    <p><strong>🏃‍♂️ Run for your life!</strong> Use arrow keys or WASD to move around the kitchen.</p>
+                    <p><strong>🔪 Avoid the Chef!</strong> Don't let him catch you or it's game over!</p>
+                    <p><strong>⭐ Collect Power-ups:</strong> Grab the golden cheese to slow down the chef temporarily!</p>
+                    <button class="close-instructions" id="closeInstructions">Start Running! 🍕</button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div class="game-area" id="gameArea">
+                <div class="score-display" id="scoreDisplay">
+                    Survival Time: <span id="timeScore">0</span>s | Best: <span id="bestScore">0</span>s
+                </div>
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div class="game-over" id="gameOver">
+                <div class="game-over-content">
+                    <h2>🔪 Caught by the Chef! 🍕</h2>
+                    <p>You survived for <span id="finalTime">0</span> seconds!</p>
+                    <p id="newRecord" style="display: none; color: #FFD700; font-weight: bold;">🏆 New Best Time!</p>
+                    <button class="restart-btn" id="restartButton">Try Again! 🍕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PizzaChefGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.instructionsPopup = document.getElementById('instructionsPopup');
+                this.gameArea = document.getElementById('gameArea');
+                this.gameOver = document.getElementById('gameOver');
+                this.scoreDisplay = document.getElementById('scoreDisplay');
+                
+                // Game state
+                this.gameRunning = false;
+                this.startTime = 0;
+                this.bestTime = parseInt(localStorage.getItem('pizzaChefBest') || '0');
+                
+                // Update best score display
+                document.getElementById('bestScore').textContent = this.bestTime;
+                
+                // Keyboard state
+                this.keys = {};
+                
+                // Game objects - Initialize before calling initGame()
+                this.pizza = {
+                    x: 100,
+                    y: 100,
+                    size: 25,
+                    speed: 4,
+                    color: '#FFD700'
+                };
+                
+                this.chef = {
+                    x: 700,
+                    y: 400,
+                    size: 30,
+                    speed: 2,
+                    color: '#FFFFFF',
+                    baseSpeed: 2,
+                    speedIncrease: 0.002
+                };
+                
+                this.powerups = [];
+                this.powerupSpawnTimer = 0;
+                this.chefSlowedUntil = 0;
+                
+                this.gameLoop = this.gameLoop.bind(this);
+                
+                this.setupCanvas();
+                this.initGame();
+                this.bindEvents();
+            }
+            
+            setupCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth || 800;
+                this.canvas.height = container.clientHeight || 600;
+                
+                // Ensure minimum size
+                if (this.canvas.width < 400) this.canvas.width = 800;
+                if (this.canvas.height < 300) this.canvas.height = 600;
+            }
+            
+            initGame() {
+                this.pizza.x = 100;
+                this.pizza.y = 100;
+                this.chef.x = this.canvas.width - 100;
+                this.chef.y = this.canvas.height - 100;
+                this.chef.speed = this.chef.baseSpeed;
+                this.powerups = [];
+                this.powerupSpawnTimer = 0;
+                this.chefSlowedUntil = 0;
+            }
+            
+            bindEvents() {
+                // Instructions close
+                document.getElementById('closeInstructions').addEventListener('click', () => {
+                    this.hideInstructions();
+                });
+                
+                // Back button
+                document.getElementById('backButton').addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+                
+                // Restart button
+                document.getElementById('restartButton').addEventListener('click', () => {
+                    this.restartGame();
+                });
+                
+                // Keyboard events
+                document.addEventListener('keydown', (e) => {
+                    // Handle spacebar for instructions popup
+                    if (e.key === ' ' && this.instructionsPopup.style.display === 'flex') {
+                        e.preventDefault();
+                        this.hideInstructions();
+                        return;
+                    }
+
+                    // Game controls during gameplay
+                    if (this.gameRunning) {
+                        this.keys[e.key] = true;
+                    }
+
+                    // Handle spacebar for game over
+                    if (e.key === ' ' && this.gameOver.style.display === 'flex') {
+                        e.preventDefault();
+                        this.restartGame();
+                    }
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
+                });
+                
+                // Tablet controls event listeners
+                const tabletLeft = document.getElementById('tabletLeft');
+                const tabletRight = document.getElementById('tabletRight');
+                const tabletUp = document.getElementById('tabletUp');
+                const tabletDown = document.getElementById('tabletDown');
+
+                tabletLeft.addEventListener('touchstart', e => { 
+                    this.keys.ArrowLeft = true; 
+                    this.keys['a'] = true;
+                    e.preventDefault(); 
+                });
+                tabletLeft.addEventListener('touchend', e => { 
+                    this.keys.ArrowLeft = false; 
+                    this.keys['a'] = false;
+                    e.preventDefault(); 
+                });
+                tabletRight.addEventListener('touchstart', e => { 
+                    this.keys.ArrowRight = true; 
+                    this.keys['d'] = true;
+                    e.preventDefault(); 
+                });
+                tabletRight.addEventListener('touchend', e => { 
+                    this.keys.ArrowRight = false; 
+                    this.keys['d'] = false;
+                    e.preventDefault(); 
+                });
+                tabletUp.addEventListener('touchstart', e => {
+                    this.keys.ArrowUp = true;
+                    this.keys['w'] = true;
+                    e.preventDefault();
+                });
+                tabletUp.addEventListener('touchend', e => {
+                    this.keys.ArrowUp = false;
+                    this.keys['w'] = false;
+                    e.preventDefault();
+                });
+                tabletDown.addEventListener('touchstart', e => { 
+                    this.keys.ArrowDown = true; 
+                    this.keys['s'] = true;
+                    e.preventDefault(); 
+                });
+                tabletDown.addEventListener('touchend', e => { 
+                    this.keys.ArrowDown = false; 
+                    this.keys['s'] = false;
+                    e.preventDefault(); 
+                });
+            }
+            
+            hideInstructions() {
+                this.instructionsPopup.style.display = 'none';
+                this.gameArea.style.display = 'block';
+                
+                // Ensure canvas is properly sized after showing game area
+                setTimeout(() => {
+                    this.resizeCanvas();
+                    this.startGame();
+                }, 50);
+            }
+            
+            startGame() {
+                // Ensure canvas is ready
+                if (this.canvas.width === 0 || this.canvas.height === 0) {
+                    this.resizeCanvas();
+                }
+                
+                this.gameRunning = true;
+                this.startTime = Date.now();
+                this.initGame();
+                this.gameLoop();
+            }
+            
+            restartGame() {
+                this.gameOver.style.display = 'none';
+                this.startGame();
+            }
+            
+            updateGame() {
+                if (!this.gameRunning) return;
+                
+                const currentTime = Date.now();
+                const elapsedTime = Math.floor((currentTime - this.startTime) / 1000);
+                
+                // Update score display
+                document.getElementById('timeScore').textContent = elapsedTime;
+                
+                // Handle pizza movement
+                if (this.keys.ArrowLeft || this.keys['a'] || this.keys['A']) {
+                    this.pizza.x = Math.max(this.pizza.size, this.pizza.x - this.pizza.speed);
+                }
+                if (this.keys.ArrowRight || this.keys['d'] || this.keys['D']) {
+                    this.pizza.x = Math.min(this.canvas.width - this.pizza.size, this.pizza.x + this.pizza.speed);
+                }
+                if (this.keys.ArrowUp || this.keys['w'] || this.keys['W']) {
+                    this.pizza.y = Math.max(this.pizza.size, this.pizza.y - this.pizza.speed);
+                }
+                if (this.keys.ArrowDown || this.keys['s'] || this.keys['S']) {
+                    this.pizza.y = Math.min(this.canvas.height - this.pizza.size, this.pizza.y + this.pizza.speed);
+                }
+                
+                // Update chef movement (chase pizza)
+                const dx = this.pizza.x - this.chef.x;
+                const dy = this.pizza.y - this.chef.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    let currentSpeed = this.chef.speed;
+                    
+                    // Check if chef is slowed by powerup
+                    if (currentTime < this.chefSlowedUntil) {
+                        currentSpeed *= 0.3; // Slow chef to 30% speed
+                    }
+                    
+                    this.chef.x += (dx / distance) * currentSpeed;
+                    this.chef.y += (dy / distance) * currentSpeed;
+                }
+                
+                // Increase chef speed over time
+                this.chef.speed += this.chef.speedIncrease;
+                
+                // Spawn powerups
+                this.powerupSpawnTimer--;
+                if (this.powerupSpawnTimer <= 0) {
+                    this.spawnPowerup();
+                    this.powerupSpawnTimer = 300 + Math.random() * 300; // 5-10 seconds at 60fps
+                }
+                
+                // Update powerups
+                this.powerups.forEach((powerup, index) => {
+                    // Check collision with pizza
+                    const powerupDx = this.pizza.x - powerup.x;
+                    const powerupDy = this.pizza.y - powerup.y;
+                    const powerupDistance = Math.sqrt(powerupDx * powerupDx + powerupDy * powerupDy);
+                    
+                    if (powerupDistance < this.pizza.size + powerup.size) {
+                        // Collected powerup
+                        this.chefSlowedUntil = currentTime + 3000; // Slow chef for 3 seconds
+                        this.powerups.splice(index, 1);
+                        this.playSound(800, 200, 'sine'); // Happy collection sound
+                    }
+                });
+                
+                // Check collision with chef
+                if (distance < this.pizza.size + this.chef.size) {
+                    this.endGame(elapsedTime);
+                }
+            }
+            
+            spawnPowerup() {
+                const powerup = {
+                    x: Math.random() * (this.canvas.width - 40) + 20,
+                    y: Math.random() * (this.canvas.height - 40) + 20,
+                    size: 15,
+                    color: '#FFD700'
+                };
+                this.powerups.push(powerup);
+            }
+            
+            drawGame() {
+                // Clear canvas
+                this.ctx.fillStyle = 'rgba(135, 206, 235, 0.8)'; // Light blue kitchen background
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw kitchen tiles pattern
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                for (let x = 0; x < this.canvas.width; x += 40) {
+                    for (let y = 0; y < this.canvas.height; y += 40) {
+                        if ((x / 40 + y / 40) % 2 === 0) {
+                            this.ctx.fillRect(x, y, 40, 40);
+                        }
+                    }
+                }
+                
+                // Draw powerups
+                this.powerups.forEach(powerup => {
+                    this.drawCheese(powerup.x, powerup.y, powerup.size);
+                });
+                
+                // Draw pizza slice (player)
+                this.drawPizzaSlice(this.pizza.x, this.pizza.y, this.pizza.size);
+                
+                // Draw chef
+                this.drawChef(this.chef.x, this.chef.y, this.chef.size);
+                
+                // Draw slowdown effect
+                if (Date.now() < this.chefSlowedUntil) {
+                    this.ctx.fillStyle = 'rgba(100, 149, 237, 0.3)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    // Draw "SLOW" text
+                    this.ctx.fillStyle = '#4169E1';
+                    this.ctx.font = 'bold 24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('CHEF SLOWED!', this.canvas.width / 2, 50);
+                }
+            }
+            
+            drawPizzaSlice(x, y, size) {
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                
+                // Pizza base (triangular slice)
+                this.ctx.fillStyle = '#FFA500';
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, -size);
+                this.ctx.lineTo(-size * 0.7, size * 0.5);
+                this.ctx.lineTo(size * 0.7, size * 0.5);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                // Crust
+                this.ctx.strokeStyle = '#D2691E';
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+                
+                // Cheese
+                this.ctx.fillStyle = '#FFFF00';
+                this.ctx.beginPath();
+                this.ctx.arc(-size * 0.2, -size * 0.2, size * 0.15, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(size * 0.2, 0, size * 0.1, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Pepperoni
+                this.ctx.fillStyle = '#8B0000';
+                this.ctx.beginPath();
+                this.ctx.arc(0, size * 0.1, size * 0.08, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(-size * 0.3, size * 0.2, size * 0.06, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Simple legs (two small circles at bottom)
+                this.ctx.fillStyle = '#FFA500';
+                this.ctx.beginPath();
+                this.ctx.arc(-size * 0.2, size * 0.8, size * 0.1, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(size * 0.2, size * 0.8, size * 0.1, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                this.ctx.restore();
+            }
+            
+            drawChef(x, y, size) {
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                
+                // Chef body
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, size, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Chef hat
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.beginPath();
+                this.ctx.arc(0, -size * 1.2, size * 0.8, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Chef face
+                this.ctx.fillStyle = '#FDBCB4';
+                this.ctx.beginPath();
+                this.ctx.arc(0, -size * 0.3, size * 0.6, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Angry eyes
+                this.ctx.fillStyle = '#FF0000';
+                this.ctx.beginPath();
+                this.ctx.arc(-size * 0.2, -size * 0.4, size * 0.1, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(size * 0.2, -size * 0.4, size * 0.1, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Angry mouth
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(0, -size * 0.1, size * 0.2, 0, Math.PI);
+                this.ctx.stroke();
+                
+                // Knife
+                this.ctx.fillStyle = '#C0C0C0';
+                this.ctx.fillRect(size * 0.8, -size * 0.5, size * 0.1, size * 1.2);
+                this.ctx.fillStyle = '#8B4513';
+                this.ctx.fillRect(size * 0.8, size * 0.4, size * 0.1, size * 0.3);
+                
+                this.ctx.restore();
+            }
+            
+            drawCheese(x, y, size) {
+                this.ctx.save();
+                this.ctx.translate(x, y);
+                
+                // Golden cheese
+                this.ctx.fillStyle = '#FFD700';
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, size, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Cheese holes
+                this.ctx.fillStyle = '#FFA500';
+                this.ctx.beginPath();
+                this.ctx.arc(-size * 0.3, -size * 0.2, size * 0.2, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(size * 0.2, size * 0.1, size * 0.15, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.beginPath();
+                this.ctx.arc(0, size * 0.3, size * 0.1, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Sparkle effect
+                this.ctx.strokeStyle = '#FFFF00';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(-size * 0.8, 0);
+                this.ctx.lineTo(-size * 0.6, 0);
+                this.ctx.moveTo(-size * 0.7, -size * 0.1);
+                this.ctx.lineTo(-size * 0.7, size * 0.1);
+                this.ctx.stroke();
+                
+                this.ctx.restore();
+            }
+            
+            endGame(finalTime) {
+                this.gameRunning = false;
+                
+                // Check for new best time
+                let isNewRecord = false;
+                if (finalTime > this.bestTime) {
+                    this.bestTime = finalTime;
+                    localStorage.setItem('pizzaChefBest', this.bestTime.toString());
+                    document.getElementById('bestScore').textContent = this.bestTime;
+                    isNewRecord = true;
+                }
+                
+                // Update final score display
+                document.getElementById('finalTime').textContent = finalTime;
+                document.getElementById('newRecord').style.display = isNewRecord ? 'block' : 'none';
+                
+                // Play game over sound
+                this.playSound(200, 500, 'sawtooth');
+                
+                // Show game over screen
+                this.gameOver.style.display = 'flex';
+            }
+            
+            playSound(frequency, duration, type = 'sine') {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    // Audio not supported, silently fail
+                }
+            }
+            
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.updateGame();
+                this.drawGame();
+                requestAnimationFrame(this.gameLoop);
+            }
+        }
+        
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new PizzaChefGame();
+        });
+        
+        // Mobile address bar hide fix
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
